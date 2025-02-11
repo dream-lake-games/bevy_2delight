@@ -5,6 +5,7 @@ use bevy_2delight::prelude::*;
 // #[derive(Debug, Copy, Clone, Default, Reflect, PartialEq, Eq, Hash, AnimStateMachine)]
 // but that's a lot to remember.
 defn_anim!(
+    CircleAnim,
     // The folder containing the tag sheets + jsons
     #[folder("anim_quickstart/circle")]
     // What should the z-index of this animation be?
@@ -35,7 +36,6 @@ fn main() {
     app.add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()));
 
     app.add_plugins(AnimPlugin::new().with_default_fps(16.0));
-    app.add_plugins(AnimDefnPlugin::<CircleAnim>::default());
 
     app.add_systems(Startup, startup);
 

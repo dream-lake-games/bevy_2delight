@@ -67,6 +67,8 @@ impl<AnimTime: AnimTimeProvider> Default for AnimPlugin<AnimTime> {
 }
 impl<AnimTime: AnimTimeProvider> Plugin for AnimPlugin<AnimTime> {
     fn build(&self, app: &mut App) {
+        super::collect::register_anim_wizardry(app);
+
         app.insert_resource(AnimDefaults {
             default_fps: self.default_fps,
             default_time_class: self.default_time_class,

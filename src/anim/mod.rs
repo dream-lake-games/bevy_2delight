@@ -13,6 +13,7 @@ pub struct AnimSet;
 
 pub mod prelude {
     pub use super::{
+        collect::_AnimWizardry,
         man::{AnimDelta, AnimMan, AnimNextState},
         plugin::{AnimDefnPlugin, AnimPlugin},
         time::{AnimPlaceholderTime, AnimTimeClass, DEFAULT_TIME_CLASS},
