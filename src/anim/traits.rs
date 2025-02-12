@@ -35,7 +35,3 @@ pub trait AnimStateMachine:
 
     fn get_next(&self) -> AnimNextState<Self>;
 }
-
-pub trait AnimTimeProvider: Resource + std::fmt::Debug + Default {
-    fn get_delta_us(&self, class: AnimTimeClass) -> u32;
-}

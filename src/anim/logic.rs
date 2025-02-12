@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
-use super::traits::{AnimStateMachine, AnimTimeProvider};
+use super::time::{AnimTime, AnimTimeSet};
+use super::traits::AnimStateMachine;
 use super::AnimSet;
 
 #[derive(Component)]
@@ -33,6 +34,11 @@ impl AnimBodyBundle {
                 image,
                 flip_x,
                 flip_y,
+                image_mode: SpriteImageMode::Tiled {
+                    tile_x: true,
+                    tile_y: true,
+                    stretch_value: 1.0,
+                },
                 ..default()
             },
         }
@@ -41,14 +47,14 @@ impl AnimBodyBundle {
 
 /// This system progresses actively running animations. This happens during PreUpdate.
 /// It ONLY updates state in AnimMan and DOES NOT update any body sprites.
-fn progress_animations<StateMachine: AnimStateMachine, AnimTime: AnimTimeProvider>(
+fn progress_animations<StateMachine: AnimStateMachine>(
     mut commands: Commands,
     mut anims: Query<(Entity, &mut AnimMan<StateMachine>)>,
     defaults: Res<AnimDefaults>,
     anim_time: Res<AnimTime>,
 ) {
     let time_class = StateMachine::TIME_CLASS.unwrap_or(defaults.default_time_class);
-    let time_delta_us = anim_time.get_delta_us(time_class);
+    let time_delta_us = anim_time.get(time_class);
 
     for (anim_eid, mut anim_man) in &mut anims {
         if anim_man.body == Entity::PLACEHOLDER {
@@ -110,7 +116,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
         let body_eid = commands
             .spawn(AnimBodyBundle::new(
                 anim_man.handle_map[&anim_man.this_frame.state].clone(),
-                StateMachine::SIZE,
+                StateMachine::SIZE * StateMachine::REP,
                 anim_man.get_state().get_offset(),
                 anim_man.get_flip_x(),
                 anim_man.get_flip_y(),
@@ -161,17 +167,16 @@ fn trigger_state_changes<StateMachine: AnimStateMachine>(
     }
 }
 
-pub(crate) fn register_logic<StateMachine: AnimStateMachine, AnimTime: AnimTimeProvider>(
-    app: &mut App,
-) {
+pub(crate) fn register_logic<StateMachine: AnimStateMachine>(app: &mut App) {
     app.add_systems(
         PreUpdate,
         (
-            progress_animations::<StateMachine, AnimTime>,
+            progress_animations::<StateMachine>,
             bless_animations::<StateMachine>,
         )
             .chain()
-            .in_set(AnimSet),
+            .in_set(AnimSet)
+            .after(AnimTimeSet),
     );
     app.add_systems(
         PostUpdate,

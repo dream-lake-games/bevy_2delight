@@ -16,8 +16,8 @@ pub mod prelude {
         collect::_AnimWizardry,
         man::{AnimDelta, AnimMan, AnimNextState},
         plugin::{AnimDefnPlugin, AnimPlugin},
-        time::{AnimPlaceholderTime, AnimTimeClass, DEFAULT_TIME_CLASS},
-        traits::{AnimStateMachine, AnimTimeProvider},
+        time::{AnimTime, AnimTimeClass, AnimTimeSet, DEFAULT_TIME_CLASS},
+        traits::AnimStateMachine,
         AnimSet,
     };
     pub use crate::defn_anim;

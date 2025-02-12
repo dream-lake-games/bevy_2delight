@@ -4,21 +4,17 @@ use bevy::prelude::*;
 
 use super::logic::register_logic;
 use super::man::AnimMan;
-use super::time::{AnimPlaceholderTime, AnimTimeClass, DEFAULT_TIME_CLASS};
-use super::traits::{AnimStateMachine, AnimTimeProvider};
+use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, DEFAULT_TIME_CLASS};
+use super::traits::AnimStateMachine;
+use super::AnimSet;
 
 #[derive(Default)]
-pub struct AnimDefnPlugin<
-    StateMachine: AnimStateMachine,
-    AnimTime: AnimTimeProvider = AnimPlaceholderTime,
-> {
-    _pd: PhantomData<(StateMachine, AnimTime)>,
+pub struct AnimDefnPlugin<StateMachine: AnimStateMachine> {
+    _pd: PhantomData<StateMachine>,
 }
-impl<StateMachine: AnimStateMachine, AnimTime: AnimTimeProvider> Plugin
-    for AnimDefnPlugin<StateMachine, AnimTime>
-{
+impl<StateMachine: AnimStateMachine> Plugin for AnimDefnPlugin<StateMachine> {
     fn build(&self, app: &mut App) {
-        register_logic::<StateMachine, AnimTime>(app);
+        register_logic::<StateMachine>(app);
         app.register_type::<AnimMan<StateMachine>>();
     }
 }
@@ -29,24 +25,20 @@ pub(crate) struct AnimDefaults {
     pub default_time_class: i32,
 }
 
-pub(crate) fn update_placeholder_time(
-    time: Res<Time>,
-    mut placeholder_time: ResMut<AnimPlaceholderTime>,
-) {
-    placeholder_time.real_time_delta_us = time.delta().as_micros() as u32;
+pub(crate) fn update_default_time(time: Res<Time>, mut anim_time: ResMut<AnimTime>) {
+    anim_time.set(DEFAULT_TIME_CLASS, time.delta().as_micros() as u32);
 }
 
-pub struct AnimPlugin<AnimTime: AnimTimeProvider = AnimPlaceholderTime> {
+pub struct AnimPlugin {
     default_fps: f32,
     default_time_class: AnimTimeClass,
-    _pd: PhantomData<AnimTime>,
 }
-impl AnimPlugin<AnimPlaceholderTime> {
+impl AnimPlugin {
     pub fn new() -> Self {
         Self::default()
     }
 }
-impl<AnimTime: AnimTimeProvider> AnimPlugin<AnimTime> {
+impl AnimPlugin {
     pub fn with_default_fps(mut self, default_fps: f32) -> Self {
         self.default_fps = default_fps;
         self
@@ -56,16 +48,15 @@ impl<AnimTime: AnimTimeProvider> AnimPlugin<AnimTime> {
         self
     }
 }
-impl<AnimTime: AnimTimeProvider> Default for AnimPlugin<AnimTime> {
+impl Default for AnimPlugin {
     fn default() -> Self {
         Self {
             default_fps: 24.0,
             default_time_class: DEFAULT_TIME_CLASS,
-            _pd: default(),
         }
     }
 }
-impl<AnimTime: AnimTimeProvider> Plugin for AnimPlugin<AnimTime> {
+impl Plugin for AnimPlugin {
     fn build(&self, app: &mut App) {
         super::collect::register_anim_wizardry(app);
 
@@ -73,8 +64,11 @@ impl<AnimTime: AnimTimeProvider> Plugin for AnimPlugin<AnimTime> {
             default_fps: self.default_fps,
             default_time_class: self.default_time_class,
         });
-        app.insert_resource(AnimPlaceholderTime::default());
+        app.insert_resource(AnimTime::default());
 
-        app.add_systems(Update, update_placeholder_time.in_set(crate::anim::AnimSet));
+        app.add_systems(
+            PreUpdate,
+            update_default_time.in_set(AnimTimeSet).in_set(AnimSet),
+        );
     }
 }

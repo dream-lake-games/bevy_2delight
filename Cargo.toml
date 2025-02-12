@@ -31,3 +31,7 @@ bevy-inspector-egui = "0.28"
 [[example]]
 name = "anim_quickstart"
 path = "examples/anim_quickstart/main.rs"
+
+[[example]]
+name = "physics_quickstart"
+path = "examples/physics_quickstart/main.rs"
