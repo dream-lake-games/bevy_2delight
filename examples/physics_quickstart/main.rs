@@ -128,24 +128,33 @@ fn startup(mut commands: Commands) {
             color: Color::linear_rgb(0.1, 1.0, 0.1),
             ..default()
         },
-        Pos::new(0.0, -50.0),
-        Dyno::new(0.0, 0.0),
+        Pos::new(Frac::ZERO, Frac::whole(-50)),
+        Dyno::default(),
         StaticRx::single(StaticRxKind::Default, player_hbox.clone()),
         TriggerRx::single(TriggerRxKind::Player, player_hbox.clone()),
     ));
 
     commands.spawn(GroundBundle::new(
-        Pos::new(0.0, -300.0),
+        Pos::new(Frac::ZERO, Frac::whole(-300)),
         UVec2::new(800, 72),
     ));
     commands.spawn(GroundBundle::new(
-        Pos::new(-300.0, 0.0),
+        Pos::new(Frac::whole(-300), Frac::ZERO),
         UVec2::new(200, 72),
     ));
-    commands.spawn(GroundBundle::new(Pos::new(300.0, 0.0), UVec2::new(200, 72)));
+    commands.spawn(GroundBundle::new(
+        Pos::new(Frac::whole(300), Frac::ZERO),
+        UVec2::new(200, 72),
+    ));
 
-    commands.spawn(SpikeBundle::new(Pos::new(-300.0, 72.0), UVec2::new(36, 72)));
-    commands.spawn(SpikeBundle::new(Pos::new(300.0, 72.0), UVec2::new(36, 72)));
+    commands.spawn(SpikeBundle::new(
+        Pos::new(Frac::whole(-300), Frac::whole(72)),
+        UVec2::new(36, 72),
+    ));
+    commands.spawn(SpikeBundle::new(
+        Pos::new(Frac::whole(300), Frac::whole(72)),
+        UVec2::new(36, 72),
+    ));
 }
 
 fn update(
@@ -164,8 +173,8 @@ fn update(
     let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut();
 
     // Horizontal movement
-    let x_mag = 200.0;
-    dyno.vel.x = 0.0;
+    let x_mag = Frac::whole(200);
+    dyno.vel.x = Frac::ZERO;
     if keyboard.pressed(KeyCode::KeyA) {
         dyno.vel.x -= x_mag;
     }
@@ -174,8 +183,8 @@ fn update(
     }
 
     // Vertical movement
-    let gravity_mag = 600.0;
-    let jump_mag = 400.0;
+    let gravity_mag = Frac::whole(600);
+    let jump_mag = Frac::whole(400);
     dyno.vel.y -= bullet_time.delta_secs() * gravity_mag;
     if keyboard.just_pressed(KeyCode::KeyW) {
         dyno.vel.y = jump_mag;
@@ -186,7 +195,6 @@ fn update(
     // How to check for collisions
     if static_colls
         .get_refs(&srx.coll_keys)
-        .iter()
         .any(|coll| coll.tx_kind == StaticTxKind::Solid)
     {
         sprite.color = Color::linear_rgb(0.1, 1.0, 1.0);
@@ -195,7 +203,6 @@ fn update(
     }
     if trigger_colls
         .get_refs(&trx.coll_keys)
-        .iter()
         .any(|coll| coll.tx_kind == TriggerTxKind::Spikes)
     {
         *pos = Pos::default();

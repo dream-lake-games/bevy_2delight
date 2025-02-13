@@ -8,7 +8,7 @@ pub mod prelude {
     pub use super::dyno::Dyno;
     pub use super::hbox::{HBox, HBoxMarker};
     pub use super::plugin::PhysicsPluginGeneric;
-    pub use super::pos::{IPos, Pos};
+    pub use super::pos::Pos;
     pub use super::statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind};
     pub use super::triggers::{TriggerKind, TriggerRxGeneric, TriggerTxGeneric};
     pub use super::PhysicsSet;

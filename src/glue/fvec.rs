@@ -2,13 +2,18 @@ use bevy::prelude::*;
 
 use super::frac::Frac;
 
-#[derive(Clone, Copy, Debug, Reflect)]
+#[derive(Clone, Copy, Debug, Default, Reflect)]
 pub struct FVec2 {
     pub x: Frac,
     pub y: Frac,
 }
 impl FVec2 {
+    pub const ZERO: Self = Self::const_new(Frac::ZERO, Frac::ZERO);
+
     pub fn new(x: Frac, y: Frac) -> Self {
+        Self { x, y }
+    }
+    pub const fn const_new(x: Frac, y: Frac) -> Self {
         Self { x, y }
     }
     pub fn round(&self) -> IVec2 {
@@ -16,6 +21,12 @@ impl FVec2 {
             x: self.x.round(),
             y: self.y.round(),
         }
+    }
+    pub fn length_squared(&self) -> Frac {
+        self.x.squared() + self.y.squared()
+    }
+    pub fn dot(&self, o: Self) -> Frac {
+        self.x * o.x + self.y * o.y
     }
 }
 impl PartialEq for FVec2 {

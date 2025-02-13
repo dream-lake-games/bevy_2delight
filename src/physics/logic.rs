@@ -1,15 +1,18 @@
 use bevy::prelude::*;
 
-use crate::physics::{
-    colls::{StaticCollRec, StaticColls, TriggerCollRecGeneric, TriggerCollsGeneric},
-    dyno::Dyno,
-    hbox::HBox,
-    pos::Pos,
-    prelude::{
-        BulletTimeClass, BulletTimeGeneric, StaticRx, StaticRxKind, StaticTx, StaticTxKind,
-        TriggerKind, TriggerRxGeneric, TriggerTxGeneric,
+use crate::{
+    glue::{frac::Frac, fvec::FVec2},
+    physics::{
+        colls::{StaticCollRec, StaticColls, TriggerCollRecGeneric, TriggerCollsGeneric},
+        dyno::Dyno,
+        hbox::HBox,
+        pos::Pos,
+        prelude::{
+            BulletTimeClass, BulletTimeGeneric, StaticRx, StaticRxKind, StaticTx, StaticTxKind,
+            TriggerKind, TriggerRxGeneric, TriggerTxGeneric,
+        },
+        PhysicsSet,
     },
-    PhysicsSet,
 };
 
 /// A helpful function to make sure physics things exist as we expect them to
@@ -21,7 +24,7 @@ fn invariants(
     debug_assert!(dyno_without_pos.is_empty());
     debug_assert!(static_rx_n_tx.is_empty());
     for dyno in &moving_static_tx_vert_only {
-        debug_assert!(dyno.vel.x.abs() == 0.0);
+        debug_assert!(dyno.vel.x.abs() == Frac::ZERO);
     }
 }
 
@@ -58,7 +61,7 @@ fn move_static_txs<TimeClass: BulletTimeClass>(
 fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
     my_eid: Entity,
     my_pos: &mut Pos,
-    my_vel: &mut Vec2,
+    my_vel: &mut FVec2,
     my_srx: Option<(Entity, &StaticRx)>,
     my_trx: Option<(Entity, &TriggerRxGeneric<TriggerRxKind>)>,
     pos_q: &Query<&mut Pos>,
@@ -79,7 +82,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
     // Update all pos/dyno for static collisions, create records
     if let Some((_, my_srx)) = my_srx {
         for my_srx_comp in &my_srx.comps {
-            let mut my_thbox = my_srx_comp.hbox.translated(my_pos.x, my_pos.y);
+            let mut my_thbox = my_srx_comp.hbox.translated(my_pos.as_fvec2());
             // TODO: Performance engineer if needed
             // In order to avoid weird behavior when sliding along a straight edge, do this
             // First filter to only things it's colliding with
@@ -91,7 +94,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
                         eid,
                         pos: pos.clone(),
                         kind: comp.kind,
-                        thbox: comp.hbox.translated(pos.x, pos.y),
+                        thbox: comp.hbox.translated(pos.as_fvec2()),
                     })
                 })
                 .filter(|candidate| candidate.eid != my_eid)
@@ -101,7 +104,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
                 //shutup rust
                 let dist_a = a.thbox.area_overlapping_assuming_overlap(&my_thbox);
                 let dist_b = b.thbox.area_overlapping_assuming_overlap(&my_thbox);
-                dist_b.total_cmp(&dist_a)
+                dist_b.cmp(&dist_a)
             });
             for candidate in candidates {
                 let Some(push) = my_thbox.get_push_out(&candidate.thbox) else {
@@ -111,9 +114,13 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
 
                 // COLLISION ACTUALLY HAPPENING
                 let tx_dyno = dyno_q.get(candidate.eid).cloned().unwrap_or_default();
-                let mut old_perp = my_vel.dot(push.normalize_or_zero()) * push.normalize_or_zero();
+                let mut old_perp = if push.x.abs() != Frac::ZERO {
+                    FVec2::new(my_vel.x, Frac::ZERO)
+                } else {
+                    FVec2::new(Frac::ZERO, my_vel.y)
+                };
                 let old_par = *my_vel - old_perp;
-                if push.y.abs() > 0.0 {
+                if push.y.abs() > Frac::ZERO {
                     old_perp.y -= tx_dyno.vel.y;
                 }
 
@@ -133,16 +140,15 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
 
                 let mut do_push = |grr: &mut HBox| {
                     *my_pos += push;
-                    *grr = grr.translated(push.x, push.y);
+                    *grr = grr.translated(push);
                 };
 
                 match (my_srx_comp.kind, candidate.kind) {
                     (StaticRxKind::Default, StaticTxKind::Solid) => {
-                        // Solid collision, no breaking
                         static_colls.insert(coll_rec);
                         do_push(&mut my_thbox);
-                        *my_vel = old_par + Vec2::new(0.0, tx_dyno.vel.y);
-                        if old_perp.dot(push) > 0.0 {
+                        *my_vel = old_par + FVec2::new(Frac::ZERO, tx_dyno.vel.y);
+                        if old_perp.dot(push) > Frac::ZERO {
                             *my_vel += old_perp;
                         }
                     }
@@ -177,7 +183,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
     // Create trigger coll records
     if let Some((_, my_trx)) = my_trx {
         for my_trx_comp in &my_trx.comps {
-            let my_thbox = my_trx_comp.hbox.translated(my_pos.x, my_pos.y);
+            let my_thbox = my_trx_comp.hbox.translated(my_pos.as_fvec2());
             let candidates = ttx_q
                 .iter()
                 .flat_map(|(eid, ttx)| {
@@ -186,7 +192,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
                         eid,
                         pos: pos.clone(),
                         kind: comp.kind.clone(),
-                        thbox: comp.hbox.translated(pos.x, pos.y),
+                        thbox: comp.hbox.translated(pos.as_fvec2()),
                     })
                 })
                 .filter(|candidate| candidate.eid != my_eid)
@@ -288,24 +294,26 @@ fn move_interesting_dynos<
                 )
             }};
         }
-        const DELTA_PER_INCH: f32 = 1.0;
+        const DELTA_PER_INCH: Frac = Frac::const_whole(1);
         // Resolve collisions once always so stationary objects are still pushed out of each other
         call_resolve_collisions!();
         // Inch horizontally
-        let mut amt_moved_hor: f32 = 0.0;
+        let mut amt_moved_hor: Frac = Frac::ZERO;
         let max_inch_hor = scratch_vel.x.abs() * bullet_time.delta_secs();
         while amt_moved_hor < max_inch_hor.min(scratch_vel.x.abs()) {
-            let dont_overshoot = (max_inch_hor.min(scratch_vel.x.abs()) - amt_moved_hor).max(0.0);
+            let dont_overshoot =
+                (max_inch_hor.min(scratch_vel.x.abs()) - amt_moved_hor).max(Frac::ZERO);
             let moving_this_step = DELTA_PER_INCH.min(dont_overshoot);
             amt_moved_hor += moving_this_step;
             scratch_pos.x += scratch_vel.x.signum() * moving_this_step;
             call_resolve_collisions!();
         }
         // Then inch vertically
-        let mut amt_moved_ver: f32 = 0.0;
+        let mut amt_moved_ver: Frac = Frac::ZERO;
         let max_inch_ver = scratch_vel.y.abs() * bullet_time.delta_secs();
         while amt_moved_ver < max_inch_ver.min(scratch_vel.y.abs()) {
-            let dont_overshoot = (max_inch_ver.min(scratch_vel.y.abs()) - amt_moved_ver).max(0.0);
+            let dont_overshoot =
+                (max_inch_ver.min(scratch_vel.y.abs()) - amt_moved_ver).max(Frac::ZERO);
             let moving_this_step = DELTA_PER_INCH.min(dont_overshoot);
             amt_moved_ver += moving_this_step;
             scratch_pos.y += scratch_vel.y.signum() * moving_this_step;

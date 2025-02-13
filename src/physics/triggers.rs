@@ -32,7 +32,7 @@ impl<TriggerRxKind: TriggerKind> TriggerRxGeneric<TriggerRxKind> {
     pub fn get_thboxes(&self, pos: Pos) -> Vec<HBox> {
         self.comps
             .iter()
-            .map(|comp| comp.hbox.translated(pos.x, pos.y))
+            .map(|comp| comp.hbox.translated(pos.as_fvec2()))
             .collect()
     }
 }
@@ -62,7 +62,7 @@ impl<TriggerTxKind: TriggerKind> TriggerTxGeneric<TriggerTxKind> {
     pub fn get_thboxes(&self, pos: Pos) -> Vec<HBox> {
         self.comps
             .iter()
-            .map(|comp| comp.hbox.translated(pos.x, pos.y))
+            .map(|comp| comp.hbox.translated(pos.as_fvec2()))
             .collect()
     }
 }

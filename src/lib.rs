@@ -5,5 +5,6 @@ mod physics;
 
 pub mod prelude {
     pub use super::anim::prelude::*;
+    pub use super::glue::prelude::*;
     pub use super::physics::prelude::*;
 }

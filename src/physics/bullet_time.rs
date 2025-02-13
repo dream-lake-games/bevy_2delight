@@ -2,6 +2,8 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
+use crate::glue::frac::Frac;
+
 pub trait BulletTimeClass:
     std::fmt::Debug + Default + std::marker::Send + std::marker::Sync + Clone + 'static
 {
@@ -62,8 +64,8 @@ impl<TimeClass: BulletTimeClass> BulletTimeGeneric<TimeClass> {
     pub fn delta(&self) -> std::time::Duration {
         self.duration
     }
-    pub fn delta_secs(&self) -> f32 {
-        self.duration.as_secs_f32()
+    pub fn delta_secs(&self) -> Frac {
+        Frac::ZERO.with_micro(self.duration.as_micros() as i32)
     }
     pub fn get_base(&self) -> TimeClass {
         self.state.base.clone()

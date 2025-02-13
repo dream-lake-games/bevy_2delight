@@ -1,12 +1,20 @@
 use bevy::prelude::*;
 
 const DENOM: i64 = 1_000_000;
+const SQRT_DENOM: i64 = 1_000;
 
 #[derive(Clone, Copy, Debug, Reflect)]
 pub struct Frac {
     num: i64,
 }
+impl Default for Frac {
+    fn default() -> Self {
+        Self { num: 0 }
+    }
+}
 impl Frac {
+    pub const ZERO: Self = Self::const_whole(0);
+
     pub fn new(whole: i32, cent: i8) -> Self {
         Self {
             num: if whole >= 0 {
@@ -17,6 +25,11 @@ impl Frac {
         }
     }
     pub fn whole(whole: i32) -> Self {
+        Self {
+            num: (whole as i64) * DENOM,
+        }
+    }
+    pub const fn const_whole(whole: i32) -> Self {
         Self {
             num: (whole as i64) * DENOM,
         }
@@ -64,6 +77,27 @@ impl Frac {
                 div
             }
         }
+    }
+    pub fn abs(&self) -> Frac {
+        Frac {
+            num: self.num.abs(),
+        }
+    }
+    pub fn squared(&self) -> Frac {
+        Frac {
+            num: (self.num * self.num) / DENOM,
+        }
+    }
+    pub fn signum(&self) -> Frac {
+        if self.num < 0 {
+            Frac::whole(-1)
+        } else {
+            Frac::whole(1)
+        }
+    }
+
+    pub fn as_f32(&self) -> f32 {
+        self.num as f32 / DENOM as f32
     }
 }
 impl PartialEq for Frac {
@@ -128,6 +162,25 @@ impl std::ops::DivAssign for Frac {
         self.num = (self.num * DENOM) / rhs.num;
     }
 }
+impl std::ops::Neg for Frac {
+    type Output = Self;
+
+    fn neg(mut self) -> Self::Output {
+        self.num = -self.num;
+        self
+    }
+}
+
+impl PartialOrd for Frac {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.num.partial_cmp(&other.num)
+    }
+}
+impl Ord for Frac {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.num.cmp(&other.num)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -168,9 +221,9 @@ mod tests {
         let a = Frac::whole(-1);
         let b = Frac::whole(2);
         let mut c = a / b;
-        assert_eq!(c, Frac::whole(0).with_cent(-50));
+        assert_eq!(c, Frac::ZERO.with_cent(-50));
         c /= Frac::new(-4, 30);
-        assert_eq!(c, Frac::whole(0).with_micro(116_279));
+        assert_eq!(c, Frac::ZERO.with_micro(116_279));
     }
 
     #[test]
@@ -183,5 +236,21 @@ mod tests {
         assert_eq!(c, 1);
         let d = Frac::new(1, 60).round();
         assert_eq!(d, 2);
+    }
+
+    #[test]
+    fn test_square() {
+        let a = Frac::whole(7);
+        assert_eq!(a.squared(), Frac::whole(49));
+    }
+
+    #[test]
+    fn test_signum() {
+        let a = Frac::whole(-1);
+        let b = Frac::ZERO;
+        let c = Frac::whole(1);
+        assert_eq!(a.signum(), Frac::whole(-1));
+        assert_eq!(b.signum(), Frac::whole(1));
+        assert_eq!(c.signum(), Frac::whole(1));
     }
 }

@@ -1,25 +1,28 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::physics::{
-    hbox::HBoxMarker,
-    pos::Pos,
-    statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind},
-    triggers::{TriggerKind, TriggerRxGeneric, TriggerTxGeneric},
-    PhysicsSet,
+use crate::{
+    glue::fvec::FVec2,
+    physics::{
+        hbox::HBoxMarker,
+        pos::Pos,
+        statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind},
+        triggers::{TriggerKind, TriggerRxGeneric, TriggerTxGeneric},
+        PhysicsSet,
+    },
 };
 
 pub type CollKey = u32;
 
 #[derive(Debug, Clone, Reflect)]
 pub struct StaticCollRec {
-    pub push: Vec2,
+    pub push: FVec2,
     /// Position of rx at time of collision
     pub rx_pos: Pos,
     /// Before collision, component of rx's velocity in collision normal direction
-    pub rx_perp: Vec2,
+    pub rx_perp: FVec2,
     /// Before collision, component of rx's velocity perpendicular to normal direction
     /// Name is weird because it's "parallel" to original vel of rx
-    pub rx_par: Vec2,
+    pub rx_par: FVec2,
     /// Entity of the control associated with the rx
     pub rx_ctrl: Entity,
     /// The kind of the rx
@@ -47,8 +50,14 @@ impl StaticColls {
     pub fn get(&self, key: &CollKey) -> Option<&StaticCollRec> {
         self.map.get(key)
     }
-    pub fn get_refs(&self, coll_keys: &[CollKey]) -> Vec<&StaticCollRec> {
-        coll_keys.iter().filter_map(|key| self.get(key)).collect()
+    pub fn get_refs<'a, 'b>(
+        &'a self,
+        coll_keys: &'b [CollKey],
+    ) -> std::iter::FilterMap<
+        std::slice::Iter<'b, u32>,
+        impl FnMut(&'b u32) -> Option<&'a StaticCollRec>,
+    > {
+        coll_keys.iter().filter_map(|key| self.get(key))
     }
     pub fn all(&self) -> Vec<&StaticCollRec> {
         self.map.values().into_iter().collect()
@@ -91,11 +100,14 @@ impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>
     ) -> Option<&TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>> {
         self.map.get(key)
     }
-    pub fn get_refs(
-        &self,
-        coll_keys: &[CollKey],
-    ) -> Vec<&TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>> {
-        coll_keys.iter().filter_map(|key| self.get(key)).collect()
+    pub fn get_refs<'a, 'b>(
+        &'a self,
+        coll_keys: &'b [CollKey],
+    ) -> std::iter::FilterMap<
+        std::slice::Iter<'b, u32>,
+        impl FnMut(&'b u32) -> Option<&'a TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>>,
+    > {
+        coll_keys.iter().filter_map(|key| self.get(key))
     }
 }
 
@@ -166,13 +178,18 @@ impl<'a, TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>
     }
 }
 
+#[derive(Component)]
+pub struct HasStaticColl;
+#[derive(Component)]
+pub struct HasTriggerColl;
+
 fn reset_colls_every_frame<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
     mut static_colls: ResMut<StaticColls>,
     mut trigger_colls: ResMut<TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>>,
-    mut srx_ctrls: Query<&mut StaticRx>,
-    mut stx_ctrls: Query<&mut StaticTx>,
-    mut trx_ctrls: Query<&mut TriggerRxGeneric<TriggerRxKind>>,
-    mut ttx_ctrls: Query<&mut TriggerTxGeneric<TriggerTxKind>>,
+    mut srx_ctrls: Query<&mut StaticRx, With<HasStaticColl>>,
+    mut stx_ctrls: Query<&mut StaticTx, With<HasStaticColl>>,
+    mut trx_ctrls: Query<&mut TriggerRxGeneric<TriggerRxKind>, With<HasTriggerColl>>,
+    mut ttx_ctrls: Query<&mut TriggerTxGeneric<TriggerTxKind>, With<HasTriggerColl>>,
 ) {
     // Eh at some point we may want to shrink memory used, but this probably fine
     static_colls.map.clear();
