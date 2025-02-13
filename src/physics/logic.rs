@@ -1,15 +1,15 @@
 use bevy::prelude::*;
 
 use crate::{
-    glue::{frac::Frac, fvec::FVec2},
+    glue::{bullet_time::BulletTime, frac::Frac, fvec::FVec2},
     physics::{
         colls::{StaticCollRec, StaticColls, TriggerCollRecGeneric, TriggerCollsGeneric},
         dyno::Dyno,
         hbox::HBox,
         pos::Pos,
         prelude::{
-            BulletTimeClass, BulletTimeGeneric, StaticRx, StaticRxKind, StaticTx, StaticTxKind,
-            TriggerKind, TriggerRxGeneric, TriggerTxGeneric,
+            StaticRx, StaticRxKind, StaticTx, StaticTxKind, TriggerKind, TriggerRxGeneric,
+            TriggerTxGeneric,
         },
         PhysicsSet,
     },
@@ -29,8 +29,8 @@ fn invariants(
 }
 
 /// Moves dynos that have no statics and no trigger receivers
-fn move_uninteresting_dynos<TriggerRxKind: TriggerKind, TimeClass: BulletTimeClass>(
-    bullet_time: Res<BulletTimeGeneric<TimeClass>>,
+fn move_uninteresting_dynos<TriggerRxKind: TriggerKind>(
+    bullet_time: Res<BulletTime>,
     mut ents: Query<
         (&Dyno, &mut Pos),
         (
@@ -46,8 +46,8 @@ fn move_uninteresting_dynos<TriggerRxKind: TriggerKind, TimeClass: BulletTimeCla
 }
 
 /// Moves static txs
-fn move_static_txs<TimeClass: BulletTimeClass>(
-    bullet_time: Res<BulletTimeGeneric<TimeClass>>,
+fn move_static_txs(
+    bullet_time: Res<BulletTime>,
     mut ents: Query<(&Dyno, &mut Pos), (Without<StaticRx>, With<StaticTx>)>,
 ) {
     for (dyno, mut pos) in &mut ents {
@@ -243,12 +243,8 @@ fn populate_ctrl_coll_keys<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKin
 }
 
 /// Moves the interesting stuff and handles collisions
-fn move_interesting_dynos<
-    TriggerRxKind: TriggerKind,
-    TriggerTxKind: TriggerKind,
-    TimeClass: BulletTimeClass,
->(
-    bullet_time: Res<BulletTimeGeneric<TimeClass>>,
+fn move_interesting_dynos<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+    bullet_time: Res<BulletTime>,
     mut pos_q: Query<&mut Pos>,
     mut dyno_q: Query<&mut Dyno>,
     mut srx_q: Query<(Entity, &mut StaticRx)>,
@@ -339,20 +335,16 @@ fn move_interesting_dynos<
     );
 }
 
-pub(super) fn register_logic<
-    TriggerRxKind: TriggerKind,
-    TriggerTxKind: TriggerKind,
-    TimeClass: BulletTimeClass,
->(
+pub(super) fn register_logic<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
     app: &mut App,
 ) {
     app.add_systems(
         Update,
         (
             invariants,
-            move_uninteresting_dynos::<TriggerRxKind, TimeClass>,
-            move_static_txs::<TimeClass>,
-            move_interesting_dynos::<TriggerRxKind, TriggerTxKind, TimeClass>,
+            move_uninteresting_dynos::<TriggerRxKind>,
+            move_static_txs,
+            move_interesting_dynos::<TriggerRxKind, TriggerTxKind>,
         )
             .chain()
             .in_set(PhysicsSet)

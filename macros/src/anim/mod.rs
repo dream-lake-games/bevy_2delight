@@ -70,7 +70,7 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
 
     let zix = enum_info.zix.unwrap_or(0.0);
     let time_class = match enum_info.time_class {
-        Some(class) => quote::quote! { Some(#class) },
+        Some(class) => quote::quote! { Some(AnimTimeClass::#class) },
         None => quote::quote!(None),
     };
 

@@ -53,7 +53,7 @@ fn progress_animations<StateMachine: AnimStateMachine>(
     defaults: Res<AnimDefaults>,
     anim_time: Res<AnimTime>,
 ) {
-    let time_class = StateMachine::TIME_CLASS.unwrap_or(defaults.default_time_class);
+    let time_class = StateMachine::TIME_CLASS.unwrap_or(defaults.settings.default_time_class);
     let time_delta_us = anim_time.get(time_class);
 
     for (anim_eid, mut anim_man) in &mut anims {

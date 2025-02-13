@@ -2,9 +2,11 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
+use crate::prelude::BulletTime;
+
 use super::logic::register_logic;
 use super::man::AnimMan;
-use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, DEFAULT_TIME_CLASS};
+use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, AnimsPaused};
 use super::traits::AnimStateMachine;
 use super::AnimSet;
 
@@ -19,41 +21,47 @@ impl<StateMachine: AnimStateMachine> Plugin for AnimDefnPlugin<StateMachine> {
     }
 }
 
-#[derive(Clone, Debug, Reflect, Resource)]
-pub(crate) struct AnimDefaults {
-    pub default_fps: f32,
-    pub default_time_class: i32,
+#[derive(Clone, Debug, Reflect)]
+pub struct AnimSettings {
+    pub default_fps: u32,
+    pub default_time_class: AnimTimeClass,
 }
-
-pub(crate) fn update_default_time(time: Res<Time>, mut anim_time: ResMut<AnimTime>) {
-    anim_time.set(DEFAULT_TIME_CLASS, time.delta().as_micros() as u32);
-}
-
-pub struct AnimPlugin {
-    default_fps: f32,
-    default_time_class: AnimTimeClass,
-}
-impl AnimPlugin {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-impl AnimPlugin {
-    pub fn with_default_fps(mut self, default_fps: f32) -> Self {
-        self.default_fps = default_fps;
-        self
-    }
-    pub fn with_default_time_class(mut self, default_time_class: AnimTimeClass) -> Self {
-        self.default_time_class = default_time_class;
-        self
-    }
-}
-impl Default for AnimPlugin {
+impl Default for AnimSettings {
     fn default() -> Self {
         Self {
-            default_fps: 24.0,
-            default_time_class: DEFAULT_TIME_CLASS,
+            default_fps: 24,
+            default_time_class: default(),
         }
+    }
+}
+
+#[derive(Clone, Debug, Reflect, Resource)]
+pub(crate) struct AnimDefaults {
+    pub(crate) settings: AnimSettings,
+}
+
+pub(crate) fn update_anim_time(
+    anims_paused: Res<AnimsPaused>,
+    bullet_time: Res<BulletTime>,
+    mut anim_time: ResMut<AnimTime>,
+) {
+    if anims_paused.0 {
+        anim_time.set(AnimTimeClass::BulletUnpaused, 0);
+        anim_time.set(AnimTimeClass::RealUnpaused, 0);
+    } else {
+        anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_micros());
+        anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_micros());
+    }
+    anim_time.set(AnimTimeClass::BulletAlways, bullet_time.delta_micros());
+    anim_time.set(AnimTimeClass::RealAlways, bullet_time.real_delta_micros());
+}
+
+pub(crate) struct AnimPlugin {
+    pub(crate) settings: AnimSettings,
+}
+impl AnimPlugin {
+    pub fn new(settings: AnimSettings) -> Self {
+        Self { settings }
     }
 }
 impl Plugin for AnimPlugin {
@@ -61,14 +69,14 @@ impl Plugin for AnimPlugin {
         super::collect::register_anim_wizardry(app);
 
         app.insert_resource(AnimDefaults {
-            default_fps: self.default_fps,
-            default_time_class: self.default_time_class,
+            settings: self.settings.clone(),
         });
         app.insert_resource(AnimTime::default());
+        app.insert_resource(AnimsPaused::default());
 
         app.add_systems(
             PreUpdate,
-            update_default_time.in_set(AnimTimeSet).in_set(AnimSet),
+            update_anim_time.in_set(AnimTimeSet).in_set(AnimSet),
         );
     }
 }

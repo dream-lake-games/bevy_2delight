@@ -16,37 +16,13 @@ enum TriggerTxKind {
 }
 impl TriggerKind for TriggerTxKind {}
 
-#[derive(Default, Debug, Clone)]
-enum BulletTimeSpeed {
-    #[default]
-    Normal,
-    Slow,
-}
-impl BulletTimeClass for BulletTimeSpeed {
-    fn to_factor(&self) -> f32 {
-        match self {
-            Self::Normal => 1.0,
-            Self::Slow => 0.1,
-        }
-    }
-}
-impl BulletTimeSpeed {
-    pub fn rotated(&self) -> Self {
-        match self {
-            Self::Normal => Self::Slow,
-            Self::Slow => Self::Normal,
-        }
-    }
-}
-
 // I _highly_ recommend you create type aliases here to cut back on some verbosity
 type TriggerRx = TriggerRxGeneric<TriggerRxKind>;
 type TriggerTx = TriggerTxGeneric<TriggerTxKind>;
 type TriggerColls = TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>;
 #[allow(dead_code)]
 type TriggerCollRec = TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>;
-type BulletTime = BulletTimeGeneric<BulletTimeSpeed>;
-type PhysicsPlugin = PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind, BulletTimeSpeed>;
+type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 
 fn main() {
     let mut app = App::new();
@@ -56,7 +32,10 @@ fn main() {
         FrameTimeDiagnosticsPlugin,
         LogDiagnosticsPlugin::default(),
     ));
-    app.add_plugins(PhysicsPlugin::default());
+    app.add_plugins(TwoDelightPlugin {
+        anim_settings: default(),
+        physics_settings: PhysicsSettings::default(),
+    });
 
     app.add_systems(Startup, startup);
     app.add_systems(Update, update.after(PhysicsSet));
@@ -166,8 +145,11 @@ fn update(
 ) {
     // Maybe toggle bullet time
     if keyboard.just_pressed(KeyCode::Space) {
-        let new_speed = bullet_time.get_base().rotated();
-        bullet_time.set_base(new_speed);
+        if bullet_time.get_base() == Frac::whole(1) {
+            bullet_time.set_base(Frac::cent(30));
+        } else {
+            bullet_time.set_base(Frac::whole(1));
+        }
     }
 
     let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut();
@@ -188,8 +170,8 @@ fn update(
     dyno.vel.y -= bullet_time.delta_secs() * gravity_mag;
     if keyboard.just_pressed(KeyCode::KeyW) {
         dyno.vel.y = jump_mag;
-        // Commenting out because it feels bad but here's how to add a short-term bullet time effect
-        // bullet_time.add_effect(BulletTimeSpeeds::Slow, 0.1);
+        // Commenting out bc it feels bad but here's how to add a short-term bullet-time effect
+        bullet_time.add_effect(Frac::ZERO, Frac::cent(30));
     }
 
     // How to check for collisions

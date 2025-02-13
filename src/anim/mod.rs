@@ -15,8 +15,8 @@ pub mod prelude {
     pub use super::{
         collect::_AnimWizardry,
         man::{AnimDelta, AnimMan, AnimNextState},
-        plugin::{AnimDefnPlugin, AnimPlugin},
-        time::{AnimTime, AnimTimeClass, AnimTimeSet, DEFAULT_TIME_CLASS},
+        plugin::*,
+        time::{AnimTime, AnimTimeClass, AnimTimeSet},
         traits::AnimStateMachine,
         AnimSet,
     };

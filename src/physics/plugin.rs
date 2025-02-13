@@ -1,21 +1,12 @@
 use bevy::prelude::*;
 
-use crate::physics::{
-    bullet_time::{BulletTimeClassDefault, BulletTimePlugin},
-    colls, logic, pos,
-    prelude::BulletTimeClass,
-    triggers::TriggerKind,
-};
+use crate::physics::{colls, logic, pos, triggers::TriggerKind};
 
-pub struct PhysicsPluginGeneric<
-    TriggerRxKind: TriggerKind,
-    TriggerTxKind: TriggerKind,
-    TimeClass: BulletTimeClass = BulletTimeClassDefault,
-> {
-    _pd: std::marker::PhantomData<(TriggerRxKind, TriggerTxKind, TimeClass)>,
+pub struct PhysicsSettingsGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+    _pd: std::marker::PhantomData<(TriggerRxKind, TriggerTxKind)>,
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind, TimeClass: BulletTimeClass> Default
-    for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind, TimeClass>
+impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
+    for PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>
 {
     fn default() -> Self {
         Self {
@@ -23,13 +14,25 @@ impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind, TimeClass: BulletTi
         }
     }
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind, TimeClass: BulletTimeClass> Plugin
-    for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind, TimeClass>
+
+pub(crate) struct PhysicsPluginGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+    _pd: std::marker::PhantomData<(TriggerRxKind, TriggerTxKind)>,
+}
+impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
+    for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind>
+{
+    fn default() -> Self {
+        Self {
+            _pd: std::marker::PhantomData,
+        }
+    }
+}
+impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Plugin
+    for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind>
 {
     fn build(&self, app: &mut App) {
         colls::register_colls::<TriggerRxKind, TriggerTxKind>(app);
-        logic::register_logic::<TriggerRxKind, TriggerTxKind, TimeClass>(app);
+        logic::register_logic::<TriggerRxKind, TriggerTxKind>(app);
         pos::register_pos(app);
-        app.add_plugins(BulletTimePlugin::<TimeClass>::default());
     }
 }

@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
 const DENOM: i64 = 1_000_000;
-const SQRT_DENOM: i64 = 1_000;
 
 #[derive(Clone, Copy, Debug, Reflect)]
 pub struct Frac {
@@ -14,6 +13,7 @@ impl Default for Frac {
 }
 impl Frac {
     pub const ZERO: Self = Self::const_whole(0);
+    pub const ONE: Self = Self::const_whole(1);
 
     pub fn new(whole: i32, cent: i8) -> Self {
         Self {
@@ -32,6 +32,11 @@ impl Frac {
     pub const fn const_whole(whole: i32) -> Self {
         Self {
             num: (whole as i64) * DENOM,
+        }
+    }
+    pub fn cent(cent: i8) -> Self {
+        Self {
+            num: cent as i64 * DENOM / 100,
         }
     }
     pub fn with_cent(mut self, cent: i8) -> Self {
@@ -98,6 +103,9 @@ impl Frac {
 
     pub fn as_f32(&self) -> f32 {
         self.num as f32 / DENOM as f32
+    }
+    pub fn as_micros(&self) -> i64 {
+        self.num
     }
 }
 impl PartialEq for Frac {
