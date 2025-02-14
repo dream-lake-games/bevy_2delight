@@ -1,4 +1,4 @@
-use bevy::{prelude::*, reflect::Reflectable, utils::HashMap};
+use bevy::{prelude::*, reflect::Reflectable, render::view::RenderLayers, utils::HashMap};
 
 use super::{man::AnimNextState, time::AnimTimeClass};
 
@@ -16,8 +16,7 @@ pub trait AnimStateMachine:
     + Reflectable
     + std::fmt::Debug
 {
-    // type Layer: Layer; TODO
-
+    const RENDER_LAYERS: Option<RenderLayers>;
     const SIZE: UVec2;
     const ZIX: f32;
     const TIME_CLASS: Option<AnimTimeClass>;

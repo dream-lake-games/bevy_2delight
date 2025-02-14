@@ -10,6 +10,8 @@ pub struct FVec2 {
 impl FVec2 {
     pub const ZERO: Self = Self::const_new(Frac::ZERO, Frac::ZERO);
     pub const ONE: Self = Self::const_new(Frac::ONE, Frac::ONE);
+    pub const X: Self = Self::const_new(Frac::ONE, Frac::ZERO);
+    pub const Y: Self = Self::const_new(Frac::ZERO, Frac::ONE);
 
     pub fn new(x: Frac, y: Frac) -> Self {
         Self { x, y }

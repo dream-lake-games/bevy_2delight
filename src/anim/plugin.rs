@@ -66,7 +66,7 @@ impl AnimPlugin {
 }
 impl Plugin for AnimPlugin {
     fn build(&self, app: &mut App) {
-        super::collect::register_anim_wizardry(app);
+        super::anim_collect::register_anim_wizardry(app);
 
         app.insert_resource(AnimDefaults {
             settings: self.settings.clone(),

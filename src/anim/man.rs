@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy::reflect::Reflect;
+use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
+
+use crate::layer::prelude::{Layer, MainStaticLayer};
 
 use super::traits::AnimStateMachine;
 
@@ -58,6 +61,7 @@ pub struct AnimObserveStateChanges;
 
 /// The main animation controller
 #[derive(Component, Clone, Debug, Reflect)]
+#[require(Transform, Visibility)]
 pub struct AnimMan<StateMachine: AnimStateMachine> {
     /// Current data this frame of the animation
     pub(super) this_frame: AnimFrameData<StateMachine>,
@@ -65,6 +69,8 @@ pub struct AnimMan<StateMachine: AnimStateMachine> {
     pub(super) last_frame: Option<AnimFrameData<StateMachine>>,
     /// How much time has been spent on this ix of the animation
     pub(super) time_us: u32,
+    /// The render layer of the animation
+    pub(super) render_layers: RenderLayers,
     /// INTERNAL: More ergonomic way to get to the body
     pub(super) body: Entity,
     /// INTERNAL: Hold these strong handles to prevent flickering
@@ -77,6 +83,7 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
             this_frame: default(),
             last_frame: None,
             time_us: 0,
+            render_layers: MainStaticLayer::RENDER_LAYERS,
             body: Entity::PLACEHOLDER,
             handle_map: default(),
         }
@@ -101,6 +108,14 @@ impl<StateMachine: AnimStateMachine> AnimMan<StateMachine> {
     }
     pub fn with_flip_y(mut self, val: bool) -> Self {
         self.this_frame.flip_y = val;
+        self
+    }
+    pub fn with_layer<L: Layer>(mut self) -> Self {
+        self.render_layers = L::RENDER_LAYERS;
+        self
+    }
+    pub(crate) fn with_render_layers(mut self, layers: RenderLayers) -> Self {
+        self.render_layers = layers;
         self
     }
 }

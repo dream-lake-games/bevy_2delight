@@ -6,7 +6,7 @@ use crate::{
         hbox::HBoxMarker,
         pos::Pos,
         statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind},
-        triggers::{TriggerKind, TriggerRxGeneric, TriggerTxGeneric},
+        triggers::{TriggerKindTrait, TriggerRxGeneric, TriggerTxGeneric},
         PhysicsSet,
     },
 };
@@ -65,7 +65,7 @@ impl StaticColls {
 }
 
 #[derive(Debug, Clone, Reflect)]
-pub struct TriggerCollRecGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+pub struct TriggerCollRecGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> {
     /// Position of rx at time of collision
     pub rx_pos: Pos,
     /// Entity of the control associated with the rx
@@ -84,10 +84,10 @@ pub struct TriggerCollRecGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: Trig
     pub tx_hbox: HBoxMarker,
 }
 #[derive(Resource, Debug, Reflect)]
-pub struct TriggerCollsGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+pub struct TriggerCollsGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> {
     pub(crate) map: HashMap<CollKey, TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>>,
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>
+impl<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
     TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>
 {
     pub fn insert(&mut self, rec: TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>) {
@@ -140,7 +140,7 @@ impl<'a> ByHBox<'a, StaticCollRec> for Vec<&'a StaticCollRec> {
         result
     }
 }
-impl<'a, TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>
+impl<'a, TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
     ByHBox<'a, TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>>
     for Vec<&'a TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>>
 {
@@ -183,7 +183,7 @@ pub struct HasStaticColl;
 #[derive(Component)]
 pub struct HasTriggerColl;
 
-fn reset_colls_every_frame<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+fn reset_colls_every_frame<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     mut static_colls: ResMut<StaticColls>,
     mut trigger_colls: ResMut<TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>>,
     mut srx_ctrls: Query<&mut StaticRx, With<HasStaticColl>>,
@@ -207,7 +207,7 @@ fn reset_colls_every_frame<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKin
     clear_coll_keys!(ttx_ctrls);
 }
 
-pub(super) fn register_colls<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+pub(super) fn register_colls<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     app: &mut App,
 ) {
     app.insert_resource(StaticColls { map: default() });

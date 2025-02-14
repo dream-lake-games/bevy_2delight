@@ -9,7 +9,7 @@ pub mod prelude {
     pub use super::plugin::*;
     pub use super::pos::Pos;
     pub use super::statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind};
-    pub use super::triggers::{TriggerKind, TriggerRxGeneric, TriggerTxGeneric};
+    pub use super::triggers::{TriggerKindTrait, TriggerRxGeneric, TriggerTxGeneric};
     pub use super::PhysicsSet;
 }
 

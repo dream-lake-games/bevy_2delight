@@ -48,13 +48,11 @@ defn_anim!(
     }
 );
 
-#[derive(std::hash::Hash, Debug, Clone)]
+#[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
 enum TriggerRxKind {}
-impl TriggerKind for TriggerRxKind {}
 
-#[derive(std::hash::Hash, Debug, Clone)]
+#[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
 enum TriggerTxKind {}
-impl TriggerKind for TriggerTxKind {}
 type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 
 fn startup(mut commands: Commands) {
@@ -62,13 +60,11 @@ fn startup(mut commands: Commands) {
     commands.spawn((
         Name::new("slow_circle"),
         AnimMan::<SlowCircleAnim>::default(),
-        Transform::from_scale(Vec3::ONE * 6.0),
         Visibility::default(),
     ));
     commands.spawn((
         Name::new("fast_circle"),
         AnimMan::<FastCircleAnim>::default(),
-        Transform::from_scale(Vec3::ONE * 6.0),
         Visibility::default(),
     ));
 }
@@ -76,11 +72,23 @@ fn startup(mut commands: Commands) {
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()));
-
     app.add_plugins(TwoDelightPlugin {
         anim_settings: AnimSettings::default(),
         physics_settings: PhysicsSettings::default(),
+        layer_settings: LayerSettings {
+            screen_size: UVec2::new(240, 240),
+            overlay_growth: 4,
+            window: Window {
+                resizable: true,
+                title: "Anim Quickstart".to_string(),
+                mode: bevy::window::WindowMode::Windowed,
+                ..default()
+            },
+            asset_plugin: AssetPlugin {
+                meta_check: bevy::asset::AssetMetaCheck::Never,
+                ..default()
+            },
+        },
     });
 
     app.add_systems(Startup, startup);

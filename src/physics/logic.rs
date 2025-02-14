@@ -8,7 +8,7 @@ use crate::{
         hbox::HBox,
         pos::Pos,
         prelude::{
-            StaticRx, StaticRxKind, StaticTx, StaticTxKind, TriggerKind, TriggerRxGeneric,
+            StaticRx, StaticRxKind, StaticTx, StaticTxKind, TriggerKindTrait, TriggerRxGeneric,
             TriggerTxGeneric,
         },
         PhysicsSet,
@@ -29,7 +29,7 @@ fn invariants(
 }
 
 /// Moves dynos that have no statics and no trigger receivers
-fn move_uninteresting_dynos<TriggerRxKind: TriggerKind>(
+fn move_uninteresting_dynos<TriggerRxKind: TriggerKindTrait>(
     bullet_time: Res<BulletTime>,
     mut ents: Query<
         (&Dyno, &mut Pos),
@@ -58,7 +58,7 @@ fn move_static_txs(
 /// Resolves collisions for a single entity.
 /// If it has statics, it resolves static collisions and may update pos and vel
 /// If it has triggers, it will trigger as needed (duh)
-fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     my_eid: Entity,
     my_pos: &mut Pos,
     my_vel: &mut FVec2,
@@ -216,7 +216,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
 
 /// As we resolve collisions, we create the collisions records but don't put the corresponding
 /// keys in the needed vecs in the ctrls. This helper does that, assuming all colls have been resolved.
-fn populate_ctrl_coll_keys<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+fn populate_ctrl_coll_keys<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     srx_q: &mut Query<(Entity, &mut StaticRx)>,
     stx_q: &mut Query<(Entity, &mut StaticTx)>,
     trx_q: &mut Query<(Entity, &mut TriggerRxGeneric<TriggerRxKind>)>,
@@ -243,7 +243,7 @@ fn populate_ctrl_coll_keys<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKin
 }
 
 /// Moves the interesting stuff and handles collisions
-fn move_interesting_dynos<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     bullet_time: Res<BulletTime>,
     mut pos_q: Query<&mut Pos>,
     mut dyno_q: Query<&mut Dyno>,
@@ -335,7 +335,7 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind
     );
 }
 
-pub(super) fn register_logic<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind>(
+pub(super) fn register_logic<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     app: &mut App,
 ) {
     app.add_systems(

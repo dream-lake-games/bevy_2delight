@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 
-use crate::physics::{colls, logic, pos, triggers::TriggerKind};
+use crate::physics::{colls, logic, pos, triggers::TriggerKindTrait};
 
-pub struct PhysicsSettingsGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+pub struct PhysicsSettingsGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
+{
     _pd: std::marker::PhantomData<(TriggerRxKind, TriggerTxKind)>,
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
+impl<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> Default
     for PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>
 {
     fn default() -> Self {
@@ -15,10 +16,13 @@ impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
     }
 }
 
-pub(crate) struct PhysicsPluginGeneric<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> {
+pub(crate) struct PhysicsPluginGeneric<
+    TriggerRxKind: TriggerKindTrait,
+    TriggerTxKind: TriggerKindTrait,
+> {
     _pd: std::marker::PhantomData<(TriggerRxKind, TriggerTxKind)>,
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
+impl<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> Default
     for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind>
 {
     fn default() -> Self {
@@ -27,7 +31,7 @@ impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Default
         }
     }
 }
-impl<TriggerRxKind: TriggerKind, TriggerTxKind: TriggerKind> Plugin
+impl<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> Plugin
     for PhysicsPluginGeneric<TriggerRxKind, TriggerTxKind>
 {
     fn build(&self, app: &mut App) {

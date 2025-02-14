@@ -14,6 +14,7 @@ impl Default for Frac {
 impl Frac {
     pub const ZERO: Self = Self::const_whole(0);
     pub const ONE: Self = Self::const_whole(1);
+    pub const TWO: Self = Self::const_whole(2);
 
     pub fn new(whole: i32, cent: i8) -> Self {
         Self {
@@ -35,6 +36,11 @@ impl Frac {
         }
     }
     pub fn cent(cent: i8) -> Self {
+        Self {
+            num: cent as i64 * DENOM / 100,
+        }
+    }
+    pub const fn const_cent(cent: i8) -> Self {
         Self {
             num: cent as i64 * DENOM / 100,
         }
@@ -98,6 +104,11 @@ impl Frac {
             Frac::whole(-1)
         } else {
             Frac::whole(1)
+        }
+    }
+    pub fn rem_euclid(&self, other: Frac) -> Frac {
+        Self {
+            num: self.num.rem_euclid(other.num),
         }
     }
 

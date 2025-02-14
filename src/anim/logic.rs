@@ -1,4 +1,7 @@
 use bevy::prelude::*;
+use bevy::render::view::RenderLayers;
+
+use crate::prelude::{Layer, MainStaticLayer};
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
@@ -15,6 +18,7 @@ struct AnimBodyBundle {
     marker: AnimBody,
     transform: Transform,
     sprite: Sprite,
+    render_layers: RenderLayers,
 }
 impl AnimBodyBundle {
     pub fn new(
@@ -23,6 +27,7 @@ impl AnimBodyBundle {
         offset: IVec2,
         flip_x: bool,
         flip_y: bool,
+        render_layers: RenderLayers,
     ) -> Self {
         Self {
             name: Name::new("AnimBody"),
@@ -41,6 +46,7 @@ impl AnimBodyBundle {
                 },
                 ..default()
             },
+            render_layers,
         }
     }
 }
@@ -120,6 +126,9 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                 anim_man.get_state().get_offset(),
                 anim_man.get_flip_x(),
                 anim_man.get_flip_y(),
+                StateMachine::RENDER_LAYERS
+                    .clone()
+                    .unwrap_or(MainStaticLayer::RENDER_LAYERS),
             ))
             .set_parent(eid)
             .id();

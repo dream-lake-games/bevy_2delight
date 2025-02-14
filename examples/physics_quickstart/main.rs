@@ -4,17 +4,15 @@ use bevy::{
 };
 use bevy_2delight::prelude::*;
 
-#[derive(std::hash::Hash, Debug, Clone)]
+#[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
 enum TriggerRxKind {
     Player,
 }
-impl TriggerKind for TriggerRxKind {}
 
-#[derive(std::hash::Hash, Debug, Clone, PartialEq, Eq)]
+#[derive(std::hash::Hash, Debug, Clone, PartialEq, Eq, TriggerKind)]
 enum TriggerTxKind {
     Spikes,
 }
-impl TriggerKind for TriggerTxKind {}
 
 // I _highly_ recommend you create type aliases here to cut back on some verbosity
 type TriggerRx = TriggerRxGeneric<TriggerRxKind>;
@@ -27,14 +25,14 @@ type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins((
-        DefaultPlugins.set(ImagePlugin::default_nearest()),
-        FrameTimeDiagnosticsPlugin,
-        LogDiagnosticsPlugin::default(),
-    ));
+    app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
     app.add_plugins(TwoDelightPlugin {
         anim_settings: default(),
         physics_settings: PhysicsSettings::default(),
+        layer_settings: LayerSettings {
+            screen_size: UVec2::new(600, 600),
+            ..default()
+        },
     });
 
     app.add_systems(Startup, startup);

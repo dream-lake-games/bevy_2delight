@@ -2,21 +2,21 @@ use bevy::prelude::*;
 
 use crate::physics::{colls::CollKey, hbox::HBox, pos::Pos};
 
-pub trait TriggerKind:
+pub trait TriggerKindTrait:
     Clone + std::fmt::Debug + std::hash::Hash + std::marker::Send + std::marker::Sync + 'static
 {
 }
 
-pub(crate) struct TriggerRxComp<TriggerRxKind: TriggerKind> {
+pub(crate) struct TriggerRxComp<TriggerRxKind: TriggerKindTrait> {
     pub(crate) kind: TriggerRxKind,
     pub(crate) hbox: HBox,
 }
 #[derive(Component)]
-pub struct TriggerRxGeneric<TriggerRxKind: TriggerKind> {
+pub struct TriggerRxGeneric<TriggerRxKind: TriggerKindTrait> {
     pub(crate) comps: Vec<TriggerRxComp<TriggerRxKind>>,
     pub coll_keys: Vec<CollKey>,
 }
-impl<TriggerRxKind: TriggerKind> TriggerRxGeneric<TriggerRxKind> {
+impl<TriggerRxKind: TriggerKindTrait> TriggerRxGeneric<TriggerRxKind> {
     pub fn single(kind: TriggerRxKind, hbox: HBox) -> Self {
         Self::new(vec![(kind, hbox)])
     }
@@ -37,16 +37,16 @@ impl<TriggerRxKind: TriggerKind> TriggerRxGeneric<TriggerRxKind> {
     }
 }
 
-pub(crate) struct TriggerTxComp<TriggerTxKind: TriggerKind> {
+pub(crate) struct TriggerTxComp<TriggerTxKind: TriggerKindTrait> {
     pub(crate) kind: TriggerTxKind,
     pub(crate) hbox: HBox,
 }
 #[derive(Component)]
-pub struct TriggerTxGeneric<TriggerTxKind: TriggerKind> {
+pub struct TriggerTxGeneric<TriggerTxKind: TriggerKindTrait> {
     pub(crate) comps: Vec<TriggerTxComp<TriggerTxKind>>,
     pub coll_keys: Vec<CollKey>,
 }
-impl<TriggerTxKind: TriggerKind> TriggerTxGeneric<TriggerTxKind> {
+impl<TriggerTxKind: TriggerKindTrait> TriggerTxGeneric<TriggerTxKind> {
     pub fn single(kind: TriggerTxKind, hbox: HBox) -> Self {
         Self::new(vec![(kind, hbox)])
     }

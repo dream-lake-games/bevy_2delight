@@ -68,6 +68,10 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
     let (w, h) = (fishing_info.tag_info.w, fishing_info.tag_info.h);
     let (rep_x, rep_y) = enum_info.rep.unwrap_or((1, 1));
 
+    let layer = match enum_info.layer {
+        Some(layer) => quote::quote! { Some(#layer::RENDER_LAYERS) },
+        None => quote::quote! { None },
+    };
     let zix = enum_info.zix.unwrap_or(0.0);
     let time_class = match enum_info.time_class {
         Some(class) => quote::quote! { Some(AnimTimeClass::#class) },
@@ -121,6 +125,7 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
 
     quote::quote! {
         impl bevy_2delight::prelude::AnimStateMachine for #enum_ident {
+            const RENDER_LAYERS: Option<bevy::render::view::RenderLayers> = #layer;
             const SIZE: UVec2 = UVec2::new(#w, #h);
             const ZIX: f32 = #zix;
             const TIME_CLASS: Option<bevy_2delight::prelude::AnimTimeClass> = #time_class;

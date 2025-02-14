@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-mod collect;
+mod anim_collect;
 mod logic;
 mod man;
 mod plugin;
@@ -13,7 +13,7 @@ pub struct AnimSet;
 
 pub mod prelude {
     pub use super::{
-        collect::_AnimWizardry,
+        anim_collect::_AnimWizardry,
         man::{AnimDelta, AnimMan, AnimNextState},
         plugin::*,
         time::{AnimTime, AnimTimeClass, AnimTimeSet},
