@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_2delight::prelude::*;
+use strum_macros::EnumIter;
 
 #[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
 enum TriggerRxKind {
@@ -22,17 +23,26 @@ type TriggerColls = TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>;
 type TriggerCollRec = TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>;
 type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 
+#[derive(Clone, Copy, Debug, Default, EnumIter, Reflect, PartialEq, Eq, std::hash::Hash)]
+enum LdtkRoot {
+    #[default]
+    CatchAll,
+}
+impl LdtkRootKind for LdtkRoot {}
+type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
+
 fn main() {
     let mut app = App::new();
 
     app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
     app.add_plugins(TwoDelightPlugin {
         anim_settings: default(),
-        physics_settings: PhysicsSettings::default(),
-        layer_settings: LayerSettings {
+        composition_settings: CompositionSettings {
             screen_size: UVec2::new(600, 600),
             ..default()
         },
+        ldtk_settings: LdtkSettings::default(),
+        physics_settings: PhysicsSettings::default(),
     });
 
     app.add_systems(Startup, startup);
@@ -94,8 +104,6 @@ impl SpikeBundle {
 }
 
 fn startup(mut commands: Commands) {
-    commands.spawn((Name::new("camera"), Camera2d));
-
     let player_hbox = HBox::new(36, 36);
     commands.spawn((
         Name::new("Player"),

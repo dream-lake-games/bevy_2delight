@@ -3,7 +3,7 @@ use bevy::reflect::Reflect;
 use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 
-use crate::layer::prelude::{Layer, MainStaticLayer};
+use crate::composition::prelude::Layer;
 
 use super::traits::AnimStateMachine;
 
@@ -83,7 +83,7 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
             this_frame: default(),
             last_frame: None,
             time_us: 0,
-            render_layers: MainStaticLayer::RENDER_LAYERS,
+            render_layers: Layer::Static.render_layers(),
             body: Entity::PLACEHOLDER,
             handle_map: default(),
         }
@@ -110,12 +110,8 @@ impl<StateMachine: AnimStateMachine> AnimMan<StateMachine> {
         self.this_frame.flip_y = val;
         self
     }
-    pub fn with_layer<L: Layer>(mut self) -> Self {
-        self.render_layers = L::RENDER_LAYERS;
-        self
-    }
-    pub(crate) fn with_render_layers(mut self, layers: RenderLayers) -> Self {
-        self.render_layers = layers;
+    pub fn with_layer(mut self, layer: Layer) -> Self {
+        self.render_layers = layer.render_layers();
         self
     }
 }

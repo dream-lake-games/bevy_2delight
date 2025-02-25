@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_2delight::prelude::*;
+use bevy_2delight::prelude::{LdtkSettingsGeneric, *};
+use strum_macros::EnumIter;
 
 // You also could write:
 // #[derive(Debug, Copy, Clone, Default, Reflect, PartialEq, Eq, Hash, AnimStateMachine)]
@@ -55,8 +56,15 @@ enum TriggerRxKind {}
 enum TriggerTxKind {}
 type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 
+#[derive(Clone, Copy, Debug, Default, EnumIter, Reflect, PartialEq, Eq, std::hash::Hash)]
+enum LdtkRoot {
+    #[default]
+    CatchAll,
+}
+impl LdtkRootKind for LdtkRoot {}
+type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
+
 fn startup(mut commands: Commands) {
-    commands.spawn((Name::new("camera"), Camera2d::default()));
     commands.spawn((
         Name::new("slow_circle"),
         AnimMan::<SlowCircleAnim>::default(),
@@ -74,22 +82,15 @@ fn main() {
 
     app.add_plugins(TwoDelightPlugin {
         anim_settings: AnimSettings::default(),
+        composition_settings: CompositionSettings::default(),
+        ldtk_settings: LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
-        layer_settings: LayerSettings {
-            screen_size: UVec2::new(240, 240),
-            overlay_growth: 4,
-            window: Window {
-                resizable: true,
-                title: "Anim Quickstart".to_string(),
-                mode: bevy::window::WindowMode::Windowed,
-                ..default()
-            },
-            asset_plugin: AssetPlugin {
-                meta_check: bevy::asset::AssetMetaCheck::Never,
-                ..default()
-            },
-        },
     });
+    app.add_plugins(
+        bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(
+            bevy::input::common_conditions::input_toggle_active(false, KeyCode::Tab),
+        ),
+    );
 
     app.add_systems(Startup, startup);
 

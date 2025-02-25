@@ -18,14 +18,20 @@ bevy = { version = "0.15", default-features = false, features = [
     "bevy_asset",
     "bevy_render",
     "bevy_sprite",
+    "bevy_state",
     "bevy_window",
     "png",
 ] }
 bevy_2delight_macros = { version = "0.1.0", path = "macros" }
+bevy_ecs_ldtk = "0.11"
+bevy_ecs_tilemap = { version = "0.15", default-features = false }
 bevy_framepace = "0.18"
+lazy_static = "1.5.0"
 inventory = "0.3.17"
 paste = "1.0"
 rand = "0.8.5"
+strum = "0.27"
+strum_macros = "0.27"
 
 [dev-dependencies]
 bevy = "0.15"
@@ -38,6 +44,10 @@ path = "examples/anim_quickstart/main.rs"
 [[example]]
 name = "physics_quickstart"
 path = "examples/physics_quickstart/main.rs"
+
+[[example]]
+name = "platformer"
+path = "examples/platformer/main.rs"
 
 [profile.dev]
 opt-level = 1

@@ -27,7 +27,7 @@ mod plugin;
 /// This is a render layer that explicitly doesn't render
 pub const DUMMY_LAYER_USIZE: usize = 0;
 
-/// The set that handles driving underlying light animations. Happens during `PostUpdat`, before `AnimSet`.
+/// The set that handles driving underlying light animations. Happens during `PostUpdate`, before `AnimSet`.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LightAnimSet;
 
@@ -35,7 +35,7 @@ pub struct LightAnimSet;
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LightInteractionSet;
 
-/// The set that internally handles updating layer cameras. This happens in `PostUpdate`.
+/// The set that internally handles updating layer cameras. This happens in `Update`.
 /// NOTE: This is the system that places all the cameras. You must make sure the pos is correct before this system.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayersCameraSet;

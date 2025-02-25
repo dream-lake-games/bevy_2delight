@@ -29,9 +29,9 @@ pub(crate) fn get_single_ident(name: &str, attr: &Attribute) -> Ident {
                 .get_ident()
                 .expect(format!(r#"#[{name}] should have ident form"#).as_str())
                 .clone(),
-            _ => panic!("#[{name}...] attribute should take the form #[name(ident)]"),
+            _ => panic!("#[{name}...] attribute should take the form #[{name}(ident)]"),
         },
-        _ => panic!("#[{name}...] attribute should take the form #[name(ident)]"),
+        _ => panic!("#[{name}...] attribute should take the form #[{name}(ident)]"),
     }
 }
 

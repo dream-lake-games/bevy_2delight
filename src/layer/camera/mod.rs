@@ -24,21 +24,6 @@ pub struct DynamicCamera;
 #[derive(Component)]
 pub(crate) struct FollowDynamicCamera;
 
-pub(crate) fn setup_smush_camera(mut commands: Commands, layers_res: Res<LayerRes>) {
-    commands
-        .spawn((
-            Name::new("camera"),
-            Camera2d,
-            Camera {
-                order: SmushLayer::RENDER_ORDER as isize + 1,
-                clear_color: ClearColorConfig::Custom(Color::BLACK),
-                ..default()
-            },
-            SmushLayer::RENDER_LAYERS,
-        ))
-        .set_parent(layers_res.root_eid());
-}
-
 fn follow_dynamic_camera(
     dynamic_camera: Query<&Pos, With<DynamicCamera>>,
     mut followers: Query<&mut Transform, (With<FollowDynamicCamera>, Without<DynamicCamera>)>,

@@ -17,6 +17,7 @@ use crate::layer::{
 };
 
 pub(crate) mod layer_defns;
+mod new_layer_defns;
 
 /// Key information defining a layer
 pub trait Layer: std::fmt::Debug + Default {

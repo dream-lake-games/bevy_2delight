@@ -69,7 +69,7 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
     let (rep_x, rep_y) = enum_info.rep.unwrap_or((1, 1));
 
     let layer = match enum_info.layer {
-        Some(layer) => quote::quote! { Some(#layer::RENDER_LAYERS) },
+        Some(layer) => quote::quote! { Some(Layer::#layer.render_layers()) },
         None => quote::quote! { None },
     };
     let zix = enum_info.zix.unwrap_or(0.0);

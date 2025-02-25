@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
-use crate::prelude::{Layer, MainStaticLayer};
+use crate::prelude::Layer;
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
@@ -128,7 +128,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                 anim_man.get_flip_y(),
                 StateMachine::RENDER_LAYERS
                     .clone()
-                    .unwrap_or(MainStaticLayer::RENDER_LAYERS),
+                    .unwrap_or(Layer::Static.render_layers()),
             ))
             .set_parent(eid)
             .id();
