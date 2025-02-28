@@ -31,6 +31,10 @@ impl FVec2 {
     pub fn dot(&self, o: Self) -> Frac {
         self.x * o.x + self.y * o.y
     }
+
+    pub fn as_vec2(&self) -> Vec2 {
+        Vec2::new(self.x.as_f32(), self.y.as_f32())
+    }
 }
 impl PartialEq for FVec2 {
     fn eq(&self, other: &Self) -> bool {

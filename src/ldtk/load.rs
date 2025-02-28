@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::{LdtkProjectHandle, LdtkWorldBundle, LevelSelection};
 
-use super::prelude::{LdtkRootKind, LdtkRootRes};
+use super::prelude::{LdtkRootKind, LdtkRootResGeneric};
 
 /// The LDTK spawning state
 /// The API only exposes commands that will go:
@@ -100,7 +100,7 @@ fn handle_unload_ldtk<R: LdtkRootKind>(
     state: Res<State<LdtkState>>,
     mut next_state: ResMut<NextState<LdtkState>>,
     existing_roots: Query<Entity, With<LdtkProjectHandle>>,
-    roots: Res<LdtkRootRes<R>>,
+    roots: Res<LdtkRootResGeneric<R>>,
 ) {
     if !matches!(state.get(), LdtkState::Loaded) {
         warn!("Can't issue UnloadLdtk when state is {:?}", state.get());
@@ -121,7 +121,7 @@ fn update_unload_ldtk<R: LdtkRootKind>(
     project_roots: Query<Entity, With<LdtkProjectHandle>>,
     mut next_state: ResMut<NextState<LdtkState>>,
     children_q: Query<&Children>,
-    roots: Res<LdtkRootRes<R>>,
+    roots: Res<LdtkRootResGeneric<R>>,
 ) {
     if !project_roots.is_empty() {
         return;

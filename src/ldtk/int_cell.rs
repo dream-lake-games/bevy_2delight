@@ -5,7 +5,7 @@ use bevy_ecs_tilemap::map::TilemapType;
 use crate::prelude::{Frac, Layer, Pos};
 
 use super::{
-    ldtk_roots::{LdtkRootKind, LdtkRootRes},
+    ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
     load::BlockLdtkLoad,
 };
 
@@ -58,7 +58,7 @@ fn post_ldtk_int_cell_layer_blessing(
 fn post_ldtk_int_cell_value_blessing<R: LdtkRootKind, B: LdtkIntCellValue<R>>(
     mut commands: Commands,
     mut wrappers: Query<(Entity, &GlobalTransform, &LdtkIntCellWrapper<R, B>)>,
-    roots: Res<LdtkRootRes<R>>,
+    roots: Res<LdtkRootResGeneric<R>>,
 ) {
     for (ldtk_eid, gt, wrapper) in &mut wrappers {
         if gt.translation().x == 0.0 && gt.translation().y == 0.0 {
@@ -99,12 +99,12 @@ impl LdtkIntCellLayerer for App {
     }
 }
 
-pub struct LdtkIntCellValuePlugin<R: LdtkRootKind, B: LdtkIntCellValue<R>> {
+pub struct LdtkIntCellValuePluginGeneric<R: LdtkRootKind, B: LdtkIntCellValue<R>> {
     layer_id: &'static str,
     values: Vec<i32>,
     _pd: std::marker::PhantomData<(R, B)>,
 }
-impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> LdtkIntCellValuePlugin<R, B> {
+impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> LdtkIntCellValuePluginGeneric<R, B> {
     pub fn single(layer_id: &'static str, value: i32) -> Self {
         Self {
             layer_id,
@@ -120,7 +120,7 @@ impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> LdtkIntCellValuePlugin<R, B> {
         }
     }
 }
-impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> Plugin for LdtkIntCellValuePlugin<R, B> {
+impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> Plugin for LdtkIntCellValuePluginGeneric<R, B> {
     fn build(&self, app: &mut App) {
         for value in &self.values {
             app.register_ldtk_int_cell_for_layer::<LdtkIntCellWrapper<R, B>>(

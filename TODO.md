@@ -2,9 +2,7 @@
 
 ## LDTK
 
-What's the right abstraction for ldtk?
-
-LdtkDelight
+Basic version exists
 
 - Proper state with:
     - Unloaded
@@ -17,14 +15,17 @@ use events to trigger. Only valid transitions the outside world can trigger are:
 - Loaded -> Unloading
 - Everything else should be handled internally
 
+Each layer is registered with the app.
+
 We add a plugin:
-- For each layer
 - For each entity
 - For each intcell (can be multiple values, or a single value)
 
 We maintain:
-- Current level
-- Bounds of current level
-- SpawnedLidActive/Inactive
+- Bounds of all spawned levels
 
-DOn't think I need physical lid in/active, can add later if I have a compelling reason
+Current level is still the actual underlying component
+
+### TODO: Ldtk
+
+Need to make spawned lid active/inactive

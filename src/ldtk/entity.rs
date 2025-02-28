@@ -8,7 +8,7 @@ use bevy_ecs_ldtk::{
 use crate::prelude::*;
 
 use super::{
-    ldtk_roots::{LdtkRootKind, LdtkRootRes},
+    ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
     load::BlockLdtkLoad,
 };
 
@@ -50,7 +50,7 @@ impl<R: LdtkRootKind, B: LdtkEntity<R>> bevy_ecs_ldtk::app::LdtkEntity for LdtkE
 fn post_ldtk_entity_blessing<R: LdtkRootKind, B: LdtkEntity<R>>(
     mut commands: Commands,
     wrappers: Query<(Entity, &GlobalTransform, &LdtkEntityWrapper<R, B>)>,
-    roots: Res<LdtkRootRes<R>>,
+    roots: Res<LdtkRootResGeneric<R>>,
 ) {
     for (ldtk_eid, gt, wrapper) in &wrappers {
         if gt.translation().x == 0.0 && gt.translation().y == 0.0 {
@@ -69,12 +69,12 @@ fn post_ldtk_entity_blessing<R: LdtkRootKind, B: LdtkEntity<R>>(
     }
 }
 
-pub struct LdtkEntityPlugin<R: LdtkRootKind, B: LdtkEntity<R>> {
+pub struct LdtkEntityPluginGeneric<R: LdtkRootKind, B: LdtkEntity<R>> {
     _pd: std::marker::PhantomData<(R, B)>,
     layer_id: &'static str,
     entity_id: &'static str,
 }
-impl<R: LdtkRootKind, B: LdtkEntity<R>> LdtkEntityPlugin<R, B> {
+impl<R: LdtkRootKind, B: LdtkEntity<R>> LdtkEntityPluginGeneric<R, B> {
     pub fn new(layer_id: &'static str, entity_id: &'static str) -> Self {
         Self {
             layer_id,
@@ -83,7 +83,7 @@ impl<R: LdtkRootKind, B: LdtkEntity<R>> LdtkEntityPlugin<R, B> {
         }
     }
 }
-impl<R: LdtkRootKind, B: LdtkEntity<R>> Plugin for LdtkEntityPlugin<R, B> {
+impl<R: LdtkRootKind, B: LdtkEntity<R>> Plugin for LdtkEntityPluginGeneric<R, B> {
     fn build(&self, app: &mut App) {
         app.register_ldtk_entity_for_layer::<LdtkEntityWrapper<R, B>>(
             &self.layer_id,

@@ -27,8 +27,8 @@ fn on_add_pos(
     let me = *world.get::<Pos>(eid).expect("Couldn't get Pos after add");
     match world.get_mut::<Transform>(eid) {
         Some(mut tran) => {
-            tran.translation.x = me.x.as_f32();
-            tran.translation.y = me.y.as_f32();
+            tran.translation.x = me.x.round() as f32;
+            tran.translation.y = me.y.round() as f32;
             tran.translation.z = me.z.as_f32();
         }
         None => {
@@ -110,9 +110,9 @@ impl std::ops::Neg for Pos {
 
 fn update_transforms(mut ents: Query<(&Pos, &mut Transform)>) {
     for (pos, mut tran) in &mut ents {
-        tran.translation.x = pos.x.as_f32();
-        tran.translation.y = pos.y.as_f32();
-        tran.translation.z = pos.z.as_f32();
+        tran.translation.x = pos.x.as_f32().round();
+        tran.translation.y = pos.y.as_f32().round();
+        tran.translation.z = pos.z.as_f32().round();
     }
 }
 

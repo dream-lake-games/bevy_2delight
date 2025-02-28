@@ -74,7 +74,6 @@ impl Frac {
         let div = (self.num / DENOM) as i32;
         let rem = (self.num % DENOM) as i32;
         let half_denom = DENOM as i32 / 2;
-        println!("d r {div} {rem}");
         if self.num > 0 {
             if rem >= half_denom {
                 div + 1

@@ -12,10 +12,12 @@ mod plugin;
 pub struct LdtkMaintSet;
 
 pub mod prelude {
-    pub use super::entity::{LdtkEntity, LdtkEntityPlugin};
-    pub use super::int_cell::{LdtkIntCellLayerer, LdtkIntCellValue, LdtkIntCellValuePlugin};
+    pub use super::entity::{LdtkEntity, LdtkEntityPluginGeneric};
+    pub use super::int_cell::{
+        LdtkIntCellLayerer, LdtkIntCellValue, LdtkIntCellValuePluginGeneric,
+    };
     pub use super::ldtk_maint::LdtkLevelRects;
-    pub use super::ldtk_roots::{LdtkRootKind, LdtkRootRes};
+    pub use super::ldtk_roots::{LdtkRootKind, LdtkRootResGeneric};
     pub use super::load::{LdtkState, LoadLdtk, UnloadLdtk};
     pub(crate) use super::plugin::LdtkPlugin;
     pub use super::plugin::LdtkSettingsGeneric;

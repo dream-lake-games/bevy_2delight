@@ -1,10 +1,10 @@
 use bevy::{prelude::*, reflect::Reflectable, utils::HashMap};
 
 #[derive(Resource)]
-pub struct LdtkRootRes<R: LdtkRootKind> {
+pub struct LdtkRootResGeneric<R: LdtkRootKind> {
     map: HashMap<R, Entity>,
 }
-impl<R: LdtkRootKind> LdtkRootRes<R> {
+impl<R: LdtkRootKind> LdtkRootResGeneric<R> {
     pub fn get_eid(&self, key: R) -> Entity {
         self.map.get(&key).copied().unwrap()
     }
@@ -30,7 +30,7 @@ pub trait LdtkRootKind:
 {
 }
 
-fn create_roots<R: LdtkRootKind>(mut commands: Commands, mut roots: ResMut<LdtkRootRes<R>>) {
+fn create_roots<R: LdtkRootKind>(mut commands: Commands, mut roots: ResMut<LdtkRootResGeneric<R>>) {
     for root in R::iter() {
         let eid = commands
             .spawn((
@@ -44,7 +44,7 @@ fn create_roots<R: LdtkRootKind>(mut commands: Commands, mut roots: ResMut<LdtkR
 }
 
 pub(super) fn register_ldtk_root<R: LdtkRootKind>(app: &mut App) {
-    app.insert_resource(LdtkRootRes::<R> { map: default() });
+    app.insert_resource(LdtkRootResGeneric::<R> { map: default() });
 
     app.add_systems(Startup, create_roots::<R>);
 }

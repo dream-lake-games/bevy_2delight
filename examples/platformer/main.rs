@@ -6,6 +6,7 @@ use bevy_2delight::prelude::*;
 
 mod bgfg;
 mod ldtk;
+mod player;
 
 #[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
 enum TriggerRxKind {
@@ -45,6 +46,7 @@ fn main() {
 
     bgfg::register_bgfg(&mut app);
     ldtk::register_ldtk(&mut app);
+    player::regiser_player(&mut app);
 
     app.run();
 }

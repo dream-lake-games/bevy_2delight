@@ -14,6 +14,7 @@ pub mod prelude {
 }
 
 mod colls;
+mod debug;
 mod dyno;
 mod hbox;
 mod logic;

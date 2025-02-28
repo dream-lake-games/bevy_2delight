@@ -34,10 +34,11 @@ impl Plugin for CompositionPlugin {
                     primary_window: Some(Window {
                         resizable: true,
                         title: self.settings.title.clone(),
-                        resolution: bevy::window::WindowResolution::new(
-                            self.settings.screen_size.x as f32,
-                            self.settings.screen_size.y as f32,
-                        ),
+                        // resolution: bevy::window::WindowResolution::new(
+                        //     10.0,
+                        //     10.0, // self.settings.screen_size.x as f32,
+                        //          // self.settings.screen_size.y as f32,
+                        // ),
                         mode: bevy::window::WindowMode::BorderlessFullscreen(
                             MonitorSelection::Primary,
                         ),

@@ -82,11 +82,12 @@ impl BulletTime {
     }
 }
 
-fn update_bullet_time(mut bullet_time: ResMut<BulletTime>) {
+fn update_bullet_time(mut bullet_time: ResMut<BulletTime>, time: Res<Time>) {
     // If we're at less than 24fps, we'd rather show a slow game than a super jittery one
     // TODO(mork): This should be up to the user to set. Hardcoding for KAMI.
     // TODO(mork): No but really. Adjusting for pyre
     let not_too_fast_time = Frac::whole(1) / Frac::whole(FRAMERATE as i32);
+    let not_too_fast_time = Frac::ZERO.with_micro(time.delta().as_micros() as i32);
     bullet_time.state.tick(not_too_fast_time.as_micros() as i32);
     bullet_time.duration_us =
         (not_too_fast_time * bullet_time.state.to_factor()).as_micros() as i32;

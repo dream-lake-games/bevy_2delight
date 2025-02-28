@@ -146,16 +146,18 @@ fn drive_animations<StateMachine: AnimStateMachine>(
         if anim_man.body == Entity::PLACEHOLDER {
             continue;
         }
-        if Some(&anim_man.this_frame) == anim_man.last_frame.as_ref() {
-            continue;
-        }
         let mut body = bodies
             .get_mut(anim_man.body)
             .expect("Body invariant broken for AnimMan");
+        body.flip_x = anim_man.get_flip_x();
+        body.flip_y = anim_man.get_flip_y();
+        if Some(&anim_man.this_frame) == anim_man.last_frame.as_ref() {
+            continue;
+        }
         body.image = anim_man.handle_map[&anim_man.get_state()].clone();
         let bottom_left = UVec2::new(anim_man.get_ix() * StateMachine::SIZE.x, 0);
         let top_right = UVec2::new(
-            (anim_man.get_ix() + 1) * StateMachine::SIZE.x,
+            (anim_man.get_ix() + 1) * StateMachine::SIZE.x - 1,
             StateMachine::SIZE.y,
         );
         body.rect = Some(Rect::from_corners(
