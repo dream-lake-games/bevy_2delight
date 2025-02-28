@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-const DENOM: i64 = 1_000_000;
+const DENOM: i64 = 100_000_000;
 
 #[derive(Clone, Copy, Debug, Reflect)]
 pub struct Frac {
@@ -115,7 +115,7 @@ impl Frac {
         self.num as f32 / DENOM as f32
     }
     pub fn as_micros(&self) -> i64 {
-        self.num
+        self.num / (DENOM / 1_000_000)
     }
 }
 impl PartialEq for Frac {

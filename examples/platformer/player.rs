@@ -124,9 +124,9 @@ struct MovementConsts {
 impl Default for MovementConsts {
     fn default() -> Self {
         Self {
-            air_speed: 75,
+            air_speed: 300,
             air_drag_cent: 50,
-            ground_speed: 200,
+            ground_speed: 300,
             ground_drag_cent: 0,
             jump_speed: 100,
             max_component_speed: 100,
@@ -186,6 +186,8 @@ fn update_player_stateful(
         PlayerAnim::Air => {
             if on_ground {
                 anim.set_state(PlayerAnim::Land);
+            } else {
+                anim.set_flip_x(dyno.vel.x < Frac::ZERO);
             }
         }
         PlayerAnim::Idle => {
@@ -195,8 +197,7 @@ fn update_player_stateful(
             }
         }
         PlayerAnim::Run => {
-            if dyno.vel.x.abs() < Frac::whole(1) && input.dir.x == Frac::ZERO {
-                dyno.vel.x = Frac::ZERO;
+            if input.dir.x == Frac::ZERO {
                 anim.set_state(PlayerAnim::Idle);
             } else {
                 anim.set_flip_x(dyno.vel.x < Frac::ZERO);

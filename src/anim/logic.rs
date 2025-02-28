@@ -190,11 +190,12 @@ pub(crate) fn register_logic<StateMachine: AnimStateMachine>(app: &mut App) {
             .after(AnimTimeSet),
     );
     app.add_systems(
-        PostUpdate,
+        PreUpdate,
         (
             drive_animations::<StateMachine>,
             trigger_state_changes::<StateMachine>,
         )
-            .in_set(AnimSet),
+            .in_set(AnimSet)
+            .before(progress_animations::<StateMachine>),
     );
 }

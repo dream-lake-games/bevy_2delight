@@ -29,3 +29,14 @@ Current level is still the actual underlying component
 ### TODO: Ldtk
 
 Need to make spawned lid active/inactive
+
+# Grrrrr
+
+Shit feels bad
+
+Needs fixing:
+
+- [ ] Animation image flickering
+    - Can solve with better system sets
+- [ ] Animations with odd sizes shouldn't be fucked
+    - Just need to manually tweak position in anim man

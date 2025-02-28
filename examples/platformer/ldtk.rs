@@ -12,9 +12,8 @@ pub(super) enum LdtkRoot {
 }
 impl LdtkRootKind for LdtkRoot {}
 pub(super) type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
-pub(super) type LdtkEntityPlugin<B: LdtkEntity<LdtkRoot>> = LdtkEntityPluginGeneric<LdtkRoot, B>;
-pub(super) type LdtkIntCellValuePlugin<B: LdtkEntity<LdtkRoot>> =
-    LdtkIntCellValuePluginGeneric<LdtkRoot, B>;
+pub(super) type LdtkEntityPlugin<B> = LdtkEntityPluginGeneric<LdtkRoot, B>;
+pub(super) type LdtkIntCellValuePlugin<B> = LdtkIntCellValuePluginGeneric<LdtkRoot, B>;
 pub(super) type LdtkRootRes = LdtkRootResGeneric<LdtkRoot>;
 
 #[derive(Bundle)]
@@ -46,7 +45,10 @@ pub(super) fn register_ldtk(app: &mut App) {
     app.register_ldtk_int_cell_layer("DirtAmbience", Layer::AmbientPixels);
     app.register_ldtk_int_cell_layer("DirtDetail", Layer::DetailPixels);
 
-    app.add_plugins(LdtkIntCellValuePluginGeneric::<LdtkRoot, DirtBundle>::single("DirtStatic", 1));
+    app.add_plugins(LdtkIntCellValuePlugin::<DirtBundle>::single(
+        "DirtStatic",
+        1,
+    ));
 
     app.add_systems(Startup, startup);
 }
