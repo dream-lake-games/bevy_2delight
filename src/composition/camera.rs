@@ -34,14 +34,14 @@ fn follow_dynamic_camera(
     }
 }
 
-#[derive(Clone, Debug, Reflect)]
+#[derive(Clone, Debug)]
 struct CameraShakeSpec {
     time_left: Frac,
     x_range: RangeInclusive<i32>,
     y_range: RangeInclusive<i32>,
 }
 
-#[derive(Resource, Debug, Reflect)]
+#[derive(Resource, Debug)]
 pub struct CameraShake {
     specs: Vec<CameraShakeSpec>,
     offset: FVec2,

@@ -13,7 +13,7 @@ use crate::{
 
 pub type CollKey = u32;
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone)]
 pub struct StaticCollRec {
     pub push: FVec2,
     /// Position of rx at time of collision
@@ -38,7 +38,7 @@ pub struct StaticCollRec {
     /// The marker of the hbox on the tx  triggering this collision
     pub tx_hbox: HBoxMarker,
 }
-#[derive(Resource, Debug, Reflect)]
+#[derive(Resource, Debug)]
 pub struct StaticColls {
     pub(crate) map: HashMap<CollKey, StaticCollRec>,
 }
@@ -64,7 +64,7 @@ impl StaticColls {
     }
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone)]
 pub struct TriggerCollRecGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> {
     /// Position of rx at time of collision
     pub rx_pos: Pos,
@@ -83,7 +83,7 @@ pub struct TriggerCollRecGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind:
     /// The marker of the hbox on the tx triggering this collision
     pub tx_hbox: HBoxMarker,
 }
-#[derive(Resource, Debug, Reflect)]
+#[derive(Resource, Debug)]
 pub struct TriggerCollsGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait> {
     pub(crate) map: HashMap<CollKey, TriggerCollRecGeneric<TriggerRxKind, TriggerTxKind>>,
 }

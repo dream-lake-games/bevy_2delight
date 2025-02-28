@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::frac::Frac;
 
-#[derive(Clone, Copy, Debug, Default, Reflect)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct FVec2 {
     pub x: Frac,
     pub y: Frac,

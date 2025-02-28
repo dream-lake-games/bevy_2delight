@@ -1,14 +1,15 @@
 use bevy::prelude::*;
+use fixed::types::I32F32;
 
-const DENOM: i64 = 100_000_000;
+type F = I32F32;
 
-#[derive(Clone, Copy, Debug, Reflect)]
+#[derive(Clone, Copy, Debug)]
 pub struct Frac {
-    num: i64,
+    num: F,
 }
 impl Default for Frac {
     fn default() -> Self {
-        Self { num: 0 }
+        Self { num: F::ZERO }
     }
 }
 impl Frac {
@@ -19,74 +20,59 @@ impl Frac {
     pub fn new(whole: i32, cent: i8) -> Self {
         Self {
             num: if whole >= 0 {
-                (whole as i64) * DENOM + (cent as i64) * (DENOM / 100)
+                F::from_num(whole) + F::from_num(cent) / 100
             } else {
-                (whole as i64) * DENOM - (cent as i64) * (DENOM / 100)
+                F::from_num(whole) - F::from_num(cent) / 100
             },
         }
     }
     pub fn whole(whole: i32) -> Self {
         Self {
-            num: (whole as i64) * DENOM,
+            num: F::from_num(whole),
         }
     }
     pub const fn const_whole(whole: i32) -> Self {
         Self {
-            num: (whole as i64) * DENOM,
+            num: F::const_from_int(whole as i64),
         }
     }
     pub fn cent(cent: i8) -> Self {
         Self {
-            num: cent as i64 * DENOM / 100,
+            num: F::from_num(cent) / 100,
         }
     }
     pub const fn const_cent(cent: i8) -> Self {
         Self {
-            num: cent as i64 * DENOM / 100,
+            num: F::const_from_int(cent as i64 / 100),
         }
     }
     pub fn with_cent(mut self, cent: i8) -> Self {
         if self.num >= 0 {
-            self.num += (cent as i64) * (DENOM / 100)
+            self.num += F::from_num(cent) / 100;
         } else {
-            self.num -= (cent as i64) * (DENOM / 100)
+            self.num -= F::from_num(cent) / 100;
         }
         self
     }
     pub fn with_mil(mut self, mil: i16) -> Self {
         if self.num >= 0 {
-            self.num += (mil as i64) * (DENOM / 1_000)
+            self.num += F::from_num(mil) / 1_000;
         } else {
-            self.num -= (mil as i64) * (DENOM / 1_000)
+            self.num -= F::from_num(mil) / 1_000;
         }
         self
     }
     pub fn with_micro(mut self, micro: i32) -> Self {
         if self.num >= 0 {
-            self.num += (micro as i64) * (DENOM / 1_000_000)
+            self.num += F::from_num(micro) / 1_000_000;
         } else {
-            self.num -= (micro as i64) * (DENOM / 1_000_000)
+            self.num -= F::from_num(micro) / 1_000_000;
         }
         self
     }
 
     pub fn round(&self) -> i32 {
-        let div = (self.num / DENOM) as i32;
-        let rem = (self.num % DENOM) as i32;
-        let half_denom = DENOM as i32 / 2;
-        if self.num > 0 {
-            if rem >= half_denom {
-                div + 1
-            } else {
-                div
-            }
-        } else {
-            if rem <= -half_denom {
-                div - 1
-            } else {
-                div
-            }
-        }
+        self.num.round().to_num()
     }
     pub fn abs(&self) -> Frac {
         Frac {
@@ -95,7 +81,7 @@ impl Frac {
     }
     pub fn squared(&self) -> Frac {
         Frac {
-            num: (self.num * self.num) / DENOM,
+            num: (self.num * self.num),
         }
     }
     pub fn signum(&self) -> Frac {
@@ -112,10 +98,10 @@ impl Frac {
     }
 
     pub fn as_f32(&self) -> f32 {
-        self.num as f32 / DENOM as f32
+        self.num.to_num()
     }
     pub fn as_micros(&self) -> i64 {
-        self.num / (DENOM / 1_000_000)
+        (self.num * 1_000_000).round().to_num()
     }
 }
 impl PartialEq for Frac {
@@ -157,13 +143,13 @@ impl std::ops::Mul for Frac {
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
-            num: (self.num * rhs.num) / DENOM,
+            num: self.num * rhs.num,
         }
     }
 }
 impl std::ops::MulAssign for Frac {
     fn mul_assign(&mut self, rhs: Self) {
-        self.num = (self.num * rhs.num) / DENOM;
+        self.num = self.num * rhs.num;
     }
 }
 impl std::ops::Div for Frac {
@@ -171,13 +157,13 @@ impl std::ops::Div for Frac {
 
     fn div(self, rhs: Self) -> Self::Output {
         Self {
-            num: (self.num * DENOM) / rhs.num,
+            num: self.num / rhs.num,
         }
     }
 }
 impl std::ops::DivAssign for Frac {
     fn div_assign(&mut self, rhs: Self) {
-        self.num = (self.num * DENOM) / rhs.num;
+        self.num = self.num / rhs.num;
     }
 }
 impl std::ops::Neg for Frac {

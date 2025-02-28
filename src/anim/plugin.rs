@@ -2,10 +2,9 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
-use crate::prelude::BulletTime;
+use crate::prelude::{BulletTime, Frac};
 
 use super::logic::register_logic;
-use super::man::AnimMan;
 use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, AnimsPaused};
 use super::traits::AnimStateMachine;
 use super::AnimSet;
@@ -17,7 +16,6 @@ pub struct AnimDefnPlugin<StateMachine: AnimStateMachine> {
 impl<StateMachine: AnimStateMachine> Plugin for AnimDefnPlugin<StateMachine> {
     fn build(&self, app: &mut App) {
         register_logic::<StateMachine>(app);
-        app.register_type::<AnimMan<StateMachine>>();
     }
 }
 
@@ -46,14 +44,14 @@ pub(crate) fn update_anim_time(
     mut anim_time: ResMut<AnimTime>,
 ) {
     if anims_paused.0 {
-        anim_time.set(AnimTimeClass::BulletUnpaused, 0);
-        anim_time.set(AnimTimeClass::RealUnpaused, 0);
+        anim_time.set(AnimTimeClass::BulletUnpaused, Frac::ZERO);
+        anim_time.set(AnimTimeClass::RealUnpaused, Frac::ZERO);
     } else {
-        anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_micros());
-        anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_micros());
+        anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_secs());
+        anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_secs());
     }
-    anim_time.set(AnimTimeClass::BulletAlways, bullet_time.delta_micros());
-    anim_time.set(AnimTimeClass::RealAlways, bullet_time.real_delta_micros());
+    anim_time.set(AnimTimeClass::BulletAlways, bullet_time.delta_secs());
+    anim_time.set(AnimTimeClass::RealAlways, bullet_time.real_delta_secs());
 }
 
 pub(crate) struct AnimPlugin {

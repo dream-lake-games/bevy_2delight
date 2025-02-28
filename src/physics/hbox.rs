@@ -5,7 +5,7 @@ use crate::glue::{frac::Frac, fvec::FVec2};
 pub type HBoxMarker = u32;
 
 /// HBOX?????
-#[derive(Clone, Debug, Reflect)]
+#[derive(Clone, Debug)]
 pub struct HBox {
     offset: FVec2,
     size: UVec2,

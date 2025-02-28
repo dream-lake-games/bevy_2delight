@@ -9,7 +9,7 @@ const FRAMERATE: u32 = 60;
 #[derive(Debug)]
 struct BulletTimeEffect {
     factor: Frac,
-    time_left_us: i32,
+    time_left: Frac,
 }
 
 #[derive(Debug)]
@@ -28,11 +28,11 @@ impl Default for BulletTimeState {
 
 impl BulletTimeState {
     /// Ticks down any active effects
-    fn tick(&mut self, real_time_us: i32) {
+    fn tick(&mut self, amt: Frac) {
         for effect in &mut self.effects {
-            effect.time_left_us -= real_time_us;
+            effect.time_left -= amt;
         }
-        self.effects.retain(|effect| effect.time_left_us > 0);
+        self.effects.retain(|effect| effect.time_left > Frac::ZERO);
     }
 
     /// Gets the current time factor. This is the slowest active effect, or base if there are no active effects
@@ -49,21 +49,15 @@ impl BulletTimeState {
 #[derive(Resource, Debug, Default)]
 pub struct BulletTime {
     state: BulletTimeState,
-    duration_us: i32,
-    real_duration_us: i32,
+    duration: Frac,
+    real_duration: Frac,
 }
 impl BulletTime {
     pub fn delta_secs(&self) -> Frac {
-        Frac::ZERO.with_micro(self.duration_us)
-    }
-    pub fn delta_micros(&self) -> u32 {
-        self.duration_us as u32
+        self.duration
     }
     pub fn real_delta_secs(&self) -> Frac {
-        Frac::ZERO.with_micro(self.real_duration_us)
-    }
-    pub fn real_delta_micros(&self) -> u32 {
-        self.real_duration_us as u32
+        self.real_duration
     }
     pub fn get_base(&self) -> Frac {
         self.state.base
@@ -74,7 +68,7 @@ impl BulletTime {
     pub fn add_effect(&mut self, factor: Frac, time: Frac) {
         self.state.effects.push(BulletTimeEffect {
             factor,
-            time_left_us: time.as_micros() as i32,
+            time_left: time,
         });
     }
     pub fn clear_effects(&mut self) {
@@ -87,11 +81,10 @@ fn update_bullet_time(mut bullet_time: ResMut<BulletTime>, time: Res<Time>) {
     // TODO(mork): This should be up to the user to set. Hardcoding for KAMI.
     // TODO(mork): No but really. Adjusting for pyre
     let not_too_fast_time = Frac::whole(1) / Frac::whole(FRAMERATE as i32);
-    let not_too_fast_time = Frac::ZERO.with_micro(time.delta().as_micros() as i32);
-    bullet_time.state.tick(not_too_fast_time.as_micros() as i32);
-    bullet_time.duration_us =
-        (not_too_fast_time * bullet_time.state.to_factor()).as_micros() as i32;
-    bullet_time.real_duration_us = not_too_fast_time.as_micros() as i32;
+    // let not_too_fast_time = Frac::ZERO.with_micro(time.delta().as_micros() as i32);
+    bullet_time.state.tick(not_too_fast_time);
+    bullet_time.duration = not_too_fast_time * bullet_time.state.to_factor();
+    bullet_time.real_duration = not_too_fast_time;
 }
 
 #[derive(Default)]

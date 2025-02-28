@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
-use crate::prelude::Layer;
+use crate::prelude::{Frac, Layer};
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
@@ -69,16 +69,17 @@ fn progress_animations<StateMachine: AnimStateMachine>(
 
         anim_man.last_frame = Some(anim_man.this_frame.clone());
 
-        let get_upf = |current_state: &StateMachine| -> u32 {
+        let get_spf = |current_state: &StateMachine| -> Frac {
             let fps = current_state.get_fps();
-            1_000_000 / fps
+            Frac::whole(1) / Frac::whole(fps as i32)
         };
 
         // Transition through ixs and states
-        anim_man.time_us += time_delta_us;
-        while anim_man.time_us > get_upf(&anim_man.this_frame.state) {
+        anim_man.time += time_delta_us;
+        while anim_man.time > get_spf(&anim_man.this_frame.state) {
             anim_man.this_frame.ix += 1;
-            anim_man.time_us -= get_upf(&anim_man.this_frame.state);
+            let dec = get_spf(&anim_man.this_frame.state);
+            anim_man.time -= dec;
             if anim_man.this_frame.ix >= anim_man.this_frame.state.get_length() {
                 match anim_man.this_frame.state.get_next() {
                     AnimNextState::Stay => {

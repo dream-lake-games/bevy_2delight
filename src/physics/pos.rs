@@ -11,7 +11,7 @@ use crate::{
     physics::PhysicsSet,
 };
 
-#[derive(Copy, Clone, Debug, Default, Reflect, Component)]
+#[derive(Copy, Clone, Debug, Default, Component)]
 #[component(on_add = on_add_pos)]
 #[require(Transform, Visibility)]
 pub struct Pos {

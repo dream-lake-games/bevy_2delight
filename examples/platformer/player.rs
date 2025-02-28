@@ -152,8 +152,14 @@ fn update_player_stateful(
     match anim.get_state() {
         PlayerAnim::Air | PlayerAnim::Jump => {
             if input.dir.x < Frac::ZERO {
+                if dyno.vel.x > Frac::ZERO {
+                    dyno.vel.x *= Frac::cent(consts.air_drag_cent);
+                }
                 dyno.vel.x -= Frac::whole(consts.air_speed) * bullet_time.delta_secs();
             } else if input.dir.x > Frac::ZERO {
+                if dyno.vel.x < Frac::ZERO {
+                    dyno.vel.x *= Frac::cent(consts.air_drag_cent);
+                }
                 dyno.vel.x += Frac::whole(consts.air_speed) * bullet_time.delta_secs();
             } else {
                 dyno.vel.x *= Frac::cent(consts.air_drag_cent);
@@ -161,8 +167,14 @@ fn update_player_stateful(
         }
         PlayerAnim::Idle | PlayerAnim::Run | PlayerAnim::Land => {
             if input.dir.x < Frac::ZERO {
+                if dyno.vel.x > Frac::ZERO {
+                    dyno.vel.x *= Frac::cent(consts.ground_drag_cent);
+                }
                 dyno.vel.x -= Frac::whole(consts.ground_speed) * bullet_time.delta_secs();
             } else if input.dir.x > Frac::ZERO {
+                if dyno.vel.x < Frac::ZERO {
+                    dyno.vel.x *= Frac::cent(consts.ground_drag_cent);
+                }
                 dyno.vel.x += Frac::whole(consts.ground_speed) * bullet_time.delta_secs();
             } else {
                 dyno.vel.x *= Frac::cent(consts.ground_drag_cent);

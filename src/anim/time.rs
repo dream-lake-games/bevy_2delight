@@ -4,6 +4,8 @@ use bevy::{
     utils::HashMap,
 };
 
+use crate::prelude::Frac;
+
 #[derive(Resource, Default)]
 pub struct AnimsPaused(pub bool);
 
@@ -26,16 +28,16 @@ pub struct AnimTimeSet;
 
 #[derive(Resource, Debug, Default)]
 pub struct AnimTime {
-    pub(crate) map: HashMap<AnimTimeClass, u32>,
+    pub(crate) map: HashMap<AnimTimeClass, Frac>,
 }
 impl AnimTime {
     pub fn clear(&mut self) {
         self.map.clear();
     }
-    pub fn set(&mut self, class: AnimTimeClass, us: u32) {
-        self.map.insert(class, us);
+    pub fn set(&mut self, class: AnimTimeClass, frac: Frac) {
+        self.map.insert(class, frac);
     }
-    pub fn get(&self, class: AnimTimeClass) -> u32 {
-        self.map.get(&class).copied().unwrap_or(0)
+    pub fn get(&self, class: AnimTimeClass) -> Frac {
+        self.map.get(&class).copied().unwrap_or(Frac::ZERO)
     }
 }

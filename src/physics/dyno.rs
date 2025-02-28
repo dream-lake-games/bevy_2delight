@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::glue::{frac::Frac, fvec::FVec2};
 
-#[derive(Component, Clone, Debug, Reflect, Default)]
+#[derive(Component, Clone, Debug, Default)]
 #[require(crate::physics::pos::Pos)]
 pub struct Dyno {
     pub vel: FVec2,
