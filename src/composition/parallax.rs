@@ -5,17 +5,17 @@ use crate::prelude::*;
 #[derive(Component)]
 #[require(Pos)]
 pub struct ParallaxX {
-    mult: Frac,
-    wrap_size: Option<Frac>,
+    mult: Fx,
+    wrap_size: Option<Fx>,
 }
 impl ParallaxX {
-    pub fn wrapped(mult: Frac, wrap: Frac) -> Self {
+    pub fn wrapped(mult: Fx, wrap: Fx) -> Self {
         Self {
             mult,
             wrap_size: Some(wrap),
         }
     }
-    pub fn new_unwrapped(mult: Frac) -> Self {
+    pub fn new_unwrapped(mult: Fx) -> Self {
         Self {
             mult,
             wrap_size: None,
@@ -26,17 +26,17 @@ impl ParallaxX {
 #[derive(Component)]
 #[require(Pos)]
 pub struct ParallaxY {
-    mult: Frac,
-    wrap_size: Option<Frac>,
+    mult: Fx,
+    wrap_size: Option<Fx>,
 }
 impl ParallaxY {
-    pub fn new_wrapped(mult: Frac, wrap: Frac) -> Self {
+    pub fn new_wrapped(mult: Fx, wrap: Fx) -> Self {
         Self {
             mult,
             wrap_size: Some(wrap),
         }
     }
-    pub fn new_unwrapped(mult: Frac) -> Self {
+    pub fn new_unwrapped(mult: Fx) -> Self {
         Self {
             mult,
             wrap_size: None,
@@ -54,11 +54,11 @@ fn reposition_parallax_x(
     for (px_pos, px_def, mut tran) in &mut px_q {
         let mut diff = (px_pos.x - cam_pos.x) * px_def.mult;
         if let Some(wrap_size) = px_def.wrap_size {
-            diff += wrap_size / Frac::whole(2);
+            diff += wrap_size / Fx::from_num(2);
             diff = diff.rem_euclid(wrap_size);
-            diff -= wrap_size / Frac::whole(2);
+            diff -= wrap_size / Fx::from_num(2);
         }
-        tran.translation.x = diff.as_f32();
+        tran.translation.x = diff.to_num();
     }
 }
 
@@ -72,11 +72,11 @@ fn reposition_parallax_y(
     for (py_pos, py_def, mut tran) in &mut py_q {
         let mut diff = (py_pos.y - cam_pos.y) * py_def.mult;
         if let Some(wrap_size) = py_def.wrap_size {
-            diff += wrap_size / Frac::whole(2);
+            diff += wrap_size / Fx::from_num(2);
             diff = diff.rem_euclid(wrap_size);
-            diff -= wrap_size / Frac::whole(2);
+            diff -= wrap_size / Fx::from_num(2);
         }
-        tran.translation.y = diff.as_f32();
+        tran.translation.y = diff.to_num();
     }
 }
 

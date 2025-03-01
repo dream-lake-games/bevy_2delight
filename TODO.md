@@ -38,5 +38,10 @@ Needs fixing:
 
 - [ ] Animation image flickering
     - Can solve with better system sets
-- [ ] Animations with odd sizes shouldn't be fucked
+- [x] Animations with odd sizes shouldn't be fucked
     - Just need to manually tweak position in anim man
+- [x] Use a better fixed point impl
+- [ ] Animation as part of build step so that it updates with files? I think? Or nonce and it's fine?
+    - [ ] Actually this is probably what I want
+        - [ ] Release - Basically what I have now. It's a const
+        - [ ] Development - Have this be a resource. Have keyboard shortcut that will cause it to refresh

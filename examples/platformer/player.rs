@@ -35,10 +35,10 @@ struct PlayerInput {
 }
 fn update_player_input(mut player_input: ResMut<PlayerInput>, keyboard: Res<ButtonInput<KeyCode>>) {
     player_input.jump = keyboard.just_pressed(KeyCode::KeyJ);
-    let x_dir = Frac::whole(
+    let x_dir = Fx::from_num(
         keyboard.pressed(KeyCode::KeyD) as i32 - keyboard.pressed(KeyCode::KeyA) as i32,
     );
-    let y_dir = Frac::whole(
+    let y_dir = Fx::from_num(
         keyboard.pressed(KeyCode::KeyW) as i32 - keyboard.pressed(KeyCode::KeyS) as i32,
     );
     player_input.dir = FVec2::new(x_dir, y_dir);
@@ -48,7 +48,7 @@ fn update_player_input(mut player_input: ResMut<PlayerInput>, keyboard: Res<Butt
 struct Player {
     /// How much time the player has left to input a jump and get a jump
     /// Kinda like a can_jump boolean but w/ coyote frames
-    jump_time: Frac,
+    jump_time: Fx,
 }
 #[derive(Bundle)]
 struct PlayerBundle {
@@ -65,13 +65,19 @@ impl PlayerBundle {
         Self {
             name: Name::new("Player"),
             player: Player {
-                jump_time: Frac::ZERO,
+                jump_time: Fx::ZERO,
             },
             anim: AnimMan::new(PlayerAnim::Idle),
             pos,
             dyno: Dyno::default(),
-            static_rx: StaticRx::single(StaticRxKind::Default, HBox::new(8, 13)),
-            trigger_rx: TriggerRx::single(TriggerRxKind::Player, HBox::new(8, 8)),
+            static_rx: StaticRx::single(
+                StaticRxKind::Default,
+                HBox::new(7, 12).with_offset(Fx::from_num(0), Fx::from_num(-1)),
+            ),
+            trigger_rx: TriggerRx::single(
+                TriggerRxKind::Player,
+                HBox::new(7, 12).with_offset(Fx::from_num(0), Fx::from_num(-1)),
+            ),
         }
     }
 }
@@ -88,15 +94,15 @@ fn update_player_always(
         return;
     };
     // Gravity
-    dyno.vel.y -= bullet_time.delta_secs() * Frac::whole(300);
+    dyno.vel.y -= bullet_time.delta_secs() * Fx::from_num(300);
     // Jump timing
     if scolls
         .get_refs(&srx.coll_keys)
-        .any(|coll| coll.push.y > Frac::ZERO && coll.tx_kind == StaticTxKind::Solid)
+        .any(|coll| coll.push.y > Fx::ZERO && coll.tx_kind == StaticTxKind::Solid)
     {
-        player.jump_time = Frac::cent(10);
+        player.jump_time = Fx::from_num(0.1);
     } else {
-        if player.jump_time > Frac::ZERO {
+        if player.jump_time > Fx::ZERO {
             player.jump_time -= bullet_time.real_delta_secs();
         }
     }
@@ -115,9 +121,9 @@ fn update_player_always(
 #[derive(Resource, Reflect)]
 struct MovementConsts {
     air_speed: i32,
-    air_drag_cent: i8,
+    air_drag: f32,
     ground_speed: i32,
-    ground_drag_cent: i8,
+    ground_drag: f32,
     jump_speed: i32,
     max_component_speed: i32,
 }
@@ -125,9 +131,9 @@ impl Default for MovementConsts {
     fn default() -> Self {
         Self {
             air_speed: 300,
-            air_drag_cent: 50,
+            air_drag: 0.5,
             ground_speed: 300,
-            ground_drag_cent: 0,
+            ground_drag: 0.1,
             jump_speed: 100,
             max_component_speed: 100,
         }
@@ -146,43 +152,43 @@ fn update_player_stateful(
     };
     let on_ground = scolls
         .get_refs(&srx.coll_keys)
-        .any(|coll| coll.push.y > Frac::ZERO && coll.tx_kind == StaticTxKind::Solid);
+        .any(|coll| coll.push.y > Fx::ZERO && coll.tx_kind == StaticTxKind::Solid);
 
     // Horizontal movement
     match anim.get_state() {
         PlayerAnim::Air | PlayerAnim::Jump => {
-            if input.dir.x < Frac::ZERO {
-                if dyno.vel.x > Frac::ZERO {
-                    dyno.vel.x *= Frac::cent(consts.air_drag_cent);
+            if input.dir.x < Fx::ZERO {
+                if dyno.vel.x > Fx::ZERO {
+                    dyno.vel.x *= Fx::from_num(consts.air_drag);
                 }
-                dyno.vel.x -= Frac::whole(consts.air_speed) * bullet_time.delta_secs();
-            } else if input.dir.x > Frac::ZERO {
-                if dyno.vel.x < Frac::ZERO {
-                    dyno.vel.x *= Frac::cent(consts.air_drag_cent);
+                dyno.vel.x -= Fx::from_num(consts.air_speed) * bullet_time.delta_secs();
+            } else if input.dir.x > Fx::ZERO {
+                if dyno.vel.x < Fx::ZERO {
+                    dyno.vel.x *= Fx::from_num(consts.air_drag);
                 }
-                dyno.vel.x += Frac::whole(consts.air_speed) * bullet_time.delta_secs();
+                dyno.vel.x += Fx::from_num(consts.air_speed) * bullet_time.delta_secs();
             } else {
-                dyno.vel.x *= Frac::cent(consts.air_drag_cent);
+                dyno.vel.x *= Fx::from_num(consts.air_drag);
             }
         }
         PlayerAnim::Idle | PlayerAnim::Run | PlayerAnim::Land => {
-            if input.dir.x < Frac::ZERO {
-                if dyno.vel.x > Frac::ZERO {
-                    dyno.vel.x *= Frac::cent(consts.ground_drag_cent);
+            if input.dir.x < Fx::ZERO {
+                if dyno.vel.x > Fx::ZERO {
+                    dyno.vel.x *= Fx::from_num(consts.ground_drag);
                 }
-                dyno.vel.x -= Frac::whole(consts.ground_speed) * bullet_time.delta_secs();
-            } else if input.dir.x > Frac::ZERO {
-                if dyno.vel.x < Frac::ZERO {
-                    dyno.vel.x *= Frac::cent(consts.ground_drag_cent);
+                dyno.vel.x -= Fx::from_num(consts.ground_speed) * bullet_time.delta_secs();
+            } else if input.dir.x > Fx::ZERO {
+                if dyno.vel.x < Fx::ZERO {
+                    dyno.vel.x *= Fx::from_num(consts.ground_drag);
                 }
-                dyno.vel.x += Frac::whole(consts.ground_speed) * bullet_time.delta_secs();
+                dyno.vel.x += Fx::from_num(consts.ground_speed) * bullet_time.delta_secs();
             } else {
-                dyno.vel.x *= Frac::cent(consts.ground_drag_cent);
+                dyno.vel.x *= Fx::from_num(consts.ground_drag);
             }
         }
     }
     // Jumping
-    if player.jump_time > Frac::ZERO
+    if player.jump_time > Fx::ZERO
         && input.jump
         && matches!(
             anim.get_state(),
@@ -190,8 +196,8 @@ fn update_player_stateful(
         )
     {
         anim.set_state(PlayerAnim::Jump);
-        dyno.vel.y = Frac::whole(consts.jump_speed);
-        player.jump_time = Frac::ZERO;
+        dyno.vel.y = Fx::from_num(consts.jump_speed);
+        player.jump_time = Fx::ZERO;
     }
     // State transitions
     match anim.get_state() {
@@ -199,20 +205,20 @@ fn update_player_stateful(
             if on_ground {
                 anim.set_state(PlayerAnim::Land);
             } else {
-                anim.set_flip_x(dyno.vel.x < Frac::ZERO);
+                anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
         }
         PlayerAnim::Idle => {
-            if dyno.vel.x != Frac::ZERO {
+            if input.dir.x != Fx::ZERO {
                 anim.set_state(PlayerAnim::Run);
-                anim.set_flip_x(dyno.vel.x < Frac::ZERO);
+                anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
         }
         PlayerAnim::Run => {
-            if input.dir.x == Frac::ZERO {
+            if input.dir.x == Fx::ZERO {
                 anim.set_state(PlayerAnim::Idle);
             } else {
-                anim.set_flip_x(dyno.vel.x < Frac::ZERO);
+                anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
         }
         PlayerAnim::Jump => {
@@ -223,11 +229,11 @@ fn update_player_stateful(
         }
     }
     // Limit component speed (TODO: Fixed point square root...)
-    if dyno.vel.x.abs() > Frac::whole(consts.max_component_speed) {
-        dyno.vel.x = dyno.vel.x.signum() * Frac::whole(consts.max_component_speed);
+    if dyno.vel.x.abs() > Fx::from_num(consts.max_component_speed) {
+        dyno.vel.x = dyno.vel.x.signum() * Fx::from_num(consts.max_component_speed);
     }
-    if dyno.vel.y.abs() > Frac::whole(consts.max_component_speed) {
-        dyno.vel.y = dyno.vel.y.signum() * Frac::whole(consts.max_component_speed);
+    if dyno.vel.y.abs() > Fx::from_num(consts.max_component_speed) {
+        dyno.vel.y = dyno.vel.y.signum() * Fx::from_num(consts.max_component_speed);
     }
 }
 

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
-use crate::prelude::{BulletTime, Frac};
+use crate::prelude::{BulletTime, Fx};
 
 use super::logic::register_logic;
 use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, AnimsPaused};
@@ -44,8 +44,8 @@ pub(crate) fn update_anim_time(
     mut anim_time: ResMut<AnimTime>,
 ) {
     if anims_paused.0 {
-        anim_time.set(AnimTimeClass::BulletUnpaused, Frac::ZERO);
-        anim_time.set(AnimTimeClass::RealUnpaused, Frac::ZERO);
+        anim_time.set(AnimTimeClass::BulletUnpaused, Fx::ZERO);
+        anim_time.set(AnimTimeClass::RealUnpaused, Fx::ZERO);
     } else {
         anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_secs());
         anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_secs());

@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
-use crate::prelude::{
-    AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings, LdtkPlugin,
-    LdtkRootKind, LdtkSettingsGeneric, PhysicsPluginGeneric, PhysicsSettingsGeneric,
-    TriggerKindTrait,
+use crate::{
+    glue::Deterministic,
+    prelude::{
+        AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings,
+        LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, PhysicsPluginGeneric,
+        PhysicsSettingsGeneric, TriggerKindTrait,
+    },
 };
 
 pub struct TwoDelightPlugin<
@@ -15,6 +18,7 @@ pub struct TwoDelightPlugin<
     pub composition_settings: CompositionSettings,
     pub ldtk_settings: LdtkSettingsGeneric<LdtkRoot>,
     pub physics_settings: PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>,
+    pub deterministic: bool,
 }
 impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
     Plugin for TwoDelightPlugin<LdtkRoot, TriggerRxKind, TriggerTxKind>
@@ -27,5 +31,6 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
             LdtkPlugin::<LdtkRoot>::default(),
             PhysicsPluginGeneric::<TriggerRxKind, TriggerTxKind>::default(),
         ));
+        app.insert_resource(Deterministic(self.deterministic));
     }
 }

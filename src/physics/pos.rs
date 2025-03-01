@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    glue::{frac::Frac, fvec::FVec2},
+    glue::{fvec::FVec2, Fx},
     physics::PhysicsSet,
 };
 
@@ -15,9 +15,9 @@ use crate::{
 #[component(on_add = on_add_pos)]
 #[require(Transform, Visibility)]
 pub struct Pos {
-    pub x: Frac,
-    pub y: Frac,
-    pub z: Frac,
+    pub x: Fx,
+    pub y: Fx,
+    pub z: Fx,
 }
 fn on_add_pos(
     mut world: bevy::ecs::world::DeferredWorld,
@@ -27,9 +27,9 @@ fn on_add_pos(
     let me = *world.get::<Pos>(eid).expect("Couldn't get Pos after add");
     match world.get_mut::<Transform>(eid) {
         Some(mut tran) => {
-            tran.translation.x = me.x.round() as f32;
-            tran.translation.y = me.y.round() as f32;
-            tran.translation.z = me.z.as_f32();
+            tran.translation.x = me.x.round().to_num();
+            tran.translation.y = me.y.round().to_num();
+            tran.translation.z = me.z.to_num();
         }
         None => {
             world
@@ -40,14 +40,14 @@ fn on_add_pos(
     }
 }
 impl Pos {
-    pub fn new(x: Frac, y: Frac) -> Self {
+    pub fn new(x: Fx, y: Fx) -> Self {
         Self {
             x,
             y,
-            z: Frac::default(),
+            z: Fx::default(),
         }
     }
-    pub fn with_z(mut self, z: Frac) -> Self {
+    pub fn with_z(mut self, z: Fx) -> Self {
         self.z = z;
         self
     }
@@ -110,9 +110,9 @@ impl std::ops::Neg for Pos {
 
 fn update_transforms(mut ents: Query<(&Pos, &mut Transform)>) {
     for (pos, mut tran) in &mut ents {
-        tran.translation.x = pos.x.as_f32().round();
-        tran.translation.y = pos.y.as_f32().round();
-        tran.translation.z = pos.z.as_f32().round();
+        tran.translation.x = pos.x.round().to_num();
+        tran.translation.y = pos.y.round().to_num();
+        tran.translation.z = pos.z.to_num();
     }
 }
 

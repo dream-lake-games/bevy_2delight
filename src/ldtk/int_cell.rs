@@ -2,7 +2,7 @@ use bevy::{prelude::*, utils::HashMap};
 use bevy_ecs_ldtk::{app::LdtkIntCellAppExt, ldtk::LayerInstance, IntGridCell};
 use bevy_ecs_tilemap::map::TilemapType;
 
-use crate::prelude::{Frac, Layer, Pos};
+use crate::prelude::{Fx, Layer, Pos};
 
 use super::{
     ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
@@ -66,8 +66,8 @@ fn post_ldtk_int_cell_value_blessing<R: LdtkRootKind, B: LdtkIntCellValue<R>>(
             continue;
         }
         let pos = Pos::new(
-            Frac::whole(gt.translation().x.round() as i32),
-            Frac::whole(gt.translation().y.round() as i32),
+            Fx::from_num(gt.translation().x.round() as i32),
+            Fx::from_num(gt.translation().y.round() as i32),
         );
         let bund = B::from_ldtk(pos, wrapper.value);
         commands.spawn(bund).set_parent(roots.get_eid(B::ROOT));

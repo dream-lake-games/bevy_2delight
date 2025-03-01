@@ -2,25 +2,25 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::glue::frac::Frac;
+use super::{Deterministic, Fx};
 
 const FRAMERATE: u32 = 60;
 
 #[derive(Debug)]
 struct BulletTimeEffect {
-    factor: Frac,
-    time_left: Frac,
+    factor: Fx,
+    time_left: Fx,
 }
 
 #[derive(Debug)]
 struct BulletTimeState {
-    base: Frac,
+    base: Fx,
     effects: Vec<BulletTimeEffect>,
 }
 impl Default for BulletTimeState {
     fn default() -> Self {
         Self {
-            base: Frac::ONE,
+            base: Fx::ONE,
             effects: vec![],
         }
     }
@@ -28,15 +28,15 @@ impl Default for BulletTimeState {
 
 impl BulletTimeState {
     /// Ticks down any active effects
-    fn tick(&mut self, amt: Frac) {
+    fn tick(&mut self, amt: Fx) {
         for effect in &mut self.effects {
             effect.time_left -= amt;
         }
-        self.effects.retain(|effect| effect.time_left > Frac::ZERO);
+        self.effects.retain(|effect| effect.time_left > Fx::ZERO);
     }
 
     /// Gets the current time factor. This is the slowest active effect, or base if there are no active effects
-    fn to_factor(&self) -> Frac {
+    fn to_factor(&self) -> Fx {
         self.effects
             .iter()
             .map(|effect| effect.factor)
@@ -49,23 +49,23 @@ impl BulletTimeState {
 #[derive(Resource, Debug, Default)]
 pub struct BulletTime {
     state: BulletTimeState,
-    duration: Frac,
-    real_duration: Frac,
+    duration: Fx,
+    real_duration: Fx,
 }
 impl BulletTime {
-    pub fn delta_secs(&self) -> Frac {
+    pub fn delta_secs(&self) -> Fx {
         self.duration
     }
-    pub fn real_delta_secs(&self) -> Frac {
+    pub fn real_delta_secs(&self) -> Fx {
         self.real_duration
     }
-    pub fn get_base(&self) -> Frac {
+    pub fn get_base(&self) -> Fx {
         self.state.base
     }
-    pub fn set_base(&mut self, new_base: Frac) {
+    pub fn set_base(&mut self, new_base: Fx) {
         self.state.base = new_base;
     }
-    pub fn add_effect(&mut self, factor: Frac, time: Frac) {
+    pub fn add_effect(&mut self, factor: Fx, time: Fx) {
         self.state.effects.push(BulletTimeEffect {
             factor,
             time_left: time,
@@ -76,15 +76,21 @@ impl BulletTime {
     }
 }
 
-fn update_bullet_time(mut bullet_time: ResMut<BulletTime>, time: Res<Time>) {
-    // If we're at less than 24fps, we'd rather show a slow game than a super jittery one
-    // TODO(mork): This should be up to the user to set. Hardcoding for KAMI.
-    // TODO(mork): No but really. Adjusting for pyre
-    let not_too_fast_time = Frac::whole(1) / Frac::whole(FRAMERATE as i32);
-    // let not_too_fast_time = Frac::ZERO.with_micro(time.delta().as_micros() as i32);
-    bullet_time.state.tick(not_too_fast_time);
-    bullet_time.duration = not_too_fast_time * bullet_time.state.to_factor();
-    bullet_time.real_duration = not_too_fast_time;
+fn update_bullet_time(
+    mut bullet_time: ResMut<BulletTime>,
+    time: Res<Time>,
+    deterministic: Res<Deterministic>,
+) {
+    let time_fx = if deterministic.0 {
+        Fx::from_num(1) / Fx::from_num(FRAMERATE)
+    } else {
+        let min_fps = Fx::from_num(1) / Fx::from_num(FRAMERATE - 4);
+        let max_fps = Fx::from_num(1) / Fx::from_num(FRAMERATE + 4);
+        Fx::from_num(time.delta_secs()).max(min_fps).min(max_fps)
+    };
+    bullet_time.state.tick(time_fx);
+    bullet_time.duration = time_fx * bullet_time.state.to_factor();
+    bullet_time.real_duration = time_fx;
 }
 
 #[derive(Default)]

@@ -4,7 +4,7 @@ use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 
 use crate::composition::prelude::Layer;
-use crate::prelude::Frac;
+use crate::prelude::Fx;
 
 use super::traits::AnimStateMachine;
 
@@ -69,7 +69,7 @@ pub struct AnimMan<StateMachine: AnimStateMachine> {
     /// Data from last frame of the animation
     pub(super) last_frame: Option<AnimFrameData<StateMachine>>,
     /// How much time has been spent on this ix of the animation
-    pub(super) time: Frac,
+    pub(super) time: Fx,
     /// The render layer of the animation
     pub(super) render_layers: RenderLayers,
     /// INTERNAL: More ergonomic way to get to the body
@@ -83,7 +83,7 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
         Self {
             this_frame: default(),
             last_frame: None,
-            time: Frac::ZERO,
+            time: Fx::ZERO,
             render_layers: Layer::Static.render_layers(),
             body: Entity::PLACEHOLDER,
             handle_map: default(),
@@ -192,7 +192,7 @@ impl<StateMachine: AnimStateMachine> AnimMan<StateMachine> {
     pub fn reset_state(&mut self, state: StateMachine) {
         self.this_frame.state = state;
         self.this_frame.ix = 0;
-        self.time = Frac::ZERO;
+        self.time = Fx::ZERO;
     }
     /// Set the flipx value of the animation
     pub fn set_flip_x(&mut self, flip_x: bool) {

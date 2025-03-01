@@ -37,6 +37,7 @@ fn main() {
         },
         ldtk_settings: ldtk::LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
+        deterministic: false,
     });
     app.add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(

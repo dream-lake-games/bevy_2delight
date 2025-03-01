@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    glue::{bullet_time::BulletTime, frac::Frac, fvec::FVec2},
+    glue::{bullet_time::BulletTime, fvec::FVec2, Fx},
     physics::{
         colls::{StaticCollRec, StaticColls, TriggerCollRecGeneric, TriggerCollsGeneric},
         dyno::Dyno,
@@ -24,7 +24,7 @@ fn invariants(
     debug_assert!(dyno_without_pos.is_empty());
     debug_assert!(static_rx_n_tx.is_empty());
     for dyno in &moving_static_tx_vert_only {
-        debug_assert!(dyno.vel.x.abs() == Frac::ZERO);
+        debug_assert!(dyno.vel.x.abs() == Fx::ZERO);
     }
 }
 
@@ -114,13 +114,13 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
 
                 // COLLISION ACTUALLY HAPPENING
                 let tx_dyno = dyno_q.get(candidate.eid).cloned().unwrap_or_default();
-                let mut old_perp = if push.x.abs() != Frac::ZERO {
-                    FVec2::new(my_vel.x, Frac::ZERO)
+                let mut old_perp = if push.x.abs() != Fx::ZERO {
+                    FVec2::new(my_vel.x, Fx::ZERO)
                 } else {
-                    FVec2::new(Frac::ZERO, my_vel.y)
+                    FVec2::new(Fx::ZERO, my_vel.y)
                 };
                 let old_par = *my_vel - old_perp;
-                if push.y.abs() > Frac::ZERO {
+                if push.y.abs() > Fx::ZERO {
                     old_perp.y -= tx_dyno.vel.y;
                 }
 
@@ -147,8 +147,8 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                     (StaticRxKind::Default, StaticTxKind::Solid) => {
                         static_colls.insert(coll_rec);
                         do_push(&mut my_thbox);
-                        *my_vel = old_par + FVec2::new(Frac::ZERO, tx_dyno.vel.y);
-                        if old_perp.dot(push) > Frac::ZERO {
+                        *my_vel = old_par + FVec2::new(Fx::ZERO, tx_dyno.vel.y);
+                        if old_perp.dot(push) > Fx::ZERO {
                             *my_vel += old_perp;
                         }
                     }
@@ -290,26 +290,26 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
                 )
             }};
         }
-        const DELTA_PER_INCH: Frac = Frac::const_whole(1);
+        const DELTA_PER_INCH: Fx = Fx::const_from_int(1);
         // Resolve collisions once always so stationary objects are still pushed out of each other
         call_resolve_collisions!();
         // Inch horizontally
-        let mut amt_moved_hor: Frac = Frac::ZERO;
+        let mut amt_moved_hor: Fx = Fx::ZERO;
         let max_inch_hor = scratch_vel.x.abs() * bullet_time.delta_secs();
         while amt_moved_hor < max_inch_hor.min(scratch_vel.x.abs()) {
             let dont_overshoot =
-                (max_inch_hor.min(scratch_vel.x.abs()) - amt_moved_hor).max(Frac::ZERO);
+                (max_inch_hor.min(scratch_vel.x.abs()) - amt_moved_hor).max(Fx::ZERO);
             let moving_this_step = DELTA_PER_INCH.min(dont_overshoot);
             amt_moved_hor += moving_this_step;
             scratch_pos.x += scratch_vel.x.signum() * moving_this_step;
             call_resolve_collisions!();
         }
         // Then inch vertically
-        let mut amt_moved_ver: Frac = Frac::ZERO;
+        let mut amt_moved_ver: Fx = Fx::ZERO;
         let max_inch_ver = scratch_vel.y.abs() * bullet_time.delta_secs();
         while amt_moved_ver < max_inch_ver.min(scratch_vel.y.abs()) {
             let dont_overshoot =
-                (max_inch_ver.min(scratch_vel.y.abs()) - amt_moved_ver).max(Frac::ZERO);
+                (max_inch_ver.min(scratch_vel.y.abs()) - amt_moved_ver).max(Fx::ZERO);
             let moving_this_step = DELTA_PER_INCH.min(dont_overshoot);
             amt_moved_ver += moving_this_step;
             scratch_pos.y += scratch_vel.y.signum() * moving_this_step;

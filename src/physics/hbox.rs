@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::glue::{frac::Frac, fvec::FVec2};
+use crate::glue::{fvec::FVec2, Fx};
 
 pub type HBoxMarker = u32;
 
@@ -18,13 +18,13 @@ impl HBox {
             offset: default(),
             size: UVec2::new(w, h),
             half_size: FVec2::new(
-                Frac::whole(w as i32) / Frac::whole(2),
-                Frac::whole(h as i32) / Frac::whole(2),
+                Fx::from_num(w as i32) / Fx::from_num(2),
+                Fx::from_num(h as i32) / Fx::from_num(2),
             ),
             marker: default(),
         }
     }
-    pub fn with_offset(mut self, x: Frac, y: Frac) -> Self {
+    pub fn with_offset(mut self, x: Fx, y: Fx) -> Self {
         self.offset.x = x;
         self.offset.y = y;
         self
@@ -50,16 +50,16 @@ impl HBox {
             marker: self.marker,
         }
     }
-    pub fn min_x(&self) -> Frac {
+    pub fn min_x(&self) -> Fx {
         self.offset.x - self.half_size.x
     }
-    pub fn max_x(&self) -> Frac {
+    pub fn max_x(&self) -> Fx {
         self.offset.x + self.half_size.x
     }
-    pub fn min_y(&self) -> Frac {
+    pub fn min_y(&self) -> Fx {
         self.offset.y - self.half_size.y
     }
-    pub fn max_y(&self) -> Frac {
+    pub fn max_y(&self) -> Fx {
         self.offset.y + self.half_size.y
     }
     pub fn get_offset(&self) -> FVec2 {
@@ -77,7 +77,7 @@ impl HBox {
 // Can performance engineer later if needed.
 impl HBox {
     /// Manhattan distance to another hitbox
-    pub fn manhattan_distance(&self, rhs: &Self) -> Frac {
+    pub fn manhattan_distance(&self, rhs: &Self) -> Fx {
         let my_x_min = self.min_x();
         let my_x_max = self.max_x();
         let my_y_min = self.min_y();
@@ -95,20 +95,20 @@ impl HBox {
     }
 
     /// Manhattan distance to a point
-    pub fn manhattan_distance_to_point(&self, point: FVec2) -> Frac {
+    pub fn manhattan_distance_to_point(&self, point: FVec2) -> Fx {
         let my_x_min = self.min_x();
         let my_x_max = self.max_x();
         let my_y_min = self.min_y();
         let my_y_max = self.max_y();
 
         let x_dist = if point.x >= my_x_min && point.x <= my_x_max {
-            Frac::ZERO
+            Fx::ZERO
         } else {
             (my_x_min - point.x).abs().min((point.x - my_x_max).abs())
         };
 
         let y_dist = if point.y >= my_y_min && point.y <= my_y_max {
-            Frac::ZERO
+            Fx::ZERO
         } else {
             (my_y_min - point.y).abs().min((point.y - my_y_max).abs())
         };
@@ -118,7 +118,7 @@ impl HBox {
 
     /// Area overlapping with another hitbox
     /// NOTE: Assumes they are overlapping
-    pub fn area_overlapping_assuming_overlap(&self, rhs: &Self) -> Frac {
+    pub fn area_overlapping_assuming_overlap(&self, rhs: &Self) -> Fx {
         let my_x_min = self.min_x();
         let my_x_max = self.max_x();
         let my_y_min = self.min_y();
@@ -171,10 +171,10 @@ impl HBox {
         let oy_min = rhs.min_y();
         let oy_max = rhs.max_y();
 
-        let needed_left_push = (ox_min - my_x_max).min(Frac::ZERO);
-        let needed_right_push = (ox_max - my_x_min).max(Frac::ZERO);
-        let needed_down_push = (oy_min - my_y_max).min(Frac::ZERO);
-        let needed_up_push = (oy_max - my_y_min).max(Frac::ZERO);
+        let needed_left_push = (ox_min - my_x_max).min(Fx::ZERO);
+        let needed_right_push = (ox_max - my_x_min).max(Fx::ZERO);
+        let needed_down_push = (oy_min - my_y_max).min(Fx::ZERO);
+        let needed_up_push = (oy_max - my_y_min).max(Fx::ZERO);
 
         let needed_hor_push = if needed_left_push.abs() < needed_right_push.abs() {
             needed_left_push
@@ -188,9 +188,9 @@ impl HBox {
         };
 
         let push = if needed_hor_push.abs() < needed_ver_push.abs() {
-            FVec2::new(needed_hor_push, Frac::ZERO)
+            FVec2::new(needed_hor_push, Fx::ZERO)
         } else {
-            FVec2::new(Frac::ZERO, needed_ver_push)
+            FVec2::new(Fx::ZERO, needed_ver_push)
         };
 
         Some(push)

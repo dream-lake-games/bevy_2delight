@@ -3,9 +3,7 @@ use rand::Rng;
 use std::ops::RangeInclusive;
 
 use crate::prelude::*;
-use crate::prelude::{BulletTime, FVec2, Frac};
-
-const SHAKE_EVERY: Frac = Frac::const_cent(4);
+use crate::prelude::{BulletTime, FVec2, Fx};
 
 /// This is the component that marks the actual camera location in the world.
 /// Invariants:
@@ -29,14 +27,14 @@ fn follow_dynamic_camera(
     };
     let shake_off = camera_shake.get_offset();
     for mut tran in &mut followers {
-        tran.translation.x = (leader.x + shake_off.x).round() as f32;
-        tran.translation.y = (leader.y + shake_off.y).round() as f32;
+        tran.translation.x = (leader.x + shake_off.x).round().to_num();
+        tran.translation.y = (leader.y + shake_off.y).round().to_num();
     }
 }
 
 #[derive(Clone, Debug)]
 struct CameraShakeSpec {
-    time_left: Frac,
+    time_left: Fx,
     x_range: RangeInclusive<i32>,
     y_range: RangeInclusive<i32>,
 }
@@ -45,12 +43,12 @@ struct CameraShakeSpec {
 pub struct CameraShake {
     specs: Vec<CameraShakeSpec>,
     offset: FVec2,
-    time_since_last_update: Frac,
+    time_since_last_update: Fx,
 }
 impl CameraShake {
     pub fn add_shake(
         &mut self,
-        time: Frac,
+        time: Fx,
         x_range: RangeInclusive<i32>,
         y_range: RangeInclusive<i32>,
     ) {
@@ -74,32 +72,31 @@ impl CameraShake {
 fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<BulletTime>) {
     // Obey SHAKE_EVERY
     camera_shake.time_since_last_update += bullet_time.real_delta_secs();
-    if camera_shake.time_since_last_update < SHAKE_EVERY {
+    let shake_every = Fx::from_num(0.04);
+    if camera_shake.time_since_last_update < shake_every {
         return;
     }
-    camera_shake.time_since_last_update = Frac::ZERO;
+    camera_shake.time_since_last_update = Fx::ZERO;
 
     // Calculate offset
     let mut offset = FVec2::ZERO;
     let mut rng = rand::thread_rng();
     for spec in &mut camera_shake.specs {
-        spec.time_left -= SHAKE_EVERY;
-        offset.x += Frac::whole(rng.gen_range(spec.x_range.clone()));
-        offset.y += Frac::whole(rng.gen_range(spec.y_range.clone()));
+        spec.time_left -= shake_every;
+        offset.x += Fx::from_num(rng.gen_range(spec.x_range.clone()));
+        offset.y += Fx::from_num(rng.gen_range(spec.y_range.clone()));
     }
     camera_shake.offset = offset;
 
     // Cleanup specs
-    camera_shake
-        .specs
-        .retain(|spec| spec.time_left > Frac::ZERO);
+    camera_shake.specs.retain(|spec| spec.time_left > Fx::ZERO);
 }
 
 pub(super) fn register_camera(app: &mut App) {
     app.insert_resource(CameraShake {
         specs: vec![],
         offset: FVec2::ZERO,
-        time_since_last_update: Frac::ZERO,
+        time_since_last_update: Fx::ZERO,
     });
 
     app.add_systems(

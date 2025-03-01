@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
-use crate::prelude::{Frac, Layer};
+use crate::prelude::{Fx, Layer};
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
@@ -29,10 +29,19 @@ impl AnimBodyBundle {
         flip_y: bool,
         render_layers: RenderLayers,
     ) -> Self {
+        // TODO: If we ever make offset editable at runtime we'll have to tweak this I think
+        let mut corrected_offset = offset.as_vec2();
+        if size.x % 2 == 1 {
+            corrected_offset.x += 0.5;
+        }
+        if size.y % 2 == 1 {
+            corrected_offset.y += 0.5;
+        }
+
         Self {
             name: Name::new("AnimBody"),
             marker: AnimBody,
-            transform: Transform::from_translation(offset.as_vec2().extend(0.0)),
+            transform: Transform::from_translation(corrected_offset.extend(0.0)),
             sprite: Sprite {
                 custom_size: Some(size.as_vec2()),
                 rect: Some(Rect::from_corners(Vec2::ZERO, size.as_vec2())),
@@ -69,9 +78,9 @@ fn progress_animations<StateMachine: AnimStateMachine>(
 
         anim_man.last_frame = Some(anim_man.this_frame.clone());
 
-        let get_spf = |current_state: &StateMachine| -> Frac {
+        let get_spf = |current_state: &StateMachine| -> Fx {
             let fps = current_state.get_fps();
-            Frac::whole(1) / Frac::whole(fps as i32)
+            Fx::from_num(1) / Fx::from_num(fps as i32)
         };
 
         // Transition through ixs and states
@@ -147,24 +156,30 @@ fn drive_animations<StateMachine: AnimStateMachine>(
         if anim_man.body == Entity::PLACEHOLDER {
             continue;
         }
+        let flip_change = anim_man.delta_flip_x().is_some() || anim_man.delta_flip_y().is_some();
+        let state_change = Some(&anim_man.this_frame) == anim_man.last_frame.as_ref();
+        if !flip_change && !state_change {
+            continue;
+        }
         let mut body = bodies
             .get_mut(anim_man.body)
             .expect("Body invariant broken for AnimMan");
-        body.flip_x = anim_man.get_flip_x();
-        body.flip_y = anim_man.get_flip_y();
-        if Some(&anim_man.this_frame) == anim_man.last_frame.as_ref() {
-            continue;
+        if flip_change {
+            body.flip_x = anim_man.get_flip_x();
+            body.flip_y = anim_man.get_flip_y();
         }
-        body.image = anim_man.handle_map[&anim_man.get_state()].clone();
-        let bottom_left = UVec2::new(anim_man.get_ix() * StateMachine::SIZE.x, 0);
-        let top_right = UVec2::new(
-            (anim_man.get_ix() + 1) * StateMachine::SIZE.x - 1,
-            StateMachine::SIZE.y,
-        );
-        body.rect = Some(Rect::from_corners(
-            bottom_left.as_vec2(),
-            top_right.as_vec2(),
-        ));
+        if state_change {
+            body.image = anim_man.handle_map[&anim_man.get_state()].clone();
+            let bottom_left = UVec2::new(anim_man.get_ix() * StateMachine::SIZE.x, 0);
+            let top_right = UVec2::new(
+                (anim_man.get_ix() + 1) * StateMachine::SIZE.x - 1,
+                StateMachine::SIZE.y,
+            );
+            body.rect = Some(Rect::from_corners(
+                bottom_left.as_vec2(),
+                top_right.as_vec2(),
+            ));
+        }
     }
 }
 
