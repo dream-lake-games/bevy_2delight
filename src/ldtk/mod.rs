@@ -9,7 +9,7 @@ mod plugin;
 
 /// The set that contains all weird ldtk maintenence
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct LdtkMaintSet;
+pub(crate) struct LdtkSet;
 
 pub mod prelude {
     pub use super::entity::{LdtkEntity, LdtkEntityPluginGeneric};
@@ -21,5 +21,5 @@ pub mod prelude {
     pub use super::load::{LdtkState, LoadLdtk, UnloadLdtk};
     pub(crate) use super::plugin::LdtkPlugin;
     pub use super::plugin::LdtkSettingsGeneric;
-    pub use super::LdtkMaintSet;
+    pub(crate) use super::LdtkSet;
 }

@@ -1,13 +1,27 @@
 use bevy::prelude::*;
 
 use crate::{
+    anim::{AnimPostSet, AnimPreSet},
+    composition::LightingSet,
     glue::Deterministic,
+    ldtk::LdtkSet,
+    physics::PhysicsSet,
     prelude::{
         AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings,
-        LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, PhysicsPluginGeneric,
-        PhysicsSettingsGeneric, TriggerKindTrait,
+        LayersCameraSet, LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, LightAnimSet,
+        LightInteractionSet, PhysicsPluginGeneric, PhysicsSettingsGeneric, TriggerKindTrait,
     },
 };
+
+/// You should add all actual game logic to this set.
+/// Everything in this set will run:
+/// - AFTER the default animation progression logic
+/// - AFTER the physics system
+/// - BEFORE we actually drive the animation sprites
+/// - BEFORE we move any cameras
+/// - BEFORE we trigger any anim state change behavior
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DelightedSet;
 
 pub struct TwoDelightPlugin<
     LdtkRoot: LdtkRootKind,
@@ -24,6 +38,32 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
     Plugin for TwoDelightPlugin<LdtkRoot, TriggerRxKind, TriggerTxKind>
 {
     fn build(&self, app: &mut App) {
+        // Configurations between internal systems and other internal systems
+        app.configure_sets(
+            Update,
+            (
+                LightAnimSet.before(AnimPostSet),
+                LightInteractionSet.after(PhysicsSet),
+            ),
+        );
+
+        // Configurations between internal systems and user systems
+        app.configure_sets(
+            Update,
+            (
+                // Pre-delighted
+                AnimPreSet.before(DelightedSet),
+                LdtkSet.before(DelightedSet),
+                LightInteractionSet.before(DelightedSet),
+                PhysicsSet.before(DelightedSet),
+                // Post-delighted
+                AnimPostSet.after(DelightedSet),
+                LayersCameraSet.after(DelightedSet),
+                LightAnimSet.after(DelightedSet),
+                LightingSet.after(DelightedSet),
+            ),
+        );
+
         app.add_plugins((
             CompositionPlugin::new(self.composition_settings.clone()),
             AnimPlugin::new(self.anim_settings.clone()),

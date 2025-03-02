@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::prelude::*;
 
+use super::camera::follow_dynamic_camera;
+
 #[derive(Component)]
 #[require(Pos)]
 pub struct ParallaxX {
@@ -83,6 +85,8 @@ fn reposition_parallax_y(
 pub(super) fn register_parallax(app: &mut App) {
     app.add_systems(
         Update,
-        (reposition_parallax_x, reposition_parallax_y).after(LayersCameraSet),
+        (reposition_parallax_x, reposition_parallax_y)
+            .after(follow_dynamic_camera)
+            .in_set(LayersCameraSet),
     );
 }

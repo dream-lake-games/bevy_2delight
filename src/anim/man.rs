@@ -84,7 +84,7 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
             this_frame: default(),
             last_frame: None,
             time: Fx::ZERO,
-            render_layers: Layer::Static.render_layers(),
+            render_layers: StateMachine::RENDER_LAYERS.unwrap_or(Layer::Static.render_layers()),
             body: Entity::PLACEHOLDER,
             handle_map: default(),
         }
@@ -113,6 +113,11 @@ impl<StateMachine: AnimStateMachine> AnimMan<StateMachine> {
     }
     pub fn with_layer(mut self, layer: Layer) -> Self {
         self.render_layers = layer.render_layers();
+        self
+    }
+    /// Needed so internally we can get lights on the right layer, we don't expose this as part of the API tho
+    pub(crate) fn with_render_layers(mut self, render_layers: RenderLayers) -> Self {
+        self.render_layers = render_layers;
         self
     }
 }

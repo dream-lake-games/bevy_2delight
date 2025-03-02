@@ -1,5 +1,4 @@
 use bevy::{
-    ecs::schedule::SystemSet,
     prelude::{Reflect, Resource},
     utils::HashMap,
 };
@@ -21,10 +20,6 @@ pub enum AnimTimeClass {
     /// Play the animation ignoring bullet time, regardless of AnimsPaused
     RealAlways,
 }
-
-/// This schedule should update all of the timeclasses
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnimTimeSet;
 
 #[derive(Resource, Debug, Default)]
 pub struct AnimTime {

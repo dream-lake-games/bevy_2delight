@@ -26,6 +26,6 @@ pub mod prelude {
     pub use super::glue::prelude::*;
     pub use super::ldtk::prelude::*;
     pub use super::physics::prelude::*;
-    pub use super::plugin::TwoDelightPlugin;
+    pub use super::plugin::{DelightedSet, TwoDelightPlugin};
     pub use bevy_2delight_macros::TriggerKind;
 }

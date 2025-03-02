@@ -7,18 +7,19 @@ mod plugin;
 mod time;
 mod traits;
 
-/// A schedule set containing all logic for updating and playing animations
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnimSet;
+pub(crate) struct AnimPreSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct AnimPostSet;
 
 pub mod prelude {
     pub use super::{
         anim_collect::_AnimWizardry,
         man::{AnimDelta, AnimMan, AnimNextState},
         plugin::*,
-        time::{AnimTime, AnimTimeClass, AnimTimeSet},
+        time::{AnimTime, AnimTimeClass},
         traits::AnimStateMachine,
-        AnimSet,
     };
     pub use crate::defn_anim;
 }

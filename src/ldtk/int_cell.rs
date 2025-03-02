@@ -7,6 +7,7 @@ use crate::prelude::{Fx, Layer, Pos};
 use super::{
     ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
     load::BlockLdtkLoad,
+    LdtkSet,
 };
 
 #[derive(Resource, Default)]
@@ -128,11 +129,14 @@ impl<R: LdtkRootKind, B: LdtkIntCellValue<R>> Plugin for LdtkIntCellValuePluginG
                 *value,
             );
         }
-        app.add_systems(PreUpdate, post_ldtk_int_cell_value_blessing::<R, B>);
+        app.add_systems(
+            Update,
+            post_ldtk_int_cell_value_blessing::<R, B>.in_set(LdtkSet),
+        );
     }
 }
 
 pub(super) fn register_ldtk_int_cell(app: &mut App) {
     app.insert_resource(LdtkIntCellLayerInfo::default());
-    app.add_systems(Update, post_ldtk_int_cell_layer_blessing);
+    app.add_systems(Update, post_ldtk_int_cell_layer_blessing.in_set(LdtkSet));
 }

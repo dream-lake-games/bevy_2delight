@@ -33,14 +33,16 @@ pub(super) fn produce_light_derive(ast: DeriveInput) -> proc_macro::TokenStream 
     let light_radius_tokens = variant_infos.clone().into_iter().map(|variant_info| {
         let ident = variant_info.ident;
         match variant_info.radius {
-            Some(ru32) => quote::quote! { Self::#ident => Some(Frac::const_whole(#ru32)) },
+            Some(ru32) => {
+                quote::quote! { Self::#ident => Some(bevy_2delight::prelude::Fx::from_num(#ru32)) }
+            }
             None => quote::quote! { Self::#ident => None },
         }
     });
 
     quote::quote! {
-        impl bevy_2delight::prelude::LightStateMachine for #enum_ident {
-            fn light_radius(&self) -> Option<bevy_2delight::prelude::Frac> {
+        impl bevy_2delight::prelude::LightAnim for #enum_ident {
+            fn light_radius(&self) -> Option<bevy_2delight::prelude::Fx> {
                 match self {
                     #(#light_radius_tokens)*
                 }

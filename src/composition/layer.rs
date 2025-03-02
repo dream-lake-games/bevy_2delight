@@ -12,7 +12,7 @@ use bevy::{
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use super::camera::FollowDynamicCamera;
+use super::{camera::FollowDynamicCamera, lit_mat::LitMat, prelude::Lighting};
 
 #[derive(Resource)]
 struct LayerRoot(Entity);
@@ -28,8 +28,21 @@ impl LayerRoot {
 }
 
 #[derive(Resource)]
-struct LayerSettings {
-    screen_size: UVec2,
+pub(super) struct LightRoot(Entity);
+impl Default for LightRoot {
+    fn default() -> Self {
+        Self(Entity::PLACEHOLDER)
+    }
+}
+impl LightRoot {
+    pub(crate) fn eid(&self) -> Entity {
+        self.0
+    }
+}
+
+#[derive(Resource)]
+pub(super) struct LayerSettings {
+    pub(super) screen_size: UVec2,
 }
 impl LayerSettings {
     pub(crate) fn blank_screen_image(&self) -> Image {
@@ -60,7 +73,7 @@ impl LayerSettings {
     }
 }
 
-enum LayerOrder {
+pub(super) enum LayerOrder {
     /// Most layers. These are all things that basically are snapshotting the world.
     PreLight = 1,
     /// Requires all the individual light layers to be rendered first.
@@ -77,7 +90,7 @@ enum LayerPosition {
     Dynamic,
 }
 
-#[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, EnumIter)]
+#[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, EnumIter, std::hash::Hash)]
 pub enum Layer {
     Dummy,
     Light,
@@ -189,13 +202,25 @@ lazy_static::lazy_static! {
     ];
 }
 
-fn spawn_root(mut commands: Commands, mut root: ResMut<LayerRoot>) {
-    root.0 = commands
+fn spawn_roots(
+    mut commands: Commands,
+    mut layer_root: ResMut<LayerRoot>,
+    mut light_root: ResMut<LightRoot>,
+) {
+    layer_root.0 = commands
         .spawn((
             Name::new("LayerRoot"),
             Transform::default(),
             Visibility::Visible,
         ))
+        .id();
+    light_root.0 = commands
+        .spawn((
+            Name::new("LightRoot"),
+            Transform::default(),
+            Visibility::Visible,
+        ))
+        .set_parent(layer_root.eid())
         .id();
 }
 
@@ -237,6 +262,9 @@ fn setup_logical_layers(
     mut commands: Commands,
     root: Res<LayerRoot>,
     layer_settings: Res<LayerSettings>,
+    mut lit_mats: ResMut<Assets<LitMat>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut lighting: ResMut<Lighting>,
 ) {
     for (ix, layer) in LOGICAL_LAYERS.iter().enumerate() {
         match &layer.mode {
@@ -255,11 +283,38 @@ fn setup_logical_layers(
                     ))
                     .set_parent(root.eid());
             }
-            _ => {} // LogicalLayerMode::Lit {
-                    //     pixels,
-                    //     brightness,
-                    //     reflexivity,
-                    // } => {}
+            LogicalLayerMode::Lit {
+                pixels,
+                brightness,
+                reflexivity,
+            } => {
+                let lit_mat = LitMat::new(
+                    pixels.target(),
+                    brightness.target(),
+                    reflexivity.target(),
+                    Layer::Light.target(),
+                    Color::BLACK,
+                    1.0,
+                );
+                let lit_mat_hand = lit_mats.add(lit_mat);
+                let mesh = Mesh::from(Rectangle::new(
+                    layer_settings.screen_size.x as f32,
+                    layer_settings.screen_size.y as f32,
+                ));
+                let mesh_hand = meshes.add(mesh);
+                let eid = commands
+                    .spawn((
+                        Name::new(format!("LayerSprite_Lit_{:?}", layer.name)),
+                        MeshMaterial2d(lit_mat_hand),
+                        Mesh2d(mesh_hand),
+                        Transform::from_translation(Vec3::Z * ix as f32),
+                        ResizeLayerToWindow,
+                        SMUSH_RENDER_LAYERS.clone(),
+                    ))
+                    .set_parent(root.eid())
+                    .id();
+                lighting.layer_eid_map.insert(*pixels, eid);
+            }
         }
     }
 }
@@ -304,12 +359,13 @@ fn resize_layers_as_needed(
 
 pub(super) fn register_layer(app: &mut App, screen_size: UVec2) {
     app.insert_resource(LayerRoot::default());
+    app.insert_resource(LightRoot::default());
     app.insert_resource(LayerSettings { screen_size });
 
     app.add_systems(
         Startup,
         (
-            spawn_root,
+            spawn_roots,
             setup_physical_layers,
             setup_logical_layers,
             setup_smush_layer,

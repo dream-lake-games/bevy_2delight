@@ -20,7 +20,7 @@ pub fn light_state_machine_derive(input: proc_macro::TokenStream) -> proc_macro:
     produce_light_derive(ast)
 }
 
-#[proc_macro_derive(TriggerKind, attributes(on))]
+#[proc_macro_derive(TriggerKind)]
 pub fn trigger_kind_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 

@@ -89,6 +89,6 @@ impl<R: LdtkRootKind, B: LdtkEntity<R>> Plugin for LdtkEntityPluginGeneric<R, B>
             &self.layer_id,
             &self.entity_id,
         );
-        app.add_systems(PreUpdate, post_ldtk_entity_blessing::<R, B>);
+        app.add_systems(Update, post_ldtk_entity_blessing::<R, B>.in_set(LdtkSet));
     }
 }

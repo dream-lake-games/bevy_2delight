@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_ecs_ldtk::prelude::*;
 
-use super::LdtkMaintSet;
+use super::LdtkSet;
 
 #[derive(Resource, Clone, Debug, Reflect)]
 pub struct LdtkLevelRects {
@@ -48,5 +48,5 @@ fn update_level_rects(
 
 pub(super) fn register_ldtk_maint(app: &mut App) {
     app.insert_resource(LdtkLevelRects { map: default() });
-    app.add_systems(Update, update_level_rects.in_set(LdtkMaintSet));
+    app.add_systems(Update, update_level_rects.in_set(LdtkSet));
 }

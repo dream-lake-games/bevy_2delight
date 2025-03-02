@@ -1,13 +1,29 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
-use crate::prelude::{Fx, Layer};
+use crate::prelude::{BulletTime, Fx};
 
 use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
 use super::plugin::AnimDefaults;
-use super::time::{AnimTime, AnimTimeSet};
+use super::time::{AnimTime, AnimTimeClass, AnimsPaused};
 use super::traits::AnimStateMachine;
-use super::AnimSet;
+use super::{AnimPostSet, AnimPreSet};
+
+fn update_anim_time(
+    anims_paused: Res<AnimsPaused>,
+    bullet_time: Res<BulletTime>,
+    mut anim_time: ResMut<AnimTime>,
+) {
+    if anims_paused.0 {
+        anim_time.set(AnimTimeClass::BulletUnpaused, Fx::ZERO);
+        anim_time.set(AnimTimeClass::RealUnpaused, Fx::ZERO);
+    } else {
+        anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_secs());
+        anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_secs());
+    }
+    anim_time.set(AnimTimeClass::BulletAlways, bullet_time.delta_secs());
+    anim_time.set(AnimTimeClass::RealAlways, bullet_time.real_delta_secs());
+}
 
 #[derive(Component)]
 struct AnimBody;
@@ -136,9 +152,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                 anim_man.get_state().get_offset(),
                 anim_man.get_flip_x(),
                 anim_man.get_flip_y(),
-                StateMachine::RENDER_LAYERS
-                    .clone()
-                    .unwrap_or(Layer::Static.render_layers()),
+                anim_man.render_layers.clone(),
             ))
             .set_parent(eid)
             .id();
@@ -196,22 +210,22 @@ fn trigger_state_changes<StateMachine: AnimStateMachine>(
 
 pub(crate) fn register_logic<StateMachine: AnimStateMachine>(app: &mut App) {
     app.add_systems(
-        PreUpdate,
+        Update,
         (
+            update_anim_time,
             progress_animations::<StateMachine>,
             bless_animations::<StateMachine>,
         )
             .chain()
-            .in_set(AnimSet)
-            .after(AnimTimeSet),
+            .in_set(AnimPreSet),
     );
     app.add_systems(
-        PreUpdate,
+        Update,
         (
             drive_animations::<StateMachine>,
             trigger_state_changes::<StateMachine>,
         )
-            .in_set(AnimSet)
-            .before(progress_animations::<StateMachine>),
+            .chain()
+            .in_set(AnimPostSet),
     );
 }

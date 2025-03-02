@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::{LdtkProjectHandle, LdtkWorldBundle, LevelSelection};
 
-use super::prelude::{LdtkRootKind, LdtkRootResGeneric};
+use super::{
+    prelude::{LdtkRootKind, LdtkRootResGeneric},
+    LdtkSet,
+};
 
 /// The LDTK spawning state
 /// The API only exposes commands that will go:
@@ -144,10 +147,14 @@ pub(super) fn register_load<R: LdtkRootKind>(app: &mut App) {
 
     app.add_systems(
         Update,
-        update_load_ldtk.run_if(in_state(LdtkState::Loading)),
+        update_load_ldtk
+            .run_if(in_state(LdtkState::Loading))
+            .in_set(LdtkSet),
     );
     app.add_systems(
         Update,
-        update_unload_ldtk::<R>.run_if(in_state(LdtkState::Unloading)),
+        update_unload_ldtk::<R>
+            .run_if(in_state(LdtkState::Unloading))
+            .in_set(LdtkSet),
     );
 }

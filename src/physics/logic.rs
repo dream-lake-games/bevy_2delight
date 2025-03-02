@@ -152,7 +152,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                             *my_vel += old_perp;
                         }
                     }
-                    // TODO: Do I want this?
+                    // TODO: Do I want this? ye
                     // (StaticRxKind::Default, StaticTxKind::PassUp) => {
                     //     // Any kind of passup
                     //     if push.y > 0.0
@@ -335,6 +335,14 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
     );
 }
 
+fn update_transforms(mut ents: Query<(&Pos, &mut Transform)>) {
+    for (pos, mut tran) in &mut ents {
+        tran.translation.x = pos.x.round().to_num();
+        tran.translation.y = pos.y.round().to_num();
+        tran.translation.z = pos.z.to_num();
+    }
+}
+
 pub(super) fn register_logic<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     app: &mut App,
 ) {
@@ -345,10 +353,9 @@ pub(super) fn register_logic<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
             move_uninteresting_dynos::<TriggerRxKind>,
             move_static_txs,
             move_interesting_dynos::<TriggerRxKind, TriggerTxKind>,
+            update_transforms,
         )
             .chain()
-            .in_set(PhysicsSet)
-            .in_set(super::CollSet)
-            .before(super::PosSet),
+            .in_set(PhysicsSet),
     );
 }

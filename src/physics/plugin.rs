@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::physics::{colls, logic, pos, triggers::TriggerKindTrait};
+use crate::physics::{colls, logic, triggers::TriggerKindTrait};
 
 use super::debug::PhysicsDebugPluginGeneric;
 
@@ -39,7 +39,6 @@ impl<TriggerRx: TriggerKindTrait, TriggerTx: TriggerKindTrait> Plugin
     fn build(&self, app: &mut App) {
         colls::register_colls::<TriggerRx, TriggerTx>(app);
         logic::register_logic::<TriggerRx, TriggerTx>(app);
-        pos::register_pos(app);
 
         #[cfg(debug_assertions)]
         {

@@ -28,6 +28,17 @@ defn_anim!(
     }
 );
 
+defn_light!(
+    Light96Anim,
+    #[folder("platformer/lights/light96")]
+    pub enum Light96Anim {
+        #[default]
+        #[tag("on")]
+        #[on(48)]
+        On,
+    }
+);
+
 #[derive(Resource, Default)]
 struct PlayerInput {
     jump: bool,
@@ -55,6 +66,8 @@ struct PlayerBundle {
     name: Name,
     player: Player,
     anim: AnimMan<PlayerAnim>,
+    // light: LightMan<Light96Anim>,
+    light: CircleLight,
     pos: Pos,
     dyno: Dyno,
     static_rx: StaticRx,
@@ -68,6 +81,8 @@ impl PlayerBundle {
                 jump_time: Fx::ZERO,
             },
             anim: AnimMan::new(PlayerAnim::Idle),
+            // light: LightMan::new(Light96Anim::On),
+            light: CircleLight::strength(64.0),
             pos,
             dyno: Dyno::default(),
             static_rx: StaticRx::single(
@@ -294,6 +309,6 @@ pub(super) fn regiser_player(app: &mut App) {
             update_player_spawner,
         )
             .chain()
-            .after(PhysicsSet),
+            .in_set(DelightedSet),
     );
 }

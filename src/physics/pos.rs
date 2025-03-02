@@ -6,10 +6,7 @@
 
 use bevy::prelude::*;
 
-use crate::{
-    glue::{fvec::FVec2, Fx},
-    physics::PhysicsSet,
-};
+use crate::glue::{fvec::FVec2, Fx};
 
 #[derive(Copy, Clone, Debug, Default, Component)]
 #[component(on_add = on_add_pos)]
@@ -106,22 +103,4 @@ impl std::ops::Neg for Pos {
         self.y = -self.y;
         self
     }
-}
-
-fn update_transforms(mut ents: Query<(&Pos, &mut Transform)>) {
-    for (pos, mut tran) in &mut ents {
-        tran.translation.x = pos.x.round().to_num();
-        tran.translation.y = pos.y.round().to_num();
-        tran.translation.z = pos.z.to_num();
-    }
-}
-
-pub(super) fn register_pos(app: &mut App) {
-    app.add_systems(
-        Update,
-        update_transforms
-            .in_set(PhysicsSet)
-            .in_set(super::CollSet)
-            .in_set(super::PosSet),
-    );
 }

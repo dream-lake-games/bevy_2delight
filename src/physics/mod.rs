@@ -10,7 +10,7 @@ pub mod prelude {
     pub use super::pos::Pos;
     pub use super::statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind};
     pub use super::triggers::{TriggerKindTrait, TriggerRxGeneric, TriggerTxGeneric};
-    pub use super::PhysicsSet;
+    pub(crate) use super::PhysicsSet;
 }
 
 mod colls;
@@ -25,14 +25,4 @@ mod triggers;
 
 /// The set that contains all physics related systems
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct PhysicsSet;
-
-/// The physics-internal set that resolves collisions
-/// NOTE: Subset of PhysicsSet
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-struct CollSet;
-
-/// The physics-internal set that updates positions
-/// NOTE: Subset of CollSet
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-struct PosSet;
+pub(crate) struct PhysicsSet;

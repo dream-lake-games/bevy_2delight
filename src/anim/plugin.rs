@@ -2,12 +2,9 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
-use crate::prelude::{BulletTime, Fx};
-
 use super::logic::register_logic;
-use super::time::{AnimTime, AnimTimeClass, AnimTimeSet, AnimsPaused};
+use super::time::{AnimTime, AnimTimeClass, AnimsPaused};
 use super::traits::AnimStateMachine;
-use super::AnimSet;
 
 #[derive(Default)]
 pub struct AnimDefnPlugin<StateMachine: AnimStateMachine> {
@@ -38,22 +35,6 @@ pub(crate) struct AnimDefaults {
     pub(crate) settings: AnimSettings,
 }
 
-pub(crate) fn update_anim_time(
-    anims_paused: Res<AnimsPaused>,
-    bullet_time: Res<BulletTime>,
-    mut anim_time: ResMut<AnimTime>,
-) {
-    if anims_paused.0 {
-        anim_time.set(AnimTimeClass::BulletUnpaused, Fx::ZERO);
-        anim_time.set(AnimTimeClass::RealUnpaused, Fx::ZERO);
-    } else {
-        anim_time.set(AnimTimeClass::BulletUnpaused, bullet_time.delta_secs());
-        anim_time.set(AnimTimeClass::RealUnpaused, bullet_time.real_delta_secs());
-    }
-    anim_time.set(AnimTimeClass::BulletAlways, bullet_time.delta_secs());
-    anim_time.set(AnimTimeClass::RealAlways, bullet_time.real_delta_secs());
-}
-
 pub(crate) struct AnimPlugin {
     pub(crate) settings: AnimSettings,
 }
@@ -71,10 +52,5 @@ impl Plugin for AnimPlugin {
         });
         app.insert_resource(AnimTime::default());
         app.insert_resource(AnimsPaused::default());
-
-        app.add_systems(
-            PreUpdate,
-            update_anim_time.in_set(AnimTimeSet).in_set(AnimSet),
-        );
     }
 }

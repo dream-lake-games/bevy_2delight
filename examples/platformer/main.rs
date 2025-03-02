@@ -48,6 +48,7 @@ fn main() {
     bgfg::register_bgfg(&mut app);
     ldtk::register_ldtk(&mut app);
     player::regiser_player(&mut app);
+    debug_resource!(app, Lighting);
 
     app.run();
 }

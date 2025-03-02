@@ -5,32 +5,7 @@ use std::ops::RangeInclusive;
 use crate::prelude::*;
 use crate::prelude::{BulletTime, FVec2, Fx};
 
-/// This is the component that marks the actual camera location in the world.
-/// Invariants:
-/// - Either 0 or 1 of these must exist at all time
-/// - It must have a Pos
-#[derive(Component)]
-#[require(Pos)]
-pub struct DynamicCamera;
-
-/// The individual layer cameras that follow the dynamic camera
-#[derive(Component)]
-pub(super) struct FollowDynamicCamera;
-
-fn follow_dynamic_camera(
-    dynamic_camera: Query<&Pos, With<DynamicCamera>>,
-    mut followers: Query<&mut Transform, (With<FollowDynamicCamera>, Without<DynamicCamera>)>,
-    camera_shake: Res<CameraShake>,
-) {
-    let Ok(leader) = dynamic_camera.get_single() else {
-        return;
-    };
-    let shake_off = camera_shake.get_offset();
-    for mut tran in &mut followers {
-        tran.translation.x = (leader.x + shake_off.x).round().to_num();
-        tran.translation.y = (leader.y + shake_off.y).round().to_num();
-    }
-}
+use super::LayersCameraSet;
 
 #[derive(Clone, Debug)]
 struct CameraShakeSpec {
@@ -69,6 +44,18 @@ impl CameraShake {
     }
 }
 
+/// This is the component that marks the actual camera location in the world.
+/// Invariants:
+/// - Either 0 or 1 of these must exist at all time
+/// - It must have a Pos
+#[derive(Component)]
+#[require(Pos)]
+pub struct DynamicCamera;
+
+/// The individual layer cameras that follow the dynamic camera
+#[derive(Component)]
+pub(super) struct FollowDynamicCamera;
+
 fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<BulletTime>) {
     // Obey SHAKE_EVERY
     camera_shake.time_since_last_update += bullet_time.real_delta_secs();
@@ -90,6 +77,21 @@ fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<B
 
     // Cleanup specs
     camera_shake.specs.retain(|spec| spec.time_left > Fx::ZERO);
+}
+
+pub(super) fn follow_dynamic_camera(
+    dynamic_camera: Query<&Pos, With<DynamicCamera>>,
+    mut followers: Query<&mut Transform, (With<FollowDynamicCamera>, Without<DynamicCamera>)>,
+    camera_shake: Res<CameraShake>,
+) {
+    let Ok(leader) = dynamic_camera.get_single() else {
+        return;
+    };
+    let shake_off = camera_shake.get_offset();
+    for mut tran in &mut followers {
+        tran.translation.x = (leader.x + shake_off.x).round().to_num();
+        tran.translation.y = (leader.y + shake_off.y).round().to_num();
+    }
 }
 
 pub(super) fn register_camera(app: &mut App) {
