@@ -15,6 +15,8 @@ pub enum StaticRxKind {
 pub enum StaticTxKind {
     /// Standard solid thing. Stops stuff
     Solid,
+    /// Will let you go up, but not down
+    PassUp,
 }
 
 pub(crate) struct StaticRxComp {

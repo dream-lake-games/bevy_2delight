@@ -7,6 +7,7 @@ use bevy_2delight::prelude::*;
 mod bgfg;
 mod camera;
 mod ldtk;
+mod platforms;
 mod player;
 
 #[derive(std::hash::Hash, Debug, Clone, TriggerKind)]
@@ -38,7 +39,7 @@ fn main() {
         },
         ldtk_settings: ldtk::LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
-        deterministic: false,
+        deterministic: true,
     });
     app.add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(
@@ -46,11 +47,13 @@ fn main() {
         ),
     );
 
+    debug_resource!(app, Lighting);
+
     bgfg::register_bgfg(&mut app);
     camera::register_camera(&mut app);
     ldtk::register_ldtk(&mut app);
+    platforms::register_platforms(&mut app);
     player::regiser_player(&mut app);
-    debug_resource!(app, Lighting);
 
     app.run();
 }

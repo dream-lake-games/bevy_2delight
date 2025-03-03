@@ -83,7 +83,7 @@ impl PlayerBundle {
             anim: AnimMan::new(PlayerAnim::Idle),
             // light: LightMan::new(Light96Anim::On),
             light: CircleLight::strength(64.0),
-            pos,
+            pos: pos.with_z(Fx::from_num(10)),
             dyno: Dyno::default(),
             static_rx: StaticRx::single(
                 StaticRxKind::Default,
@@ -111,10 +111,9 @@ fn update_player_always(
     // Gravity
     dyno.vel.y -= bullet_time.delta_secs() * Fx::from_num(300);
     // Jump timing
-    if scolls
-        .get_refs(&srx.coll_keys)
-        .any(|coll| coll.push.y > Fx::ZERO && coll.tx_kind == StaticTxKind::Solid)
-    {
+    if scolls.get_refs(&srx.coll_keys).any(|coll| {
+        coll.push.y > Fx::ZERO && matches!(coll.tx_kind, StaticTxKind::Solid | StaticTxKind::PassUp)
+    }) {
         player.jump_time = Fx::from_num(0.1);
     } else {
         if player.jump_time > Fx::ZERO {
@@ -150,7 +149,7 @@ impl Default for MovementConsts {
             ground_speed: 300,
             ground_drag: 0.1,
             jump_speed: 100,
-            max_component_speed: 100,
+            max_component_speed: 150,
         }
     }
 }
@@ -165,9 +164,9 @@ fn update_player_stateful(
     let Ok((mut anim, mut dyno, mut player, srx)) = player_q.get_single_mut() else {
         return;
     };
-    let on_ground = scolls
-        .get_refs(&srx.coll_keys)
-        .any(|coll| coll.push.y > Fx::ZERO && coll.tx_kind == StaticTxKind::Solid);
+    let on_ground = scolls.get_refs(&srx.coll_keys).any(|coll| {
+        coll.push.y > Fx::ZERO && matches!(coll.tx_kind, StaticTxKind::Solid | StaticTxKind::PassUp)
+    });
 
     // Horizontal movement
     match anim.get_state() {

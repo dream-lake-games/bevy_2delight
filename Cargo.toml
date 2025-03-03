@@ -23,6 +23,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "bevy_window",
     "embedded_watcher",
     "file_watcher",
+    "multi_threaded",
     "png",
 ] }
 bevy_2delight_macros = { version = "0.1.0", path = "macros" }

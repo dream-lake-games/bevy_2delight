@@ -9,6 +9,7 @@ pub(super) enum LdtkRoot {
     CatchAll,
     Dirt,
     Player,
+    Platforms,
 }
 impl LdtkRootKind for LdtkRoot {}
 pub(super) type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;

@@ -209,18 +209,19 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                             *my_vel += old_perp;
                         }
                     }
-                    // TODO: Do I want this? ye
-                    // (StaticRxKind::Default, StaticTxKind::PassUp) => {
-                    //     // Any kind of passup
-                    //     if push.y > 0.0
-                    //         && old_perp.y < 0.0
-                    //         && other_thbox.max_y() - 1.1 < my_thbox.min_y()
-                    //     {
-                    //         add_coll_rec();
-                    //         do_push(&mut my_thbox);
-                    //         *my_vel = old_par + Vec2::new(0.0, tx_dyno.vel.y);
-                    //     }
-                    // }
+                    (StaticRxKind::Default, StaticTxKind::PassUp) => {
+                        if push.y > 0.0
+                            && old_perp.y < 0.0
+                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                        {
+                            static_colls.insert(coll_rec);
+                            do_push(&mut my_thbox);
+                            *my_vel = old_par + FVec2::new(Fx::ZERO, tx_dyno.vel.y);
+                            if old_perp.dot(push) > Fx::ZERO {
+                                *my_vel += old_perp;
+                            }
+                        }
+                    }
                     (StaticRxKind::Observe, _) => {
                         static_colls.insert(coll_rec);
                     }
