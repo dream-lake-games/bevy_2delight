@@ -34,7 +34,7 @@ fn startup(mut commands: Commands) {
     commands.spawn((
         Name::new("Grass"),
         AnimMan::new(GrassAnim::Grass),
-        ParallaxX::wrapped(Fx::from_num(2), Fx::from_num(1)),
+        ParallaxX::wrapped(Fx::from_num(1.3), Fx::from_num(1)),
     ));
 }
 

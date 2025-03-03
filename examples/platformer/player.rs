@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_2delight::prelude::*;
-use fixed::traits::Fixed;
 
 use crate::{
     ldtk::{LdtkEntityPlugin, LdtkRoot, LdtkRootRes},
@@ -57,7 +56,7 @@ fn update_player_input(mut player_input: ResMut<PlayerInput>, keyboard: Res<Butt
 }
 
 #[derive(Component)]
-struct Player {
+pub struct Player {
     /// How much time the player has left to input a jump and get a jump
     /// Kinda like a can_jump boolean but w/ coyote frames
     jump_time: Fx,

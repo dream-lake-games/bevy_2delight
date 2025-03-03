@@ -138,7 +138,6 @@ impl Layer {
     const fn layer_position(&self) -> LayerPosition {
         match self {
             Self::Dummy
-            | Self::Light
             | Self::AmbientPixels
             | Self::AmbientBrightness
             | Self::AmbientReflexivity
@@ -146,6 +145,8 @@ impl Layer {
             | Self::DetailBrightness
             | Self::DetailReflexivity
             | Self::Static => LayerPosition::Dynamic,
+            // NOTE: Light is included (indirectly) here in fixed because each of the underlying light cameras
+            //       will follow the camera, and then render back at the origin
             _ => LayerPosition::Fixed,
         }
     }

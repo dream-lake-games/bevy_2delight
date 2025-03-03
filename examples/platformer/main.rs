@@ -5,6 +5,7 @@ use bevy::{
 use bevy_2delight::prelude::*;
 
 mod bgfg;
+mod camera;
 mod ldtk;
 mod player;
 
@@ -46,6 +47,7 @@ fn main() {
     );
 
     bgfg::register_bgfg(&mut app);
+    camera::register_camera(&mut app);
     ldtk::register_ldtk(&mut app);
     player::regiser_player(&mut app);
     debug_resource!(app, Lighting);

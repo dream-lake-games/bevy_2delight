@@ -15,6 +15,8 @@ use crate::{
     },
 };
 
+use super::spat_hash::{SpatHash, SpatHashStaticTx, SpatHashTriggerTx, SpatKeys};
+
 /// A helpful function to make sure physics things exist as we expect them to
 fn invariants(
     dyno_without_pos: Query<Entity, (With<Dyno>, Without<Pos>)>,
@@ -29,29 +31,80 @@ fn invariants(
 }
 
 /// Moves dynos that have no statics and no trigger receivers
-fn move_uninteresting_dynos<TriggerRxKind: TriggerKindTrait>(
+fn move_uninteresting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     bullet_time: Res<BulletTime>,
     mut ents: Query<
-        (&Dyno, &mut Pos),
+        (
+            Entity,
+            &Dyno,
+            &mut Pos,
+            Option<&TriggerTxGeneric<TriggerTxKind>>,
+            Option<&mut SpatKeys<SpatHashTriggerTx>>,
+        ),
         (
             Without<StaticRx>,
             Without<StaticTx>,
             Without<TriggerRxGeneric<TriggerRxKind>>,
         ),
     >,
+    mut spat_hash_trigger_tx: ResMut<SpatHash<SpatHashTriggerTx>>,
 ) {
-    for (dyno, mut pos) in &mut ents {
+    for (eid, dyno, mut pos, ttx, mut spat_keys) in &mut ents {
         *pos += dyno.vel * bullet_time.delta_secs();
+        match (ttx, spat_keys.as_mut()) {
+            (Some(ttx), Some(spat_keys)) => {
+                let new_keys = spat_hash_trigger_tx.update(
+                    eid,
+                    &spat_keys,
+                    pos.clone(),
+                    ttx.comps.iter().map(|c| c.hbox.clone()).collect(),
+                );
+                **spat_keys = new_keys;
+            }
+            _ => (),
+        }
     }
 }
 
 /// Moves static txs
-fn move_static_txs(
+fn move_static_txs<TriggerTxKind: TriggerKindTrait>(
     bullet_time: Res<BulletTime>,
-    mut ents: Query<(&Dyno, &mut Pos), (Without<StaticRx>, With<StaticTx>)>,
+    mut ents: Query<
+        (
+            Entity,
+            &Dyno,
+            &mut Pos,
+            &StaticTx,
+            &mut SpatKeys<SpatHashStaticTx>,
+            Option<&TriggerTxGeneric<TriggerTxKind>>,
+            Option<&mut SpatKeys<SpatHashTriggerTx>>,
+        ),
+        Without<StaticRx>,
+    >,
+    mut spat_hash_static_tx: ResMut<SpatHash<SpatHashStaticTx>>,
+    mut spat_hash_trigger_tx: ResMut<SpatHash<SpatHashTriggerTx>>,
 ) {
-    for (dyno, mut pos) in &mut ents {
+    for (eid, dyno, mut pos, stx, mut stx_spat_keys, ttx, mut ttx_spat_keys) in &mut ents {
         *pos += dyno.vel * bullet_time.delta_secs();
+        let new_stx_spat_keys = spat_hash_static_tx.update(
+            eid,
+            &stx_spat_keys,
+            pos.clone(),
+            stx.comps.iter().map(|c| c.hbox.clone()).collect(),
+        );
+        *stx_spat_keys = new_stx_spat_keys;
+        match (ttx, ttx_spat_keys.as_mut()) {
+            (Some(ttx), Some(ttx_spat_keys)) => {
+                let new_ttx_spat_keys = spat_hash_trigger_tx.update(
+                    eid,
+                    &ttx_spat_keys,
+                    pos.clone(),
+                    ttx.comps.iter().map(|c| c.hbox.clone()).collect(),
+                );
+                **ttx_spat_keys = new_ttx_spat_keys;
+            }
+            _ => (),
+        }
     }
 }
 
@@ -70,6 +123,8 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
     ttx_q: &Query<(Entity, &mut TriggerTxGeneric<TriggerTxKind>)>,
     static_colls: &mut ResMut<StaticColls>,
     trigger_colls: &mut ResMut<TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>>,
+    spat_hash_stx: &SpatHash<SpatHashStaticTx>,
+    spat_hash_ttx: &SpatHash<SpatHashTriggerTx>,
 ) {
     // Handle static collisions
     struct StaticCollCandidate {
@@ -82,12 +137,14 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
     // Update all pos/dyno for static collisions, create records
     if let Some((_, my_srx)) = my_srx {
         for my_srx_comp in &my_srx.comps {
+            // First use our spatial hash to narrow down our search
+            let stx_keys = spat_hash_stx.get_keys(my_pos.clone(), vec![my_srx_comp.hbox.clone()]);
+            let candidate_eids = spat_hash_stx.get_eids(stx_keys);
+            // Then further whittle down to things that are not us that we overlap with
             let mut my_thbox = my_srx_comp.hbox.translated(my_pos.as_fvec2());
-            // TODO: Performance engineer if needed
-            // In order to avoid weird behavior when sliding along a straight edge, do this
-            // First filter to only things it's colliding with
-            let mut candidates = stx_q
+            let mut candidates = candidate_eids
                 .iter()
+                .filter_map(|eid| stx_q.get(*eid).ok())
                 .flat_map(|(eid, stx)| {
                     let pos = pos_q.get(eid).expect("Missing pos on stx");
                     stx.comps.iter().map(move |comp| StaticCollCandidate {
@@ -100,8 +157,8 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                 .filter(|candidate| candidate.eid != my_eid)
                 .filter(|candidate| my_thbox.overlaps_with(&candidate.thbox))
                 .collect::<Vec<_>>();
+            // Sorting by the amount of overlap allows sliding in the "right" way (I think)
             candidates.sort_by(|a, b| {
-                //shutup rust
                 let dist_a = a.thbox.area_overlapping_assuming_overlap(&my_thbox);
                 let dist_b = b.thbox.area_overlapping_assuming_overlap(&my_thbox);
                 dist_b.cmp(&dist_a)
@@ -183,9 +240,14 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
     // Create trigger coll records
     if let Some((_, my_trx)) = my_trx {
         for my_trx_comp in &my_trx.comps {
+            // First use our spatial hash to narrow down our search
+            let ttx_keys = spat_hash_ttx.get_keys(my_pos.clone(), vec![my_trx_comp.hbox.clone()]);
+            let candidate_eids = spat_hash_ttx.get_eids(ttx_keys);
+            // Then further whittle down to things that are not us that we overlap with
             let my_thbox = my_trx_comp.hbox.translated(my_pos.as_fvec2());
-            let candidates = ttx_q
+            let candidates = candidate_eids
                 .iter()
+                .filter_map(|eid| ttx_q.get(*eid).ok())
                 .flat_map(|(eid, ttx)| {
                     let pos = pos_q.get(eid).expect("Missing pos on ttx");
                     ttx.comps.iter().map(move |comp| TriggerCollCandidate {
@@ -263,6 +325,10 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
             Or<(With<StaticRx>, With<TriggerRxGeneric<TriggerRxKind>>)>,
         ),
     >,
+    // To use and maintain our spatial hashing
+    spat_hash_stx: Res<SpatHash<SpatHashStaticTx>>,
+    mut spat_hash_ttx_q: Query<&mut SpatKeys<SpatHashTriggerTx>>,
+    mut spat_hash_ttx: ResMut<SpatHash<SpatHashTriggerTx>>,
 ) {
     // First do the moving
     for eid in &ents_q {
@@ -283,10 +349,12 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
                     trx,
                     &pos_q,
                     &dyno_q,
-                    &mut stx_q,
-                    &mut ttx_q,
+                    &stx_q,
+                    &ttx_q,
                     &mut static_colls,
                     &mut trigger_colls,
+                    &spat_hash_stx,
+                    &spat_hash_ttx,
                 )
             }};
         }
@@ -323,6 +391,18 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
         if let Ok(mut set_dyno) = dyno_q.get_mut(eid) {
             set_dyno.vel = scratch_vel;
         }
+
+        // Now that we're done moving, we need to update our spatial hashes
+        // NOTE: See `invariants` fn, but we don't allow one entity to have both StaticRx and StaticTx
+        //       So we only need to update a potential TriggerTx hash here
+
+        if let (Ok((_, ttx)), Ok(mut spat_keys_ttx)) =
+            (ttx_q.get(eid), spat_hash_ttx_q.get_mut(eid))
+        {
+            let hboxes = ttx.comps.iter().map(|c| c.hbox.clone()).collect();
+            let new_keys = spat_hash_ttx.update(eid, &spat_keys_ttx, scratch_pos.clone(), hboxes);
+            *spat_keys_ttx = new_keys;
+        }
     }
     // Then update the records in the controls once
     populate_ctrl_coll_keys(
@@ -349,13 +429,16 @@ pub(super) fn register_logic<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
     app.add_systems(
         Update,
         (
-            invariants,
-            move_uninteresting_dynos::<TriggerRxKind>,
-            move_static_txs,
+            move_uninteresting_dynos::<TriggerRxKind, TriggerTxKind>,
+            move_static_txs::<TriggerTxKind>,
             move_interesting_dynos::<TriggerRxKind, TriggerTxKind>,
             update_transforms,
         )
             .chain()
             .in_set(PhysicsSet),
     );
+    #[cfg(debug_assertions)]
+    {
+        app.add_systems(Update, invariants);
+    }
 }

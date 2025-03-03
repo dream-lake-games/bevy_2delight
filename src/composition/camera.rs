@@ -81,7 +81,7 @@ fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<B
 
 pub(super) fn follow_dynamic_camera(
     dynamic_camera: Query<&Pos, With<DynamicCamera>>,
-    mut followers: Query<&mut Transform, (With<FollowDynamicCamera>, Without<DynamicCamera>)>,
+    mut followers: Query<&mut Transform, With<FollowDynamicCamera>>,
     camera_shake: Res<CameraShake>,
 ) {
     let Ok(leader) = dynamic_camera.get_single() else {

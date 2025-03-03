@@ -9,18 +9,12 @@ use crate::glue::Fx;
 
 use super::{hbox::HBox, pos::Pos};
 
-pub(crate) trait SpatHashKind: Component + Clone + Reflect {}
+pub(crate) trait SpatHashKind: Component + Clone + Reflect + std::fmt::Debug {}
 
-#[derive(Component, Clone, Reflect)]
-pub(crate) struct SpatHashStaticRx;
-impl SpatHashKind for SpatHashStaticRx {}
-#[derive(Component, Clone, Reflect)]
+#[derive(Component, Clone, Reflect, Debug)]
 pub(crate) struct SpatHashStaticTx;
 impl SpatHashKind for SpatHashStaticTx {}
-#[derive(Component, Clone, Reflect)]
-pub(crate) struct SpatHashTriggerRx;
-impl SpatHashKind for SpatHashTriggerRx {}
-#[derive(Component, Clone, Reflect)]
+#[derive(Component, Clone, Reflect, Debug)]
 pub(crate) struct SpatHashTriggerTx;
 impl SpatHashKind for SpatHashTriggerTx {}
 
@@ -35,7 +29,7 @@ impl SpatKey {
     }
 }
 
-#[derive(Component, Clone, Reflect)]
+#[derive(Component, Clone, Reflect, Debug)]
 #[component(on_remove = on_remove_spat_hash::<K>)]
 pub(crate) struct SpatKeys<K: SpatHashKind> {
     keys: HashSet<SpatKey>,
@@ -111,17 +105,16 @@ impl<K: SpatHashKind> SpatHash<K> {
         result
     }
 
-    pub fn get_keys(&self, pos: Pos, hboxes: &[HBox]) -> SpatKeys<K> {
-        let hset = HashSet::from_iter(
-            hboxes
-                .iter()
-                .map(|hbox| self.get_thbox_keys(hbox.translated(pos.as_fvec2())))
-                .flatten(),
-        );
+    pub fn get_keys(&self, pos: Pos, hboxes: Vec<HBox>) -> SpatKeys<K> {
+        let hset = hboxes
+            .iter()
+            .map(|hbox| self.get_thbox_keys(hbox.translated(pos.as_fvec2())))
+            .flatten()
+            .collect();
         SpatKeys::new(hset)
     }
 
-    pub fn insert(&mut self, eid: Entity, pos: Pos, hboxes: &[HBox]) -> SpatKeys<K> {
+    pub fn insert(&mut self, eid: Entity, pos: Pos, hboxes: Vec<HBox>) -> SpatKeys<K> {
         let keys = self.get_keys(pos, hboxes);
         for key in keys.iter() {
             self.inner_insert(*key, eid);
@@ -141,7 +134,7 @@ impl<K: SpatHashKind> SpatHash<K> {
         eid: Entity,
         old_keys: &SpatKeys<K>,
         pos: Pos,
-        hboxes: &[HBox],
+        hboxes: Vec<HBox>,
     ) -> SpatKeys<K> {
         self.remove(eid, old_keys);
         let new_keys = self.get_keys(pos, hboxes);
@@ -149,6 +142,13 @@ impl<K: SpatHashKind> SpatHash<K> {
             self.inner_insert(*key, eid);
         }
         new_keys
+    }
+
+    pub fn get_eids(&self, keys: SpatKeys<K>) -> HashSet<Entity> {
+        keys.iter()
+            .map(|key| self.map.get(key).cloned().unwrap_or_default())
+            .flatten()
+            .collect()
     }
 }
 
@@ -162,14 +162,8 @@ pub(crate) fn on_remove_spat_hash<K: SpatHashKind>(
 }
 
 pub(super) fn register_spat_hash(app: &mut App) {
-    macro_rules! handle_thingy {
-        ($kind:ty) => {
-            app.register_type::<SpatKeys<$kind>>();
-            app.insert_resource(SpatHash::<$kind>::default());
-        };
-    }
-    handle_thingy!(SpatHashStaticRx);
-    handle_thingy!(SpatHashStaticTx);
-    handle_thingy!(SpatHashTriggerRx);
-    handle_thingy!(SpatHashTriggerTx);
+    app.register_type::<SpatKeys<SpatHashStaticTx>>();
+    app.insert_resource(SpatHash::<SpatHashStaticTx>::default());
+    app.register_type::<SpatKeys<SpatHashTriggerTx>>();
+    app.insert_resource(SpatHash::<SpatHashTriggerTx>::default());
 }
