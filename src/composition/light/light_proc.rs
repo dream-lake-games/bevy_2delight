@@ -8,10 +8,12 @@ use bevy::{
 use crate::{
     composition::{layer::LayerSettings, LightingSet},
     glue::color_as_vec4,
-    prelude::{DynamicCamera, Pos},
 };
 
-use super::light_alloc::LightClaim;
+use super::{
+    light_alloc::LightClaim,
+    light_interaction::{remove_light_source, LightSource},
+};
 
 /// The mat that does the multiplying
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
@@ -40,12 +42,11 @@ impl CircleLightMat {
 
 #[derive(Component, Reflect)]
 #[component(on_add = on_add_circle_light)]
-#[component(on_remove = on_remove_circle_light)]
+#[component(on_remove = remove_light_source)]
 pub struct CircleLight {
     // The color of the light. Should be opaque (i.e. alpha of one)
     pub color: Color,
     pub strength: f32,
-    pub(super) claim: LightClaim,
     child: Entity,
 }
 impl CircleLight {
@@ -53,7 +54,6 @@ impl CircleLight {
         Self {
             color: Color::WHITE,
             strength,
-            claim: default(),
             child: Entity::PLACEHOLDER,
         }
     }
@@ -69,9 +69,9 @@ fn on_add_circle_light(
 ) {
     // Get da claim
     let claim = LightClaim::alloc(&mut world);
-    let mut myself = world.get_mut::<CircleLight>(eid).unwrap();
-    myself.claim = claim.clone();
     let rl = claim.rl.clone();
+    world.commands().entity(eid).insert(LightSource::new(claim));
+    let myself = world.get::<CircleLight>(eid).unwrap();
     let mat = CircleLightMat::new(myself.color);
 
     let screen_size = world.resource::<LayerSettings>().screen_size;
@@ -92,14 +92,6 @@ fn on_add_circle_light(
         .id();
     let mut myself = world.get_mut::<CircleLight>(eid).unwrap();
     myself.child = child_eid;
-}
-fn on_remove_circle_light(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    let claim = world.get::<CircleLight>(eid).unwrap().claim.clone();
-    claim.free(&mut world);
 }
 
 fn drive_circle_lights(

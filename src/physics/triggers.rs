@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::physics::{colls::CollKey, hbox::HBox, pos::Pos};
 
+use super::spat_hash::{on_remove_spat_hash, SpatHash, SpatHashTriggerRx, SpatHashTriggerTx};
+
 pub trait TriggerKindTrait:
     Clone + std::fmt::Debug + std::hash::Hash + std::marker::Send + std::marker::Sync + 'static
 {
@@ -12,9 +14,29 @@ pub(crate) struct TriggerRxComp<TriggerRxKind: TriggerKindTrait> {
     pub(crate) hbox: HBox,
 }
 #[derive(Component)]
+#[component(on_add = on_add_trigger_rx::<TriggerRxKind>)]
+#[component(on_remove = on_remove_spat_hash::<SpatHashTriggerRx>)]
 pub struct TriggerRxGeneric<TriggerRxKind: TriggerKindTrait> {
     pub(crate) comps: Vec<TriggerRxComp<TriggerRxKind>>,
     pub coll_keys: Vec<CollKey>,
+}
+fn on_add_trigger_rx<TriggerRxKind: TriggerKindTrait>(
+    mut world: bevy::ecs::world::DeferredWorld,
+    eid: Entity,
+    _: bevy::ecs::component::ComponentId,
+) {
+    let pos = world.get::<Pos>(eid).expect("TriggerRx needs Pos").clone();
+    let hboxes = world
+        .get::<TriggerRxGeneric<TriggerRxKind>>(eid)
+        .expect("TriggerRx myself")
+        .comps
+        .iter()
+        .map(|c| c.hbox.clone())
+        .collect::<Vec<_>>();
+    let keys = world
+        .resource_mut::<SpatHash<SpatHashTriggerRx>>()
+        .insert(eid, pos, &hboxes);
+    world.commands().entity(eid).insert(keys);
 }
 impl<TriggerRxKind: TriggerKindTrait> TriggerRxGeneric<TriggerRxKind> {
     pub fn single(kind: TriggerRxKind, hbox: HBox) -> Self {
@@ -42,9 +64,29 @@ pub(crate) struct TriggerTxComp<TriggerTxKind: TriggerKindTrait> {
     pub(crate) hbox: HBox,
 }
 #[derive(Component)]
+#[component(on_add = on_add_trigger_tx::<TriggerTxKind>)]
+#[component(on_remove = on_remove_spat_hash::<SpatHashTriggerTx>)]
 pub struct TriggerTxGeneric<TriggerTxKind: TriggerKindTrait> {
     pub(crate) comps: Vec<TriggerTxComp<TriggerTxKind>>,
     pub coll_keys: Vec<CollKey>,
+}
+fn on_add_trigger_tx<TriggerTxKind: TriggerKindTrait>(
+    mut world: bevy::ecs::world::DeferredWorld,
+    eid: Entity,
+    _: bevy::ecs::component::ComponentId,
+) {
+    let pos = world.get::<Pos>(eid).expect("TriggerTx needs Pos").clone();
+    let hboxes = world
+        .get::<TriggerTxGeneric<TriggerTxKind>>(eid)
+        .expect("TriggerTx myself")
+        .comps
+        .iter()
+        .map(|c| c.hbox.clone())
+        .collect::<Vec<_>>();
+    let keys = world
+        .resource_mut::<SpatHash<SpatHashTriggerTx>>()
+        .insert(eid, pos, &hboxes);
+    world.commands().entity(eid).insert(keys);
 }
 impl<TriggerTxKind: TriggerKindTrait> TriggerTxGeneric<TriggerTxKind> {
     pub fn single(kind: TriggerTxKind, hbox: HBox) -> Self {

@@ -5,8 +5,6 @@ var<uniform> color: vec4<f32>;
 @group(2) @binding(2)
 var<uniform> sx_sy_rings_unused: vec4<f32>;
 
-const ring_width: f32 = 0.1;
-
 fn ellip_distance(in: vec2<f32>) -> f32 {
     var x_comp = (in.x - 0.5) * (in.x - 0.5) / (sx_sy_rings_unused[0]  * sx_sy_rings_unused[0]);
     var y_comp = (in.y - 0.5) * (in.y - 0.5) / (sx_sy_rings_unused[1]  * sx_sy_rings_unused[1]);
@@ -28,5 +26,5 @@ fn apply_ring(ed: f32) -> f32 {
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var ed = ellip_distance(in.uv);
     var alpha = apply_ring(ed);
-    return vec4<f32>(color.x, color.y, color.z, alpha);
+    return vec4<f32>(color.x, color.y, color.z, color.w * alpha);
 }

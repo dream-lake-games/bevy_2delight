@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::physics::{colls, logic, triggers::TriggerKindTrait};
 
-use super::debug::PhysicsDebugPluginGeneric;
+use super::{debug::PhysicsDebugPluginGeneric, spat_hash};
 
 pub struct PhysicsSettingsGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
 {
@@ -39,6 +39,7 @@ impl<TriggerRx: TriggerKindTrait, TriggerTx: TriggerKindTrait> Plugin
     fn build(&self, app: &mut App) {
         colls::register_colls::<TriggerRx, TriggerTx>(app);
         logic::register_logic::<TriggerRx, TriggerTx>(app);
+        spat_hash::register_spat_hash(app);
 
         #[cfg(debug_assertions)]
         {

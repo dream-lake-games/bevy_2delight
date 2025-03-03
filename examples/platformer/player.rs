@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_2delight::prelude::*;
+use fixed::traits::Fixed;
 
 use crate::{
     ldtk::{LdtkEntityPlugin, LdtkRoot, LdtkRootRes},
@@ -219,7 +220,7 @@ fn update_player_stateful(
         PlayerAnim::Air => {
             if on_ground {
                 anim.set_state(PlayerAnim::Land);
-            } else {
+            } else if dyno.vel.x != Fx::ZERO {
                 anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
         }

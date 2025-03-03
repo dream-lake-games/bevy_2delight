@@ -5,7 +5,10 @@ use crate::{
     prelude::{AnimMan, AnimStateMachine, LightAnimSet},
 };
 
-use super::{light_alloc::LightClaim, light_interaction::register_light_interaction};
+use super::{
+    light_alloc::LightClaim,
+    light_interaction::{register_light_interaction, remove_light_source, LightSource},
+};
 
 /// A trait that will allow lighting systems to use this anim as light source
 pub trait LightAnim: AnimStateMachine {
@@ -34,7 +37,6 @@ impl<Anim: LightAnim> LightStateUpdate<Anim> {
 #[component(on_remove = on_remove_light_man::<Anim>)]
 pub struct LightMan<Anim: LightAnim> {
     pub(crate) state_update: Option<LightStateUpdate<Anim>>,
-    pub(super) claim: LightClaim,
 }
 /// Responsible for getting a light claim from the world and creating the underlying anim
 fn on_add_light_man<Anim: LightAnim>(
@@ -42,17 +44,20 @@ fn on_add_light_man<Anim: LightAnim>(
     eid: Entity,
     _: bevy::ecs::component::ComponentId,
 ) {
-    // Get da claim
+    // Claim a source
     let claim = LightClaim::alloc(&mut world);
+    world
+        .commands()
+        .entity(eid)
+        .insert(LightSource::new(claim.clone()));
+
+    // Make da anim
     let mut myself = world.get_mut::<LightMan<Anim>>(eid).unwrap();
-    myself.claim = claim.clone();
     let start_state = myself
         .state_update
         .as_mut()
         .map(|inner| inner.get_state())
         .cloned();
-
-    // Make da anim
     world
         .commands()
         .entity(eid)
@@ -62,17 +67,15 @@ fn on_add_light_man<Anim: LightAnim>(
 fn on_remove_light_man<Anim: LightAnim>(
     mut world: bevy::ecs::world::DeferredWorld,
     eid: Entity,
-    _: bevy::ecs::component::ComponentId,
+    component_id: bevy::ecs::component::ComponentId,
 ) {
-    let claim = world.get::<LightMan<Anim>>(eid).unwrap().claim.clone();
-    claim.free(&mut world);
     world.commands().entity(eid).remove::<AnimMan<Anim>>();
+    remove_light_source(world, eid, component_id);
 }
 impl<Anim: LightAnim> LightMan<Anim> {
     pub fn new(state: Anim) -> Self {
         Self {
             state_update: Some(LightStateUpdate::Reset(state)),
-            claim: default(),
         }
     }
     pub fn with_state(mut self, state: Anim) -> Self {
@@ -88,22 +91,30 @@ impl<Anim: LightAnim> LightMan<Anim> {
 }
 
 fn drive_light_anims<Anim: LightAnim>(
-    mut light_q: Query<(Entity, &mut LightMan<Anim>, Option<&mut AnimMan<Anim>>)>,
+    mut light_q: Query<(
+        Entity,
+        &mut LightMan<Anim>,
+        Option<&mut AnimMan<Anim>>,
+        &mut LightSource,
+    )>,
     mut commands: Commands,
 ) {
-    for (eid, mut light, mut anim) in &mut light_q {
+    for (eid, mut light, mut anim, mut source) in &mut light_q {
         match anim.as_mut() {
-            Some(anim) => match light.state_update {
-                Some(LightStateUpdate::Set(state)) => {
-                    anim.set_state(state);
-                    light.state_update = None;
+            Some(anim) => {
+                match light.state_update {
+                    Some(LightStateUpdate::Set(state)) => {
+                        anim.set_state(state);
+                        light.state_update = None;
+                    }
+                    Some(LightStateUpdate::Reset(state)) => {
+                        anim.reset_state(state);
+                        light.state_update = None;
+                    }
+                    None => {}
                 }
-                Some(LightStateUpdate::Reset(state)) => {
-                    anim.reset_state(state);
-                    light.state_update = None;
-                }
-                None => {}
-            },
+                source.radius = anim.get_state().light_radius();
+            }
             None => {
                 // If the underlying anim is removed, we interpret that as meaning we should remove the light as well
                 commands.entity(eid).remove::<LightMan<Anim>>();
