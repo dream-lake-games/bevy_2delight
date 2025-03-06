@@ -17,7 +17,7 @@ pub struct Lighting {
 impl Default for Lighting {
     fn default() -> Self {
         Self {
-            base_ambient: Color::linear_rgb(0.7, 0.7, 0.7),
+            base_ambient: Color::linear_rgb(0.6, 0.6, 0.6),
             brightness_threshold_ambient: 1.0,
             base_detail: Color::linear_rgb(0.3, 0.3, 0.3),
             brightness_threshold_detail: 1.0,
@@ -52,6 +52,7 @@ fn update_lit_mats(
 
 pub(crate) fn register_lighting(app: &mut App) {
     super::light_collect::register_light_wizardry(app);
+    super::light_interaction::register_light_interaction(app);
 
     app.insert_resource(Lighting::default());
     app.insert_resource(super::light_alloc::LightAllocer::default());

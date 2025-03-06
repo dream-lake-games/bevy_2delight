@@ -71,6 +71,18 @@ impl HBox {
     pub fn get_marker(&self) -> HBoxMarker {
         self.marker
     }
+    pub fn bottom_left(&self) -> FVec2 {
+        self.offset - self.half_size
+    }
+    pub fn top_left(&self) -> FVec2 {
+        self.offset + FVec2::new(-self.half_size.x, self.half_size.y)
+    }
+    pub fn bottom_right(&self) -> FVec2 {
+        self.offset + FVec2::new(self.half_size.x, -self.half_size.y)
+    }
+    pub fn top_right(&self) -> FVec2 {
+        self.offset + self.half_size
+    }
 }
 
 // I don't care that this is super verbose, and maybe inefficient. I want it to be correct.

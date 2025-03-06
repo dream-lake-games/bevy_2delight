@@ -1,4 +1,4 @@
-use bevy::ecs::schedule::SystemSet;
+use bevy::prelude::*;
 
 mod camera;
 mod layer;
@@ -27,6 +27,7 @@ pub struct LayersCameraSet;
 pub mod prelude {
     pub use super::camera::{CameraShake, DynamicCamera};
     pub use super::layer::Layer;
+    pub use super::light::light_interaction::OccludeLight;
     pub use super::light::light_man::{LightAnim, LightDefnPlugin, LightMan};
     pub use super::light::light_proc::CircleLight;
     pub use super::light::lighting::Lighting;

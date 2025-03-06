@@ -6,7 +6,7 @@ use bevy_2delight::prelude::*;
 )]
 pub(super) enum LdtkRoot {
     #[default]
-    CatchAll,
+    Detail,
     Dirt,
     Player,
     Platforms,
@@ -22,6 +22,7 @@ struct DirtBundle {
     name: Name,
     pos: Pos,
     stx: StaticTx,
+    occlude: OccludeLight,
 }
 impl LdtkIntCellValue<LdtkRoot> for DirtBundle {
     const ROOT: LdtkRoot = LdtkRoot::Dirt;
@@ -30,6 +31,40 @@ impl LdtkIntCellValue<LdtkRoot> for DirtBundle {
             name: Name::new("Dirt"),
             pos,
             stx: StaticTx::single(StaticTxKind::Solid, HBox::new(8, 8)),
+            occlude: OccludeLight::StaticTx,
+        }
+    }
+}
+
+defn_anim!(
+    TorchAnim,
+    #[folder("platformer/world/detail/torch")]
+    pub enum TorchAnim {
+        #[default]
+        #[tag("burn")]
+        #[fps(8)]
+        Burn,
+    }
+);
+#[derive(Bundle)]
+struct TorchBundle {
+    name: Name,
+    pos: Pos,
+    anim: AnimMan<TorchAnim>,
+    light: CircleLight,
+}
+impl LdtkEntity<LdtkRoot> for TorchBundle {
+    const ROOT: LdtkRoot = LdtkRoot::Detail;
+    fn from_ldtk(
+        pos: Pos,
+        _fields: &bevy::utils::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _iid: String,
+    ) -> Self {
+        Self {
+            name: Name::new("Torch"),
+            pos,
+            anim: default(),
+            light: CircleLight::strength(24.0),
         }
     }
 }
@@ -50,6 +85,8 @@ pub(super) fn register_ldtk(app: &mut App) {
         "DirtStatic",
         1,
     ));
+
+    app.add_plugins(LdtkEntityPlugin::<TorchBundle>::new("Entities", "Torch"));
 
     app.add_systems(Startup, startup);
 }

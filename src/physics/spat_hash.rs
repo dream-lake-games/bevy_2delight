@@ -17,6 +17,9 @@ impl SpatHashKind for SpatHashStaticTx {}
 #[derive(Component, Clone, Reflect, Debug)]
 pub(crate) struct SpatHashTriggerTx;
 impl SpatHashKind for SpatHashTriggerTx {}
+#[derive(Component, Clone, Reflect, Debug)]
+pub(crate) struct SpatHashOccludeLight;
+impl SpatHashKind for SpatHashOccludeLight {}
 
 #[derive(Copy, Clone, PartialEq, Eq, std::hash::Hash, Debug, Reflect)]
 pub(crate) struct SpatKey {
@@ -166,4 +169,6 @@ pub(super) fn register_spat_hash(app: &mut App) {
     app.insert_resource(SpatHash::<SpatHashStaticTx>::default());
     app.register_type::<SpatKeys<SpatHashTriggerTx>>();
     app.insert_resource(SpatHash::<SpatHashTriggerTx>::default());
+    app.register_type::<SpatKeys<SpatHashOccludeLight>>();
+    app.insert_resource(SpatHash::<SpatHashOccludeLight>::default());
 }

@@ -43,10 +43,11 @@ fn main() {
         },
         ldtk_settings: LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
+        deterministic: true,
     });
 
     app.add_systems(Startup, startup);
-    app.add_systems(Update, update.after(PhysicsSet));
+    app.add_systems(Update, update.in_set(DelightedSet));
 
     app.run();
 }
@@ -113,31 +114,31 @@ fn startup(mut commands: Commands) {
             color: Color::linear_rgb(0.1, 1.0, 0.1),
             ..default()
         },
-        Pos::new(Frac::ZERO, Frac::whole(-50)),
+        Pos::new(Fx::ZERO, Fx::from_num(-50)),
         Dyno::default(),
         StaticRx::single(StaticRxKind::Default, player_hbox.clone()),
         TriggerRx::single(TriggerRxKind::Player, player_hbox.clone()),
     ));
 
     commands.spawn(GroundBundle::new(
-        Pos::new(Frac::ZERO, Frac::whole(-300)),
+        Pos::new(Fx::ZERO, Fx::from_num(-300)),
         UVec2::new(800, 72),
     ));
     commands.spawn(GroundBundle::new(
-        Pos::new(Frac::whole(-300), Frac::ZERO),
+        Pos::new(Fx::from_num(-300), Fx::ZERO),
         UVec2::new(200, 72),
     ));
     commands.spawn(GroundBundle::new(
-        Pos::new(Frac::whole(300), Frac::ZERO),
+        Pos::new(Fx::from_num(300), Fx::ZERO),
         UVec2::new(200, 72),
     ));
 
     commands.spawn(SpikeBundle::new(
-        Pos::new(Frac::whole(-300), Frac::whole(72)),
+        Pos::new(Fx::from_num(-300), Fx::from_num(72)),
         UVec2::new(36, 72),
     ));
     commands.spawn(SpikeBundle::new(
-        Pos::new(Frac::whole(300), Frac::whole(72)),
+        Pos::new(Fx::from_num(300), Fx::from_num(72)),
         UVec2::new(36, 72),
     ));
 }
@@ -151,18 +152,18 @@ fn update(
 ) {
     // Maybe toggle bullet time
     if keyboard.just_pressed(KeyCode::Space) {
-        if bullet_time.get_base() == Frac::whole(1) {
-            bullet_time.set_base(Frac::cent(30));
+        if bullet_time.get_base() == Fx::from_num(1) {
+            bullet_time.set_base(Fx::from_num(0.3));
         } else {
-            bullet_time.set_base(Frac::whole(1));
+            bullet_time.set_base(Fx::from_num(1));
         }
     }
 
     let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut();
 
     // Horizontal movement
-    let x_mag = Frac::whole(200);
-    dyno.vel.x = Frac::ZERO;
+    let x_mag = Fx::from_num(200);
+    dyno.vel.x = Fx::ZERO;
     if keyboard.pressed(KeyCode::KeyA) {
         dyno.vel.x -= x_mag;
     }
@@ -171,13 +172,13 @@ fn update(
     }
 
     // Vertical movement
-    let gravity_mag = Frac::whole(600);
-    let jump_mag = Frac::whole(400);
+    let gravity_mag = Fx::from_num(600);
+    let jump_mag = Fx::from_num(400);
     dyno.vel.y -= bullet_time.delta_secs() * gravity_mag;
     if keyboard.just_pressed(KeyCode::KeyW) {
         dyno.vel.y = jump_mag;
         // Commenting out bc it feels bad but here's how to add a short-term bullet-time effect
-        bullet_time.add_effect(Frac::ZERO, Frac::cent(30));
+        bullet_time.add_effect(Fx::ZERO, Fx::from_num(0.3));
     }
 
     // How to check for collisions

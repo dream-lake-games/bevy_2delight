@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_2delight::prelude::*;
 
-use crate::ldtk::{LdtkIntCellValuePlugin, LdtkRoot};
+use crate::ldtk::{LdtkIntCellValuePlugin, LdtkRoot, LdtkRootRes};
 
 defn_anim!(
     FallingPlatformAnim,
@@ -67,6 +67,7 @@ fn update_falling_platform_spawners(
     bullet_time: Res<BulletTime>,
     mut spawners_q: Query<(Entity, &Pos, &mut FallingPlatformSpawner)>,
     mut commands: Commands,
+    ldtk_roots: Res<LdtkRootRes>,
 ) {
     for (eid, pos, mut spawner) in &mut spawners_q {
         let Some(countdown) = spawner.time_till_spawn.as_mut() else {
@@ -77,7 +78,9 @@ fn update_falling_platform_spawners(
             continue;
         }
         spawner.time_till_spawn = None;
-        commands.spawn(FallingPlatformBundle::new(*pos, eid));
+        commands
+            .spawn(FallingPlatformBundle::new(*pos, eid))
+            .set_parent(ldtk_roots.get_eid(LdtkRoot::Platforms));
     }
 }
 

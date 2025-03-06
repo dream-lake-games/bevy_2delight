@@ -85,6 +85,7 @@ fn main() {
         composition_settings: CompositionSettings::default(),
         ldtk_settings: LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
+        deterministic: false,
     });
     app.add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(

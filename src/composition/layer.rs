@@ -39,6 +39,18 @@ impl LightRoot {
         self.0
     }
 }
+#[derive(Resource)]
+pub(super) struct LightOccludeRoot(Entity);
+impl Default for LightOccludeRoot {
+    fn default() -> Self {
+        Self(Entity::PLACEHOLDER)
+    }
+}
+impl LightOccludeRoot {
+    pub(crate) fn eid(&self) -> Entity {
+        self.0
+    }
+}
 
 #[derive(Resource)]
 pub(super) struct LayerSettings {
@@ -207,6 +219,7 @@ fn spawn_roots(
     mut commands: Commands,
     mut layer_root: ResMut<LayerRoot>,
     mut light_root: ResMut<LightRoot>,
+    mut light_occlude_root: ResMut<LightOccludeRoot>,
 ) {
     layer_root.0 = commands
         .spawn((
@@ -222,6 +235,14 @@ fn spawn_roots(
             Visibility::Visible,
         ))
         .set_parent(layer_root.eid())
+        .id();
+    light_occlude_root.0 = commands
+        .spawn((
+            Name::new("LightOccludeRoot"),
+            Transform::default(),
+            Visibility::Visible,
+        ))
+        .set_parent(light_root.eid())
         .id();
 }
 
@@ -361,6 +382,7 @@ fn resize_layers_as_needed(
 pub(super) fn register_layer(app: &mut App, screen_size: UVec2) {
     app.insert_resource(LayerRoot::default());
     app.insert_resource(LightRoot::default());
+    app.insert_resource(LightOccludeRoot::default());
     app.insert_resource(LayerSettings { screen_size });
 
     app.add_systems(

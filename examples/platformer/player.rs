@@ -28,17 +28,6 @@ defn_anim!(
     }
 );
 
-defn_light!(
-    Light96Anim,
-    #[folder("platformer/lights/light96")]
-    pub enum Light96Anim {
-        #[default]
-        #[tag("on")]
-        #[on(48)]
-        On,
-    }
-);
-
 #[derive(Resource, Default)]
 struct PlayerInput {
     jump: bool,
@@ -66,7 +55,6 @@ struct PlayerBundle {
     name: Name,
     player: Player,
     anim: AnimMan<PlayerAnim>,
-    // light: LightMan<Light96Anim>,
     light: CircleLight,
     pos: Pos,
     dyno: Dyno,
@@ -81,7 +69,6 @@ impl PlayerBundle {
                 jump_time: Fx::ZERO,
             },
             anim: AnimMan::new(PlayerAnim::Idle),
-            // light: LightMan::new(Light96Anim::On),
             light: CircleLight::strength(64.0),
             pos: pos.with_z(Fx::from_num(10)),
             dyno: Dyno::default(),
@@ -149,7 +136,7 @@ impl Default for MovementConsts {
             ground_speed: 300,
             ground_drag: 0.1,
             jump_speed: 100,
-            max_component_speed: 150,
+            max_component_speed: 100,
         }
     }
 }
@@ -227,12 +214,18 @@ fn update_player_stateful(
                 anim.set_state(PlayerAnim::Run);
                 anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
+            if !on_ground {
+                anim.set_state(PlayerAnim::Air);
+            }
         }
         PlayerAnim::Run => {
             if input.dir.x == Fx::ZERO {
                 anim.set_state(PlayerAnim::Idle);
             } else {
                 anim.set_flip_x(dyno.vel.x < Fx::ZERO);
+            }
+            if !on_ground {
+                anim.set_state(PlayerAnim::Air);
             }
         }
         PlayerAnim::Jump => {

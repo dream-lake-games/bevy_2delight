@@ -7,10 +7,14 @@ pub const MAX_NUM_LIGHTS: usize = 256;
 
 use bevy::render::camera::RenderTarget;
 use bevy::render::view::RenderLayers;
+use rand::{thread_rng, Rng};
 
 use crate::composition::camera::FollowDynamicCamera;
 use crate::composition::layer::{LayerOrder, LayerSettings, LightRoot};
 use crate::prelude::Layer;
+
+use super::light_cutout::LightCutoutMat;
+use super::light_proc::ScreenMesh;
 
 /// Facilitates assigning lights to different render layers so that they don't
 /// interfere with each other
@@ -67,7 +71,6 @@ impl LightClaim {
     pub(super) fn alloc(world: &mut bevy::ecs::world::DeferredWorld) -> Self {
         let layer_settings = world.resource::<LayerSettings>();
         let image = layer_settings.blank_screen_image();
-        let custom_size = Some(layer_settings.screen_size.as_vec2());
         let light_root = world.resource::<LightRoot>().eid();
 
         // Claim a render layer
@@ -94,17 +97,18 @@ impl LightClaim {
             .id();
 
         // Spawn the mesh which will apply proper cutout shader and chuck output into aggregate light layer
+        let mat = world
+            .resource_mut::<Assets<LightCutoutMat>>()
+            .add(LightCutoutMat::new(image_hand));
+        let mesh = world.resource::<ScreenMesh>().0.clone();
         let agg_mesh_eid = world
             .commands()
             .spawn((
                 Name::new("LightActualMesh"),
-                Transform::default(),
+                Transform::from_translation(Vec3::Z * thread_rng().gen_range(0.0..1.0)),
                 Visibility::Inherited,
-                Sprite {
-                    image: image_hand,
-                    custom_size,
-                    ..default()
-                },
+                Mesh2d(mesh),
+                MeshMaterial2d(mat),
                 Layer::Light.render_layers(),
             ))
             .set_parent(light_root)

@@ -31,7 +31,6 @@ fn first_play(in: VertexOutput) -> vec4<f32> {
 
     var sampled_light = textureSample(light_texture, light_splr, in.uv);
     var total_light = sampled_light + base_light;
-    // var clamped_light = clamp(total_light, 0.0, 1.0);
 
     return raw_pixel * total_light;
 }

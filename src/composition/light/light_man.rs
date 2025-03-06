@@ -129,7 +129,6 @@ pub struct LightDefnPlugin<Anim: LightAnim> {
 }
 impl<Anim: LightAnim> Plugin for LightDefnPlugin<Anim> {
     fn build(&self, app: &mut App) {
-        register_light_interaction::<Anim>(app);
         app.add_systems(PostUpdate, drive_light_anims::<Anim>.in_set(LightAnimSet));
     }
 }

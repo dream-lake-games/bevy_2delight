@@ -4,16 +4,31 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, Material2dPlugin},
 };
+use rand::{thread_rng, Rng};
 
 use crate::{
-    composition::{layer::LayerSettings, LightingSet},
-    glue::color_as_vec4,
+    composition::{layer::LayerSettings, light::light_cutout::LightCutoutMat, LightingSet},
+    glue::{color_as_vec4, Fx},
 };
 
 use super::{
     light_alloc::LightClaim,
     light_interaction::{remove_light_source, LightSource},
 };
+
+#[derive(Resource)]
+pub(super) struct ScreenMesh(pub(super) Handle<Mesh>);
+fn startup_screen_mesh(
+    mut commands: Commands,
+    layer_settings: Res<LayerSettings>,
+    mut mesh: ResMut<Assets<Mesh>>,
+) {
+    let hand = mesh.add(Rectangle::new(
+        layer_settings.screen_size.x as f32,
+        layer_settings.screen_size.y as f32,
+    ));
+    commands.insert_resource(ScreenMesh(hand));
+}
 
 /// The mat that does the multiplying
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
@@ -86,6 +101,7 @@ fn on_add_circle_light(
             Name::new("CircleLightChild"),
             Mesh2d(mesh_hand),
             MeshMaterial2d(mat_hand),
+            Transform::from_translation(Vec3::Z * thread_rng().gen_range(0.0..1.0)),
             rl,
         ))
         .set_parent(eid)
@@ -95,13 +111,14 @@ fn on_add_circle_light(
 }
 
 fn drive_circle_lights(
-    light_q: Query<&CircleLight>,
+    mut light_q: Query<(&CircleLight, &mut LightSource)>,
     mat_holders: Query<&MeshMaterial2d<CircleLightMat>>,
     mut color_mats: ResMut<Assets<CircleLightMat>>,
     layer_settings: Res<LayerSettings>,
 ) {
     const PIXELS_PER_RING: f32 = 16.0;
-    for circle_light in &light_q {
+    for (circle_light, mut light_source) in &mut light_q {
+        light_source.radius = Some(Fx::from_num(circle_light.strength));
         let mat_holder = mat_holders
             .get(circle_light.child)
             .expect("Circle light invariant");
@@ -125,5 +142,9 @@ pub(crate) fn register_light_proc(app: &mut App) {
     app.add_plugins(Material2dPlugin::<CircleLightMat>::default());
     embedded_asset!(app, "circle_light.wgsl");
 
+    app.add_plugins(Material2dPlugin::<LightCutoutMat>::default());
+    embedded_asset!(app, "light_cutout.wgsl");
+
+    app.add_systems(Startup, startup_screen_mesh);
     app.add_systems(Update, drive_circle_lights.in_set(LightingSet));
 }
