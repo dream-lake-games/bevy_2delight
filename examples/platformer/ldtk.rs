@@ -52,6 +52,7 @@ struct TorchBundle {
     pos: Pos,
     anim: AnimMan<TorchAnim>,
     light: CircleLight,
+    flicker: LightFlicker,
 }
 impl LdtkEntity<LdtkRoot> for TorchBundle {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
@@ -64,7 +65,8 @@ impl LdtkEntity<LdtkRoot> for TorchBundle {
             name: Name::new("Torch"),
             pos,
             anim: default(),
-            light: CircleLight::strength(24.0),
+            light: CircleLight::strength(24.0).with_color(Color::linear_rgb(1.0, 1.0, 1.0)),
+            flicker: LightFlicker::new(24.0, 4.0, 4.0, 3.0, 0.1, 0.05),
         }
     }
 }

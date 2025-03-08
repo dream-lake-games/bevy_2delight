@@ -31,6 +31,7 @@ fn first_play(in: VertexOutput) -> vec4<f32> {
 
     var sampled_light = textureSample(light_texture, light_splr, in.uv);
     var total_light = sampled_light + base_light;
+    var m = max(total_light.x, max(total_light.y, total_light.z)) * 0.1;
 
     return raw_pixel * total_light;
 }

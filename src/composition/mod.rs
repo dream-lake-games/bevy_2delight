@@ -29,7 +29,7 @@ pub mod prelude {
     pub use super::layer::Layer;
     pub use super::light::light_interaction::OccludeLight;
     pub use super::light::light_man::{LightAnim, LightDefnPlugin, LightMan};
-    pub use super::light::light_proc::CircleLight;
+    pub use super::light::light_proc::{CircleLight, LightFlicker};
     pub use super::light::lighting::Lighting;
     pub use super::parallax::{ParallaxX, ParallaxY};
     pub(crate) use super::plugin::CompositionPlugin;

@@ -9,6 +9,7 @@ use rand::{thread_rng, Rng};
 use crate::{
     composition::{layer::LayerSettings, light::light_cutout::LightCutoutMat, LightingSet},
     glue::{color_as_vec4, Fx},
+    prelude::BulletTime,
 };
 
 use super::{
@@ -36,7 +37,7 @@ struct CircleLightMat {
     #[uniform(1)]
     pub(crate) color: Vec4,
     #[uniform(2)]
-    pub(crate) sx_sy_unused_unused: Vec4,
+    pub(crate) sx_sy_rings_unused: Vec4,
 }
 impl Material2d for CircleLightMat {
     fn fragment_shader() -> ShaderRef {
@@ -50,7 +51,46 @@ impl CircleLightMat {
     pub fn new(color: Color) -> Self {
         Self {
             color: color_as_vec4(color),
-            sx_sy_unused_unused: Vec4::ZERO,
+            sx_sy_rings_unused: Vec4::ZERO,
+        }
+    }
+}
+
+/// Possible strength values: [base_strength - flicker_strength, base_strength + flicker_strength]
+/// Every [interval - interval_strength, interval + interval_strength] seconds,
+/// take a step of size [-step_strength, step_strength],
+/// and set gradient [-gradient_strength, gradient_strength]
+#[derive(Component, Reflect)]
+pub struct LightFlicker {
+    pub base_strength: f32,
+    pub flicker_strength: f32,
+    pub step_strength: f32,
+    pub gradient_strength: f32,
+    pub interval: f32,
+    pub interval_strength: f32,
+    current_strength: f32,
+    current_gradient: f32,
+    time_till_delta: f32,
+}
+impl LightFlicker {
+    pub fn new(
+        base_strength: f32,
+        flicker_strength: f32,
+        step_strength: f32,
+        gradient_strength: f32,
+        interval: f32,
+        interval_strength: f32,
+    ) -> Self {
+        Self {
+            base_strength,
+            flicker_strength,
+            step_strength,
+            gradient_strength,
+            interval,
+            interval_strength,
+            current_strength: base_strength,
+            current_gradient: 0.0,
+            time_till_delta: 0.0,
         }
     }
 }
@@ -116,7 +156,7 @@ fn drive_circle_lights(
     mut color_mats: ResMut<Assets<CircleLightMat>>,
     layer_settings: Res<LayerSettings>,
 ) {
-    const PIXELS_PER_RING: f32 = 16.0;
+    const PIXELS_PER_RING: f32 = 2.0;
     for (circle_light, mut light_source) in &mut light_q {
         light_source.radius = Some(Fx::from_num(circle_light.strength));
         let mat_holder = mat_holders
@@ -127,7 +167,7 @@ fn drive_circle_lights(
             .expect("Circle light invariant");
         mat.color = color_as_vec4(circle_light.color);
         let screen_size = layer_settings.screen_size.as_vec2();
-        mat.sx_sy_unused_unused = Vec4::new(
+        mat.sx_sy_rings_unused = Vec4::new(
             circle_light.strength / screen_size.x,
             circle_light.strength / screen_size.y,
             (circle_light.strength / PIXELS_PER_RING).ceil(),
@@ -136,8 +176,37 @@ fn drive_circle_lights(
     }
 }
 
+fn drive_flicker(
+    mut light_q: Query<(&mut CircleLight, &mut LightFlicker)>,
+    bullet_time: Res<BulletTime>,
+) {
+    for (mut circle_light, mut flicker) in &mut light_q {
+        flicker.time_till_delta -= bullet_time.delta_secs().to_num::<f32>();
+
+        if flicker.time_till_delta <= 0.0 {
+            flicker.time_till_delta = thread_rng().gen_range(
+                flicker.interval - flicker.interval_strength
+                    ..flicker.interval + flicker.interval_strength,
+            );
+            flicker.current_gradient =
+                thread_rng().gen_range(-flicker.gradient_strength..flicker.gradient_strength);
+            flicker.current_strength +=
+                thread_rng().gen_range(-flicker.step_strength..flicker.step_strength);
+        }
+
+        flicker.current_strength +=
+            flicker.current_gradient * bullet_time.delta_secs().to_num::<f32>();
+        flicker.current_strength = flicker.current_strength.clamp(
+            flicker.base_strength - flicker.flicker_strength,
+            flicker.base_strength + flicker.flicker_strength,
+        );
+        circle_light.strength = flicker.current_strength;
+    }
+}
+
 pub(crate) fn register_light_proc(app: &mut App) {
     app.register_type::<CircleLight>();
+    app.register_type::<LightFlicker>();
 
     app.add_plugins(Material2dPlugin::<CircleLightMat>::default());
     embedded_asset!(app, "circle_light.wgsl");
@@ -146,5 +215,10 @@ pub(crate) fn register_light_proc(app: &mut App) {
     embedded_asset!(app, "light_cutout.wgsl");
 
     app.add_systems(Startup, startup_screen_mesh);
-    app.add_systems(Update, drive_circle_lights.in_set(LightingSet));
+    app.add_systems(
+        Update,
+        (drive_circle_lights, drive_flicker)
+            .chain()
+            .in_set(LightingSet),
+    );
 }

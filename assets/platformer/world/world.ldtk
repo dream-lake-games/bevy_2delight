@@ -1970,22 +1970,6 @@
 						},
 						{
 							"__identifier": "Torch",
-							"__grid": [30,18],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": { "tilesetUid": 61, "x": 8, "y": 0, "w": 8, "h": 8 },
-							"__smartColor": "#BE4A2F",
-							"iid": "218bd620-e920-11ef-97e3-19609189c96b",
-							"width": 8,
-							"height": 8,
-							"defUid": 65,
-							"px": [240,144],
-							"fieldInstances": [],
-							"__worldX": -48,
-							"__worldY": -48
-						},
-						{
-							"__identifier": "Torch",
 							"__grid": [44,19],
 							"__pivot": [0,0],
 							"__tags": [],
@@ -2111,6 +2095,38 @@
 							"fieldInstances": [],
 							"__worldX": -56,
 							"__worldY": 152
+						},
+						{
+							"__identifier": "Torch",
+							"__grid": [30,18],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 61, "x": 8, "y": 0, "w": 8, "h": 8 },
+							"__smartColor": "#BE4A2F",
+							"iid": "ffb03bc0-e920-11ef-97e3-93a4be8e597d",
+							"width": 8,
+							"height": 8,
+							"defUid": 65,
+							"px": [240,144],
+							"fieldInstances": [],
+							"__worldX": -48,
+							"__worldY": -48
+						},
+						{
+							"__identifier": "Torch",
+							"__grid": [26,22],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 61, "x": 8, "y": 0, "w": 8, "h": 8 },
+							"__smartColor": "#BE4A2F",
+							"iid": "00664550-e920-11ef-97e3-2d54128366cf",
+							"width": 8,
+							"height": 8,
+							"defUid": 65,
+							"px": [208,176],
+							"fieldInstances": [],
+							"__worldX": -80,
+							"__worldY": -16
 						}
 					]
 				},
