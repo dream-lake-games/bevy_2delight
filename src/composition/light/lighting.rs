@@ -38,7 +38,6 @@ fn update_lit_mats(
         .get_mut(ambient_hand)
         .expect("Ambient should always exist");
     ambient.base_light = color_as_vec4(lighting.base_ambient);
-    ambient.brightness_threshold_unused_unused_unused[0] = lighting.brightness_threshold_ambient;
 
     let detail_hand = mat_q
         .get(lighting.layer_eid_map[&Layer::DetailPixels])
@@ -47,7 +46,6 @@ fn update_lit_mats(
         .get_mut(detail_hand)
         .expect("Detail should always exist");
     detail.base_light = color_as_vec4(lighting.base_detail);
-    detail.brightness_threshold_unused_unused_unused[0] = lighting.brightness_threshold_detail;
 }
 
 pub(crate) fn register_lighting(app: &mut App) {

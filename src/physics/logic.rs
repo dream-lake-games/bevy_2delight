@@ -18,6 +18,7 @@ use crate::{
 use super::spat_hash::{SpatHash, SpatHashStaticTx, SpatHashTriggerTx, SpatKeys};
 
 /// A helpful function to make sure physics things exist as we expect them to
+#[cfg(debug_assertions)]
 fn invariants(
     dyno_without_pos: Query<Entity, (With<Dyno>, Without<Pos>)>,
     static_rx_n_tx: Query<Entity, (With<StaticRx>, With<StaticTx>)>,

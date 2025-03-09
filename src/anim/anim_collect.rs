@@ -21,6 +21,7 @@ macro_rules! defn_anim {
                 Eq,
                 Hash,
                 bevy_2delight_macros::AnimStateMachine,
+                strum_macros::EnumIter,
             )]
             $i
             #[doc(hidden)]

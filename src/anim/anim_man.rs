@@ -6,7 +6,7 @@ use bevy::utils::HashMap;
 use crate::composition::prelude::Layer;
 use crate::prelude::Fx;
 
-use super::traits::AnimStateMachine;
+use super::anim_traits::AnimStateMachine;
 
 #[derive(Debug, Clone, Reflect, PartialEq)]
 pub enum AnimNextState<NextType> {
@@ -72,10 +72,12 @@ pub struct AnimMan<StateMachine: AnimStateMachine> {
     pub(super) time: Fx,
     /// The render layer of the animation
     pub(super) render_layers: RenderLayers,
-    /// INTERNAL: More ergonomic way to get to the body
-    pub(super) body: Entity,
+    /// INTERNAL: More ergonomic way to get to the bodies
+    pub(super) pixel_body: Entity,
+    pub(super) brightness_body: Entity,
     /// INTERNAL: Hold these strong handles to prevent flickering
-    pub(super) handle_map: HashMap<StateMachine, Handle<Image>>,
+    pub(super) pixel_handle_map: HashMap<StateMachine, Handle<Image>>,
+    pub(super) brightness_handle_map: HashMap<StateMachine, Handle<Image>>,
 }
 
 impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
@@ -85,8 +87,10 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
             last_frame: None,
             time: Fx::ZERO,
             render_layers: StateMachine::RENDER_LAYERS.unwrap_or(Layer::Static.render_layers()),
-            body: Entity::PLACEHOLDER,
-            handle_map: default(),
+            pixel_body: Entity::PLACEHOLDER,
+            brightness_body: Entity::PLACEHOLDER,
+            pixel_handle_map: default(),
+            brightness_handle_map: default(),
         }
     }
 }

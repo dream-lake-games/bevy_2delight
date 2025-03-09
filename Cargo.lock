@@ -409,6 +409,7 @@ dependencies = [
  "lazy_static",
  "paste",
  "rand",
+ "serde_json",
  "strum",
  "strum_macros",
 ]

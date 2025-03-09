@@ -11,20 +11,12 @@ use crate::glue::color_as_vec4;
 pub(crate) struct LitMat {
     #[texture(1)]
     #[sampler(2)]
-    pixels: Handle<Image>,
+    input: Handle<Image>,
     #[texture(3)]
     #[sampler(4)]
-    brightness: Handle<Image>,
-    #[texture(5)]
-    #[sampler(6)]
-    reflexivity: Handle<Image>,
-    #[texture(7)]
-    #[sampler(8)]
     light: Handle<Image>,
-    #[uniform(9)]
+    #[uniform(5)]
     pub(crate) base_light: Vec4,
-    #[uniform(10)]
-    pub(crate) brightness_threshold_unused_unused_unused: Vec4,
 }
 impl Material2d for LitMat {
     fn fragment_shader() -> ShaderRef {
@@ -35,26 +27,11 @@ impl Material2d for LitMat {
     }
 }
 impl LitMat {
-    pub fn new(
-        pixels: Handle<Image>,
-        brightness: Handle<Image>,
-        reflexivity: Handle<Image>,
-        light: Handle<Image>,
-        base_light: Color,
-        brightness_threshold: f32,
-    ) -> Self {
+    pub fn new(input: Handle<Image>, light: Handle<Image>, base_light: Color) -> Self {
         Self {
-            pixels,
-            brightness,
-            reflexivity,
+            input,
             light,
             base_light: color_as_vec4(base_light),
-            brightness_threshold_unused_unused_unused: Vec4::new(
-                brightness_threshold,
-                0.0,
-                0.0,
-                0.0,
-            ),
         }
     }
 }

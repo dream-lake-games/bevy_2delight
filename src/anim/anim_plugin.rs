@@ -2,9 +2,18 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
-use super::logic::register_logic;
-use super::time::{AnimTime, AnimTimeClass, AnimsPaused};
-use super::traits::AnimStateMachine;
+use super::anim_time::{AnimTime, AnimTimeClass, AnimsPaused};
+use super::anim_traits::AnimStateMachine;
+
+#[cfg(debug_assertions)]
+#[derive(Event)]
+pub(super) struct ReloadAnims;
+#[cfg(debug_assertions)]
+fn watch_for_reload_anims(mut commands: Commands, keyboard: Res<ButtonInput<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::Backspace) {
+        commands.trigger(ReloadAnims);
+    }
+}
 
 #[derive(Default)]
 pub struct AnimDefnPlugin<StateMachine: AnimStateMachine> {
@@ -12,7 +21,8 @@ pub struct AnimDefnPlugin<StateMachine: AnimStateMachine> {
 }
 impl<StateMachine: AnimStateMachine> Plugin for AnimDefnPlugin<StateMachine> {
     fn build(&self, app: &mut App) {
-        register_logic::<StateMachine>(app);
+        super::anim_logic::register_anim_logic::<StateMachine>(app);
+        super::anim_res::register_anim_res::<StateMachine>(app);
     }
 }
 
@@ -52,5 +62,10 @@ impl Plugin for AnimPlugin {
         });
         app.insert_resource(AnimTime::default());
         app.insert_resource(AnimsPaused::default());
+
+        #[cfg(debug_assertions)]
+        {
+            app.add_systems(Update, watch_for_reload_anims);
+        }
     }
 }

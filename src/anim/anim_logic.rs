@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
-use crate::prelude::{BulletTime, Fx};
+use crate::prelude::{BulletTime, Fx, Layer};
 
-use super::man::{AnimMan, AnimNextState, AnimObserveStateChanges};
-use super::plugin::AnimDefaults;
-use super::time::{AnimTime, AnimTimeClass, AnimsPaused};
-use super::traits::AnimStateMachine;
+use super::anim_man::{AnimMan, AnimNextState, AnimObserveStateChanges};
+use super::anim_plugin::AnimDefaults;
+use super::anim_res::AnimRes;
+use super::anim_time::{AnimTime, AnimTimeClass, AnimsPaused};
+use super::anim_traits::AnimStateMachine;
 use super::{AnimPostSet, AnimPreSet};
 
 fn update_anim_time(
@@ -38,6 +39,7 @@ struct AnimBodyBundle {
 }
 impl AnimBodyBundle {
     pub fn new(
+        name: &str,
         image: Handle<Image>,
         size: UVec2,
         offset: IVec2,
@@ -55,7 +57,7 @@ impl AnimBodyBundle {
         }
 
         Self {
-            name: Name::new("AnimBody"),
+            name: Name::new(format!("AnimBody_{name}")),
             marker: AnimBody,
             transform: Transform::from_translation(corrected_offset.extend(0.0)),
             sprite: Sprite {
@@ -83,12 +85,13 @@ fn progress_animations<StateMachine: AnimStateMachine>(
     mut anims: Query<(Entity, &mut AnimMan<StateMachine>)>,
     defaults: Res<AnimDefaults>,
     anim_time: Res<AnimTime>,
+    anim_res: Res<AnimRes<StateMachine>>,
 ) {
     let time_class = StateMachine::TIME_CLASS.unwrap_or(defaults.settings.default_time_class);
     let time_delta_us = anim_time.get(time_class);
 
     for (anim_eid, mut anim_man) in &mut anims {
-        if anim_man.body == Entity::PLACEHOLDER {
+        if anim_man.pixel_body == Entity::PLACEHOLDER {
             continue;
         }
 
@@ -104,8 +107,9 @@ fn progress_animations<StateMachine: AnimStateMachine>(
         while anim_man.time > get_spf(&anim_man.this_frame.state) {
             anim_man.this_frame.ix += 1;
             let dec = get_spf(&anim_man.this_frame.state);
+            let length = anim_res.get_length(anim_man.this_frame.state);
             anim_man.time -= dec;
-            if anim_man.this_frame.ix >= anim_man.this_frame.state.get_length() {
+            if anim_man.this_frame.ix >= length {
                 match anim_man.this_frame.state.get_next() {
                     AnimNextState::Stay => {
                         anim_man.this_frame.ix = 0;
@@ -121,7 +125,7 @@ fn progress_animations<StateMachine: AnimStateMachine>(
                         break;
                     }
                     AnimNextState::Remove => {
-                        commands.entity(anim_man.body).despawn_recursive();
+                        commands.entity(anim_man.pixel_body).despawn_recursive();
                         commands.entity(anim_eid).remove::<AnimMan<StateMachine>>();
                         commands
                             .entity(anim_eid)
@@ -141,14 +145,15 @@ fn bless_animations<StateMachine: AnimStateMachine>(
     mut commands: Commands,
     mut anims: Query<(Entity, &mut AnimMan<StateMachine>), Added<AnimMan<StateMachine>>>,
     ass: Res<AssetServer>,
+    anim_res: Res<AnimRes<StateMachine>>,
 ) {
     for (eid, mut anim_man) in &mut anims {
-        anim_man.handle_map = StateMachine::make_handle_map(&ass);
-
-        let body_eid = commands
+        anim_man.pixel_handle_map = StateMachine::make_pixel_handle_map(&ass);
+        anim_man.pixel_body = commands
             .spawn(AnimBodyBundle::new(
-                anim_man.handle_map[&anim_man.this_frame.state].clone(),
-                StateMachine::SIZE * StateMachine::REP,
+                "pixels",
+                anim_man.pixel_handle_map[&anim_man.this_frame.state].clone(),
+                anim_res.get_size() * StateMachine::REP,
                 anim_man.get_state().get_offset(),
                 anim_man.get_flip_x(),
                 anim_man.get_flip_y(),
@@ -157,7 +162,25 @@ fn bless_animations<StateMachine: AnimStateMachine>(
             .set_parent(eid)
             .id();
 
-        anim_man.body = body_eid;
+        if anim_res.has_brightness() {
+            anim_man.brightness_handle_map = StateMachine::make_brightness_handle_map(&ass);
+            anim_man.brightness_body = commands
+                .spawn(AnimBodyBundle::new(
+                    "brightness",
+                    anim_man.brightness_handle_map[&anim_man.this_frame.state].clone(),
+                    anim_res.get_size() * StateMachine::REP,
+                    anim_man.get_state().get_offset(),
+                    anim_man.get_flip_x(),
+                    anim_man.get_flip_y(),
+                    if anim_man.render_layers == Layer::AmbientPixels.render_layers() {
+                        Layer::AmbientBrightness.render_layers()
+                    } else {
+                        Layer::DetailBrightness.render_layers()
+                    },
+                ))
+                .set_parent(eid)
+                .id();
+        }
     }
 }
 
@@ -165,34 +188,43 @@ fn bless_animations<StateMachine: AnimStateMachine>(
 fn drive_animations<StateMachine: AnimStateMachine>(
     mut anims: Query<&AnimMan<StateMachine>>,
     mut bodies: Query<&mut Sprite, With<AnimBody>>,
+    anim_res: Res<AnimRes<StateMachine>>,
 ) {
+    let size = anim_res.get_size();
     for anim_man in &mut anims {
-        if anim_man.body == Entity::PLACEHOLDER {
-            continue;
-        }
         let flip_change = anim_man.delta_flip_x().is_some() || anim_man.delta_flip_y().is_some();
         let state_change = Some(&anim_man.this_frame) == anim_man.last_frame.as_ref();
         if !flip_change && !state_change {
             continue;
         }
-        let mut body = bodies
-            .get_mut(anim_man.body)
-            .expect("Body invariant broken for AnimMan");
-        if flip_change {
-            body.flip_x = anim_man.get_flip_x();
-            body.flip_y = anim_man.get_flip_y();
-        }
-        if state_change {
-            body.image = anim_man.handle_map[&anim_man.get_state()].clone();
-            let bottom_left = UVec2::new(anim_man.get_ix() * StateMachine::SIZE.x, 0);
-            let top_right = UVec2::new(
-                (anim_man.get_ix() + 1) * StateMachine::SIZE.x - 1,
-                StateMachine::SIZE.y,
-            );
-            body.rect = Some(Rect::from_corners(
-                bottom_left.as_vec2(),
-                top_right.as_vec2(),
-            ));
+        for (body_eid, handle_map) in [
+            (anim_man.pixel_body, &anim_man.pixel_handle_map),
+            (anim_man.brightness_body, &anim_man.brightness_handle_map),
+        ] {
+            if body_eid == Entity::PLACEHOLDER {
+                continue;
+            }
+            let mut body = bodies
+                .get_mut(body_eid)
+                .expect("Body invariant broken for AnimMan");
+            if flip_change {
+                body.flip_x = anim_man.get_flip_x();
+                body.flip_y = anim_man.get_flip_y();
+            }
+            if state_change {
+                body.image = handle_map[&anim_man.get_state()].clone();
+                let bottom_left = UVec2::new(anim_man.get_ix() * size.x, 0);
+                let top_right = UVec2::new((anim_man.get_ix() + 1) * size.x - 1, size.y);
+                body.rect = Some(Rect::from_corners(
+                    bottom_left.as_vec2(),
+                    top_right.as_vec2(),
+                ));
+                #[cfg(debug_assertions)]
+                {
+                    // When debugging we may change the size or length of an anim mid run
+                    body.custom_size = Some((anim_res.get_size() * StateMachine::REP).as_vec2());
+                }
+            }
         }
     }
 }
@@ -208,7 +240,7 @@ fn trigger_state_changes<StateMachine: AnimStateMachine>(
     }
 }
 
-pub(crate) fn register_logic<StateMachine: AnimStateMachine>(app: &mut App) {
+pub(crate) fn register_anim_logic<StateMachine: AnimStateMachine>(app: &mut App) {
     app.add_systems(
         Update,
         (

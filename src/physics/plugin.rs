@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::physics::{colls, logic, triggers::TriggerKindTrait};
 
-use super::{debug::PhysicsDebugPluginGeneric, spat_hash};
+use super::spat_hash;
 
 pub struct PhysicsSettingsGeneric<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
 {
@@ -43,7 +43,10 @@ impl<TriggerRx: TriggerKindTrait, TriggerTx: TriggerKindTrait> Plugin
 
         #[cfg(debug_assertions)]
         {
-            app.add_plugins(PhysicsDebugPluginGeneric::<TriggerRx, TriggerTx>::default());
+            app.add_plugins(crate::physics::debug::PhysicsDebugPluginGeneric::<
+                TriggerRx,
+                TriggerTx,
+            >::default());
         }
     }
 }

@@ -1,9 +1,6 @@
 use syn::{DeriveInput, Ident};
 
-mod tag_info;
-
 use crate::parse_helpers::*;
-use tag_info::*;
 
 struct EnumInfo {
     folder: String,
@@ -17,7 +14,6 @@ struct EnumInfo {
 struct VariantInfo {
     ident: Ident,
     tag: String,
-    tag_info: TagInfo,
     fps: Option<u32>,
     offset: Option<(i32, i32)>,
     next: Option<Ident>,
@@ -48,12 +44,10 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
         if !path.exists() {
             panic!("Anim tag JSON not found: {}", path.display());
         }
-        let tag_info = TagInfo::from_path(&path).unwrap();
 
         let info = VariantInfo {
             ident: variant.ident.clone(),
             tag,
-            tag_info,
             fps: find_optional_attr!(variant, "fps").map(|a| get_single_lit_int("fps", a)),
             offset: find_optional_attr!(variant, "offset").map(|a| get_pair_lit_int("offset", a)),
             next: find_optional_attr!(variant, "next").map(|a| get_single_ident("next", a)),
@@ -64,8 +58,6 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
     if variant_infos.len() == 0 {
         panic!("The AnimStateMachine must have at least one state");
     }
-    let fishing_info = variant_infos.iter().next().unwrap();
-    let (w, h) = (fishing_info.tag_info.w, fishing_info.tag_info.h);
     let (rep_x, rep_y) = enum_info.rep.unwrap_or((1, 1));
 
     let layer = match enum_info.layer {
@@ -78,22 +70,15 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
         None => quote::quote!(None),
     };
 
-    let handle_map_tokens = variant_infos.clone().into_iter().map(|variant_info| {
+    let get_special_filepath_tokens = variant_infos.clone().into_iter().map(|variant_info| {
         let ident = variant_info.ident;
-        let path = format!("{}/{}.png", enum_info.folder, variant_info.tag);
-        quote::quote! { map.insert(Self::#ident, ass.load(#path)); }
-    });
-
-    let get_filepath_tokens = variant_infos.clone().into_iter().map(|variant_info| {
-        let ident = variant_info.ident;
-        let path = format!("{}/{}.png", enum_info.folder, variant_info.tag);
-        quote::quote! { Self::#ident => #path, }
-    });
-
-    let get_length_tokens = variant_infos.clone().into_iter().map(|variant_info| {
-        let ident = variant_info.ident;
-        let length = variant_info.tag_info.length;
-        quote::quote! { Self::#ident => #length, }
+        let folder = enum_info.folder.clone();
+        let tag = variant_info.tag.clone();
+        quote::quote! { Self::#ident => match prefix {
+                Some(px) => format!("{}/{}/{}.png", #folder, px, #tag),
+                None => format!("{}/{}.png", #folder, #tag),
+            }
+        }
     });
 
     let get_fps_tokens = variant_infos.clone().into_iter().map(|variant_info| {
@@ -126,28 +111,13 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
     quote::quote! {
         impl bevy_2delight::prelude::AnimStateMachine for #enum_ident {
             const RENDER_LAYERS: Option<bevy::render::view::RenderLayers> = #layer;
-            const SIZE: UVec2 = UVec2::new(#w, #h);
             const ZIX: f32 = #zix;
             const TIME_CLASS: Option<bevy_2delight::prelude::AnimTimeClass> = #time_class;
             const REP: UVec2 = UVec2::new(#rep_x, #rep_y);
 
-            fn make_handle_map(
-                ass: &bevy::prelude::Res<bevy::prelude::AssetServer>
-            ) -> bevy::utils::HashMap<Self, Handle<bevy::prelude::Image>> {
-                let mut map = bevy::utils::HashMap::new();
-                #(#handle_map_tokens)*
-                map
-            }
-
-            fn get_filepath(&self) -> &'static str {
+            fn get_special_filepath(&self, prefix: Option<&str>) -> String {
                 match self {
-                    #(#get_filepath_tokens)*
-                }
-            }
-
-            fn get_length(&self) -> u32 {
-                match self {
-                    #(#get_length_tokens)*
+                    #(#get_special_filepath_tokens)*
                 }
             }
 

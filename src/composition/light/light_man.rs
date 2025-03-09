@@ -7,7 +7,7 @@ use crate::{
 
 use super::{
     light_alloc::LightClaim,
-    light_interaction::{register_light_interaction, remove_light_source, LightSource},
+    light_interaction::{remove_light_source, LightSource},
 };
 
 /// A trait that will allow lighting systems to use this anim as light source
