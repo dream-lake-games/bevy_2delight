@@ -1,13 +1,12 @@
-use bevy::{
-    asset::embedded_asset,
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin},
-};
+use bevy::{asset::embedded_asset, prelude::*, sprite::Material2dPlugin};
 use rand::{thread_rng, Rng};
 
 use crate::{
-    composition::{layer::LayerSettings, light::light_cutout::LightCutoutMat, LightingSet},
+    composition::{
+        layer::LayerSettings,
+        mats::{circle_light_mat::CircleLightMat, light_cutout_mat::LightCutoutMat},
+        LightingSet,
+    },
     glue::{color_as_vec4, Fx},
     prelude::BulletTime,
 };
@@ -16,45 +15,6 @@ use super::{
     light_alloc::LightClaim,
     light_interaction::{remove_light_source, LightSource},
 };
-
-#[derive(Resource)]
-pub(super) struct ScreenMesh(pub(super) Handle<Mesh>);
-fn startup_screen_mesh(
-    mut commands: Commands,
-    layer_settings: Res<LayerSettings>,
-    mut mesh: ResMut<Assets<Mesh>>,
-) {
-    let hand = mesh.add(Rectangle::new(
-        layer_settings.screen_size.x as f32,
-        layer_settings.screen_size.y as f32,
-    ));
-    commands.insert_resource(ScreenMesh(hand));
-}
-
-/// The mat that does the multiplying
-#[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
-struct CircleLightMat {
-    #[uniform(1)]
-    pub(crate) color: Vec4,
-    #[uniform(2)]
-    pub(crate) sx_sy_rings_unused: Vec4,
-}
-impl Material2d for CircleLightMat {
-    fn fragment_shader() -> ShaderRef {
-        "embedded://bevy_2delight/composition/light/circle_light.wgsl".into()
-    }
-    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
-        bevy::sprite::AlphaMode2d::Blend
-    }
-}
-impl CircleLightMat {
-    pub fn new(color: Color) -> Self {
-        Self {
-            color: color_as_vec4(color),
-            sx_sy_rings_unused: Vec4::ZERO,
-        }
-    }
-}
 
 /// Possible strength values: [base_strength - flicker_strength, base_strength + flicker_strength]
 /// Every [interval - interval_strength, interval + interval_strength] seconds,
@@ -208,13 +168,6 @@ pub(crate) fn register_light_proc(app: &mut App) {
     app.register_type::<CircleLight>();
     app.register_type::<LightFlicker>();
 
-    app.add_plugins(Material2dPlugin::<CircleLightMat>::default());
-    embedded_asset!(app, "circle_light.wgsl");
-
-    app.add_plugins(Material2dPlugin::<LightCutoutMat>::default());
-    embedded_asset!(app, "light_cutout.wgsl");
-
-    app.add_systems(Startup, startup_screen_mesh);
     app.add_systems(
         Update,
         (drive_circle_lights, drive_flicker)

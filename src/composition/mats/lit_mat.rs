@@ -20,7 +20,7 @@ pub(crate) struct LitMat {
 }
 impl Material2d for LitMat {
     fn fragment_shader() -> ShaderRef {
-        "embedded://bevy_2delight/composition/lit_mat.wgsl".into()
+        "embedded://bevy_2delight/composition/mats/lit_mat.wgsl".into()
     }
     fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
         bevy::sprite::AlphaMode2d::Blend

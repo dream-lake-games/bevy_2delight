@@ -26,14 +26,14 @@ const BLEND_ADD: BlendState = BlendState {
 /// When multiple lights are on screen, we don't want the covering quads of one to hide another
 /// This basically turns black into clear to get around that.
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
-pub(super) struct LightCutoutMat {
+pub(crate) struct LightCutoutMat {
     #[texture(1)]
     #[sampler(2)]
     input: Handle<Image>,
 }
 impl Material2d for LightCutoutMat {
     fn fragment_shader() -> ShaderRef {
-        "embedded://bevy_2delight/composition/light/light_cutout.wgsl".into()
+        "embedded://bevy_2delight/composition/mats/light_cutout_mat.wgsl".into()
     }
     fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
         bevy::sprite::AlphaMode2d::Blend

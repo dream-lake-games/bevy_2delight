@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 
 use crate::{
-    composition::{lit_mat::LitMat, LightingSet},
+    composition::{mats::lit_mat::LitMat, LightingSet},
     glue::color_as_vec4,
     prelude::Layer,
 };

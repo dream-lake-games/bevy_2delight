@@ -3,7 +3,7 @@ use bevy::prelude::*;
 mod camera;
 mod layer;
 mod light;
-mod lit_mat;
+mod mats;
 mod parallax;
 mod plugin;
 

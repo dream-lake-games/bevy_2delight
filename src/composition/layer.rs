@@ -12,7 +12,21 @@ use bevy::{
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use super::{camera::FollowDynamicCamera, lit_mat::LitMat, prelude::Lighting};
+use super::{camera::FollowDynamicCamera, mats::lit_mat::LitMat, prelude::Lighting};
+
+#[derive(Resource)]
+pub(super) struct ScreenMesh(pub(super) Handle<Mesh>);
+fn setup_screen_mesh(
+    mut commands: Commands,
+    layer_settings: Res<LayerSettings>,
+    mut mesh: ResMut<Assets<Mesh>>,
+) {
+    let hand = mesh.add(Rectangle::new(
+        layer_settings.screen_size.x as f32,
+        layer_settings.screen_size.y as f32,
+    ));
+    commands.insert_resource(ScreenMesh(hand));
+}
 
 #[derive(Resource)]
 struct LayerRoot(Entity);
@@ -424,8 +438,8 @@ fn setup_logical_layers(
     root: Res<LayerRoot>,
     layer_settings: Res<LayerSettings>,
     mut lit_mats: ResMut<Assets<LitMat>>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut lighting: ResMut<Lighting>,
+    screen_mesh: Res<ScreenMesh>,
 ) {
     // Helper function for setting up a simple layer shared for normal and internal varieties
     let do_simple_setup =
@@ -466,18 +480,13 @@ fn setup_logical_layers(
             LogicalLayerMode::Lit { input, output } => {
                 let lit_mat = LitMat::new(input.target(), Layer::Light.target(), Color::BLACK);
                 let lit_mat_hand = lit_mats.add(lit_mat);
-                let mesh = Mesh::from(Rectangle::new(
-                    layer_settings.screen_size.x as f32,
-                    layer_settings.screen_size.y as f32,
-                ));
-                let mesh_hand = meshes.add(mesh);
+                let mesh_hand = screen_mesh.0.clone();
                 let eid = commands
                     .spawn((
                         Name::new(format!("LayerSprite_Lit_{:?}", layer.name)),
                         MeshMaterial2d(lit_mat_hand),
                         Mesh2d(mesh_hand),
                         Transform::from_translation(Vec3::Z * ix as f32),
-                        // ResizeLayerToWindow,
                         output.render_layers(),
                     ))
                     .set_parent(root.eid())
@@ -539,6 +548,7 @@ pub(super) fn register_layer(app: &mut App, screen_size: UVec2) {
         Startup,
         (
             spawn_roots,
+            setup_screen_mesh,
             setup_physical_layers,
             setup_logical_layers,
             setup_smush_layer,

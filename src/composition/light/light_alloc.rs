@@ -13,8 +13,7 @@ use crate::composition::camera::FollowDynamicCamera;
 use crate::composition::layer::{LayerOrder, LayerSettings, LightRoot};
 use crate::prelude::Layer;
 
-use super::light_cutout::LightCutoutMat;
-use super::light_proc::ScreenMesh;
+use crate::composition::{layer::ScreenMesh, mats::light_cutout_mat::LightCutoutMat};
 
 /// Facilitates assigning lights to different render layers so that they don't
 /// interfere with each other

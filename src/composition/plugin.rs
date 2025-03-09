@@ -1,6 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*, sprite::Material2dPlugin};
-
-use super::lit_mat::LitMat;
+use bevy::prelude::*;
 
 #[derive(Clone)]
 pub struct CompositionSettings {
@@ -49,13 +47,12 @@ impl Plugin for CompositionPlugin {
                 })
                 .set(ImagePlugin::default_nearest()),
         );
-        embedded_asset!(app, "lit_mat.wgsl");
-        app.add_plugins(Material2dPlugin::<LitMat>::default());
 
         super::camera::register_camera(app);
         super::layer::register_layer(app, self.settings.screen_size);
         super::parallax::register_parallax(app);
         super::light::lighting::register_lighting(app);
         super::light::light_proc::register_light_proc(app);
+        super::mats::register_mats(app);
     }
 }
