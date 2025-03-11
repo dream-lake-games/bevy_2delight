@@ -268,7 +268,7 @@ impl MetaLayer {
 
 /// For some semi-hard-coded bullshit
 #[derive(Debug)]
-enum BrightnessCombineStage {
+pub(crate) enum BrightnessCombineStage {
     Mask(MetaLayer),
     Show(InternalLayer),
 }
@@ -641,7 +641,7 @@ fn setup_logical_layers(
                         ))
                         .set_parent(root.eid());
                     let blur_mat_hand =
-                        blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 16));
+                        blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 32));
                     commands
                         .spawn((
                             Name::new(format!("GaussianBlurPass_{pass}_Mesh")),

@@ -42,8 +42,13 @@ fn threshold_brightness(raw_brightness: vec4<f32>) -> vec4<f32> {
 
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
-    var raw_brightness = get_brightness(in.uv);
-    var brightness = threshold_brightness(raw_brightness);
+    // var raw_brightness = get_brightness(in.uv);
+    // var brightness = threshold_brightness(raw_brightness);
     var pixel_value = textureSample(input_pixels_texture, input_pixels_splr, in.uv);
-    return brightness * 1.4;
+    // return brightness * 1.4;
+    let pixel_luminance = 0.2126 * pixel_value.x + 0.7152 * pixel_value.y + 0.0722 * pixel_value.z;
+    if (pixel_luminance < 0.001) {
+        return vec4<f32>(0.0);
+    }
+    return vec4<f32>(pixel_luminance, pixel_luminance, pixel_luminance, 1.0);
 }
