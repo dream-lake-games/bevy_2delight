@@ -93,6 +93,8 @@ fn main() {
         ),
     );
 
+    debug_resource!(app, Lighting);
+
     app.add_systems(Startup, startup);
 
     app.run();

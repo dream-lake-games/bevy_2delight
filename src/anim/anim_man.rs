@@ -86,7 +86,8 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
             this_frame: default(),
             last_frame: None,
             time: Fx::ZERO,
-            render_layers: StateMachine::RENDER_LAYERS.unwrap_or(Layer::Static.render_layers()),
+            render_layers: StateMachine::RENDER_LAYERS
+                .unwrap_or(Layer::StaticPixels.render_layers()),
             pixel_body: Entity::PLACEHOLDER,
             brightness_body: Entity::PLACEHOLDER,
             pixel_handle_map: default(),

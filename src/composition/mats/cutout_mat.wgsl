@@ -8,8 +8,8 @@ var input_splr: sampler;
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var val = textureSample(input_texture, input_splr, in.uv);
-    if (val.x < 0.00001 && val.y < 0.00001 && val.z < 0.00001 && val.w > 0.99999) {
-        return vec4<f32>(0);
+    if (val.x < 0.01 && val.y < 0.01 && val.z < 0.01) {
+        return vec4<f32>(0.0);
     }
     return val;
 }

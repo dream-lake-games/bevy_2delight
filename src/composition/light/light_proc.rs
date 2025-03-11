@@ -1,12 +1,8 @@
-use bevy::{asset::embedded_asset, prelude::*, sprite::Material2dPlugin};
+use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
 use crate::{
-    composition::{
-        layer::LayerSettings,
-        mats::{circle_light_mat::CircleLightMat, light_cutout_mat::LightCutoutMat},
-        LightingSet,
-    },
+    composition::{layer::LayerSettings, mats::circle_light_mat::CircleLightMat, LightingSet},
     glue::{color_as_vec4, Fx},
     prelude::BulletTime,
 };

@@ -13,7 +13,7 @@ use crate::composition::camera::FollowDynamicCamera;
 use crate::composition::layer::{LayerOrder, LayerSettings, LightRoot};
 use crate::prelude::Layer;
 
-use crate::composition::{layer::ScreenMesh, mats::light_cutout_mat::LightCutoutMat};
+use crate::composition::{layer::ScreenMesh, mats::cutout_mat::CutoutMat};
 
 /// Facilitates assigning lights to different render layers so that they don't
 /// interfere with each other
@@ -87,6 +87,7 @@ impl LightClaim {
                     order: LayerOrder::PreLight as isize,
                     target: RenderTarget::Image(image_hand.clone()),
                     clear_color: ClearColorConfig::Custom(Color::linear_rgba(0.0, 0.0, 0.0, 0.0)),
+                    hdr: true,
                     ..default()
                 },
                 rl.clone(),
@@ -97,8 +98,8 @@ impl LightClaim {
 
         // Spawn the mesh which will apply proper cutout shader and chuck output into aggregate light layer
         let mat = world
-            .resource_mut::<Assets<LightCutoutMat>>()
-            .add(LightCutoutMat::new(image_hand));
+            .resource_mut::<Assets<CutoutMat>>()
+            .add(CutoutMat::new(image_hand));
         let mesh = world.resource::<ScreenMesh>().0.clone();
         let agg_mesh_eid = world
             .commands()

@@ -9,6 +9,7 @@ use bevy::{
     },
     sprite::{Material2d, Material2dKey},
 };
+
 const BLEND_ADD: BlendState = BlendState {
     color: BlendComponent {
         src_factor: BlendFactor::SrcAlpha,
@@ -26,14 +27,14 @@ const BLEND_ADD: BlendState = BlendState {
 /// When multiple lights are on screen, we don't want the covering quads of one to hide another
 /// This basically turns black into clear to get around that.
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
-pub(crate) struct LightCutoutMat {
+pub(crate) struct CutoutMat {
     #[texture(1)]
     #[sampler(2)]
     input: Handle<Image>,
 }
-impl Material2d for LightCutoutMat {
+impl Material2d for CutoutMat {
     fn fragment_shader() -> ShaderRef {
-        "embedded://bevy_2delight/composition/mats/light_cutout_mat.wgsl".into()
+        "embedded://bevy_2delight/composition/mats/cutout_mat.wgsl".into()
     }
     fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
         bevy::sprite::AlphaMode2d::Blend
@@ -48,11 +49,10 @@ impl Material2d for LightCutoutMat {
                 target_state.blend = Some(BLEND_ADD);
             }
         }
-
         Ok(())
     }
 }
-impl LightCutoutMat {
+impl CutoutMat {
     pub fn new(input: Handle<Image>) -> Self {
         Self { input }
     }

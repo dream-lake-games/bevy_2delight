@@ -1,4 +1,7 @@
+use std::collections::VecDeque;
+
 use bevy::{
+    core_pipeline::tonemapping::Tonemapping,
     prelude::*,
     render::{
         camera::RenderTarget,
@@ -12,7 +15,14 @@ use bevy::{
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use super::{camera::FollowDynamicCamera, mats::lit_mat::LitMat, prelude::Lighting};
+use super::{
+    camera::FollowDynamicCamera,
+    mats::{
+        brightness_cull_mat::BrightnessCullMat, cutout_mat::CutoutMat,
+        gaussian_blur_mat::GaussianBlurMat, lit_mat::LitMat,
+    },
+    prelude::Lighting,
+};
 
 #[derive(Resource)]
 pub(super) struct ScreenMesh(pub(super) Handle<Mesh>);
@@ -83,7 +93,8 @@ impl LayerSettings {
                 label: None,
                 size: target_extent,
                 dimension: TextureDimension::D2,
-                format: TextureFormat::bevy_default(),
+                // format: TextureFormat::bevy_default(),
+                format: TextureFormat::Rgba16Float,
                 mip_level_count: 1,
                 sample_count: 1,
                 usage: TextureUsages::TEXTURE_BINDING
@@ -105,14 +116,17 @@ pub(super) enum LayerOrder {
     /// Requires all the individual light layers to be rendered first.
     Light = 2,
     /// Processing that requires the lighting info
-    PostLight = 3,
+    ApplyLight = 3,
     /// Requires light info, lit pixels, and brightness/reflexivity info.
     /// Will figure out how bright each pixel is and cull to only what should bloom-blur.
-    BrightnessCulling = 4,
-    /// Blurs the bloom stuff horizontally
-    BlurHorizontal = 5,
-    /// Then blurs it vertically
-    BlurVertical = 6,
+    BrightnessCull = 4,
+    /// Combines the culled brightnesses into one image.
+    /// This accounts for, say, the detail layer (brightness and not-brightness) blocking out the ambient layer (one example)
+    BrightnessCombine = 5,
+    /// Blurs the bloom stuff, claims orders [6,48] for bloom passes
+    Blur = 6,
+    PostBlur = 49,
+    Smush = 50,
 }
 
 #[derive(PartialEq, Eq)]
@@ -134,7 +148,9 @@ pub enum Layer {
     DetailPixels,
     DetailBrightness,
     DetailReflexivity,
-    Static,
+    StaticPixels,
+    StaticBrightness,
+    StaticReflexivity,
     Fg,
     Menu,
     Transition,
@@ -144,7 +160,7 @@ impl Layer {
         match self {
             // We make static 0 (the default) so if we ever forget to attach render layers
             // they'll show up here. Easier to debug than just having the thing not appear
-            Self::Static => RenderLayers::layer(0),
+            Self::StaticPixels => RenderLayers::layer(0),
             // Otherwise just increment
             Self::Dummy => RenderLayers::layer(1),
             Self::Light => RenderLayers::layer(2),
@@ -155,9 +171,11 @@ impl Layer {
             Self::DetailPixels => RenderLayers::layer(7),
             Self::DetailBrightness => RenderLayers::layer(8),
             Self::DetailReflexivity => RenderLayers::layer(9),
-            Self::Fg => RenderLayers::layer(10),
-            Self::Menu => RenderLayers::layer(11),
-            Self::Transition => RenderLayers::layer(12),
+            Self::StaticBrightness => RenderLayers::layer(10),
+            Self::StaticReflexivity => RenderLayers::layer(11),
+            Self::Fg => RenderLayers::layer(12),
+            Self::Menu => RenderLayers::layer(13),
+            Self::Transition => RenderLayers::layer(14),
         }
     }
 
@@ -177,7 +195,9 @@ impl Layer {
             | Self::DetailPixels
             | Self::DetailBrightness
             | Self::DetailReflexivity
-            | Self::Static => LayerPosition::Dynamic,
+            | Self::StaticPixels
+            | Self::StaticBrightness
+            | Self::StaticReflexivity => LayerPosition::Dynamic,
             // NOTE: Light is included (indirectly) here in fixed because each of the underlying light cameras
             //       will follow the camera, and then render back at the origin
             _ => LayerPosition::Fixed,
@@ -190,40 +210,37 @@ impl Layer {
 }
 
 #[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, EnumIter, std::hash::Hash)]
-enum InternalLayer {
-    LitAmbientPixels,
-    LitDetailPixels,
-    BrightAmbientCulled,
-    BrightAmbientIntermediate,
-    BrightAmbientFinal,
-    BrightDetailCulled,
-    BrightDetailIntermediate,
-    BrightDetailFinal,
+pub(crate) enum InternalLayer {
+    AmbientPixelsLit,
+    DetailPixelsLit,
+    AmbientBrightnessCulled,
+    DetailBrightnessCulled,
+    StaticBrightnessCulled,
+    BrightnessLayered,
+    FinalBloom,
 }
 impl InternalLayer {
     pub const fn render_layers(&self) -> RenderLayers {
         match self {
-            Self::LitAmbientPixels => RenderLayers::layer(20),
-            Self::LitDetailPixels => RenderLayers::layer(21),
-            Self::BrightAmbientCulled => RenderLayers::layer(22),
-            Self::BrightAmbientIntermediate => RenderLayers::layer(23),
-            Self::BrightAmbientFinal => RenderLayers::layer(24),
-            Self::BrightDetailCulled => RenderLayers::layer(25),
-            Self::BrightDetailIntermediate => RenderLayers::layer(26),
-            Self::BrightDetailFinal => RenderLayers::layer(26),
+            Self::AmbientPixelsLit => RenderLayers::layer(20),
+            Self::DetailPixelsLit => RenderLayers::layer(21),
+            Self::AmbientBrightnessCulled => RenderLayers::layer(22),
+            Self::DetailBrightnessCulled => RenderLayers::layer(23),
+            Self::StaticBrightnessCulled => RenderLayers::layer(24),
+            Self::BrightnessLayered => RenderLayers::layer(25),
+            Self::FinalBloom => RenderLayers::layer(26),
         }
     }
 
     const fn layer_order(&self) -> LayerOrder {
         match self {
-            Self::LitAmbientPixels => LayerOrder::PostLight,
-            Self::LitDetailPixels => LayerOrder::PostLight,
-            Self::BrightAmbientCulled => LayerOrder::BrightnessCulling,
-            Self::BrightAmbientIntermediate => LayerOrder::BlurHorizontal,
-            Self::BrightAmbientFinal => LayerOrder::BlurVertical,
-            Self::BrightDetailCulled => LayerOrder::BrightnessCulling,
-            Self::BrightDetailIntermediate => LayerOrder::BlurHorizontal,
-            Self::BrightDetailFinal => LayerOrder::BlurVertical,
+            Self::AmbientPixelsLit => LayerOrder::ApplyLight,
+            Self::DetailPixelsLit => LayerOrder::ApplyLight,
+            Self::AmbientBrightnessCulled => LayerOrder::BrightnessCull,
+            Self::DetailBrightnessCulled => LayerOrder::BrightnessCull,
+            Self::StaticBrightnessCulled => LayerOrder::BrightnessCull,
+            Self::BrightnessLayered => LayerOrder::BrightnessCombine,
+            Self::FinalBloom => LayerOrder::PostBlur,
         }
     }
 
@@ -232,58 +249,80 @@ impl InternalLayer {
     }
 }
 
+// fuckkkk I was so close to avoiding nasty hacks :(
+// I guess this one isn't that bad. These should be separate enums, and idk if a trait
+// would actually be any better
+#[derive(Debug, Clone)]
+pub(crate) enum MetaLayer {
+    Normal(Layer),
+    Internal(InternalLayer),
+}
+impl MetaLayer {
+    fn target(&self) -> Handle<Image> {
+        match self {
+            Self::Normal(layer) => layer.target(),
+            Self::Internal(layer) => layer.target(),
+        }
+    }
+}
+
+/// For some semi-hard-coded bullshit
+#[derive(Debug)]
+enum BrightnessCombineStage {
+    Mask(MetaLayer),
+    Show(InternalLayer),
+}
+
 pub(crate) enum LogicalLayerMode {
-    /// Will simply take the produced layer input handle and render to a sprite in the final smush layer
-    Simple { input: Layer },
-    /// Same as above but works on internal layers
-    SimpleInternal { input: InternalLayer },
     /// Applies all the lighting goodness
     Lit { input: Layer, output: InternalLayer },
     /// Applies brightness calc + culling goodness
-    Brightness {
+    BrightnessCull {
         brightness: Layer,
         reflexivity: Layer,
-        lit_input: InternalLayer,
+        input_pixels: MetaLayer,
         output: InternalLayer,
     },
-    /// Blurs horizontally and writes to an intermediate output
-    BlurHorizontal {
+    /// Semi-hard-coded monstrosity
+    BrightnessCombine {
+        stages: Vec<BrightnessCombineStage>,
+        output: InternalLayer,
+    },
+    /// Blurs and shit
+    GaussianBlur {
         input: InternalLayer,
         output: InternalLayer,
+        passes: u32,
     },
-    /// Blurs vertical and renders to a sprite in the final smush layer
-    BlurVertical {
-        input: InternalLayer,
-        output: InternalLayer,
-    },
-}
-fn simple(input: Layer) -> LogicalLayerMode {
-    LogicalLayerMode::Simple { input }
-}
-fn simple_internal(input: InternalLayer) -> LogicalLayerMode {
-    LogicalLayerMode::SimpleInternal { input }
 }
 fn lit(input: Layer, output: InternalLayer) -> LogicalLayerMode {
     LogicalLayerMode::Lit { input, output }
 }
-fn brightness_culling(
+fn brightness_cull(
     brightness: Layer,
     reflexivity: Layer,
-    lit_input: InternalLayer,
+    input_pixels: MetaLayer,
     output: InternalLayer,
 ) -> LogicalLayerMode {
-    LogicalLayerMode::Brightness {
+    LogicalLayerMode::BrightnessCull {
         brightness,
         reflexivity,
-        lit_input,
+        input_pixels,
         output,
     }
 }
-fn blur_horizontal(input: InternalLayer, output: InternalLayer) -> LogicalLayerMode {
-    LogicalLayerMode::BlurHorizontal { input, output }
+fn brightness_combine(
+    stages: Vec<BrightnessCombineStage>,
+    output: InternalLayer,
+) -> LogicalLayerMode {
+    LogicalLayerMode::BrightnessCombine { stages, output }
 }
-fn blur_vertical(input: InternalLayer, output: InternalLayer) -> LogicalLayerMode {
-    LogicalLayerMode::BlurVertical { input, output }
+fn gaussian_blur(input: InternalLayer, output: InternalLayer, passes: u32) -> LogicalLayerMode {
+    LogicalLayerMode::GaussianBlur {
+        input,
+        output,
+        passes,
+    }
 }
 
 struct LogicalLayer {
@@ -298,44 +337,84 @@ impl LogicalLayer {
         }
     }
 }
-
 lazy_static::lazy_static! {
     static ref LOGICAL_LAYERS: Vec<LogicalLayer> = vec![
         // All of our logic
-        LogicalLayer::new("AmbiencePixels", lit(Layer::AmbientPixels, InternalLayer::LitAmbientPixels)),
+        LogicalLayer::new("AmbiencePixels", lit(Layer::AmbientPixels, InternalLayer::AmbientPixelsLit)),
         LogicalLayer::new(
-            "AmbientBrightnessCulling",
-            brightness_culling(
+            "AmbientBrightnessCulled",
+            brightness_cull(
                 Layer::AmbientBrightness,
                 Layer::AmbientReflexivity,
-                InternalLayer::LitAmbientPixels,
-                InternalLayer::BrightAmbientCulled
+                MetaLayer::Internal(InternalLayer::AmbientPixelsLit),
+                InternalLayer::AmbientBrightnessCulled
             )
         ),
-        LogicalLayer::new("AmbientBrightnessBlurHorizontal", blur_horizontal(InternalLayer::BrightAmbientCulled, InternalLayer::BrightAmbientIntermediate)),
-        LogicalLayer::new("AmbientBrightnessBlurVertical",  blur_vertical(InternalLayer::BrightAmbientIntermediate, InternalLayer::BrightAmbientFinal)),
-        LogicalLayer::new("DetailPixels", lit(Layer::DetailPixels, InternalLayer::LitDetailPixels)),
+        LogicalLayer::new("DetailPixels", lit(Layer::DetailPixels, InternalLayer::DetailPixelsLit)),
         LogicalLayer::new(
-            "DetailBrightnessCulling",
-            brightness_culling(
+            "DetailBrightnessCulled",
+            brightness_cull(
                 Layer::DetailBrightness,
                 Layer::DetailReflexivity,
-                InternalLayer::LitDetailPixels,
-                InternalLayer::BrightDetailCulled,
+                MetaLayer::Internal(InternalLayer::DetailPixelsLit),
+                InternalLayer::DetailBrightnessCulled,
             )
         ),
-        LogicalLayer::new("DetailBrightnessBlurHorizontal", blur_horizontal(InternalLayer::BrightDetailCulled, InternalLayer::BrightDetailIntermediate)),
-        LogicalLayer::new("DetailBrightnessBlurVertical", blur_vertical(InternalLayer::BrightDetailIntermediate, InternalLayer::BrightDetailFinal)),
-        // All the shit that actually produces shit to the smush layer, in order
-        LogicalLayer::new("Bg", simple(Layer::Bg)),
-        LogicalLayer::new("LitAmbiencePixels", simple_internal(InternalLayer::LitAmbientPixels)),
-        LogicalLayer::new("LitDetailPixels", simple_internal(InternalLayer::LitDetailPixels)),
-        LogicalLayer::new("Static", simple(Layer::Static)),
-        LogicalLayer::new("AmbientBrightnessFinal", simple_internal(InternalLayer::BrightAmbientFinal)),
-        LogicalLayer::new("DetailBrightnessFinal", simple_internal(InternalLayer::BrightDetailFinal)),
-        LogicalLayer::new("Fg", simple(Layer::Fg)),
-        LogicalLayer::new("Menu", simple(Layer::Menu)),
-        LogicalLayer::new("Transition", simple(Layer::Transition)),
+        LogicalLayer::new(
+            "StaticBrightnessCulled",
+            brightness_cull(
+                Layer::StaticBrightness,
+                Layer::StaticReflexivity,
+                MetaLayer::Normal(Layer::StaticPixels),
+                InternalLayer::StaticBrightnessCulled,
+            )
+        ),
+        LogicalLayer::new(
+            "BrightnessCombine",
+            brightness_combine(
+                vec![
+                    BrightnessCombineStage::Show(InternalLayer::AmbientBrightnessCulled),
+                    BrightnessCombineStage::Mask(MetaLayer::Internal(InternalLayer::DetailPixelsLit)),
+                    BrightnessCombineStage::Show(InternalLayer::DetailBrightnessCulled),
+                    BrightnessCombineStage::Mask(MetaLayer::Normal(Layer::StaticPixels)),
+                    BrightnessCombineStage::Show(InternalLayer::StaticBrightnessCulled),
+                ],
+                InternalLayer::BrightnessLayered,
+            ),
+        ),
+        LogicalLayer::new(
+            "BrightnessBlur",
+            gaussian_blur(InternalLayer::BrightnessLayered, InternalLayer::FinalBloom, 4),
+        ),
+    ];
+}
+
+// The final things that end up in the smush layer
+struct ProjectionLayer {
+    input: MetaLayer,
+}
+impl ProjectionLayer {
+    fn normal(layer: Layer) -> Self {
+        Self {
+            input: MetaLayer::Normal(layer),
+        }
+    }
+    fn internal(layer: InternalLayer) -> Self {
+        Self {
+            input: MetaLayer::Internal(layer),
+        }
+    }
+}
+lazy_static::lazy_static! {
+    static ref PROJECTION_LAYERS: Vec<ProjectionLayer> = vec![
+        ProjectionLayer::normal(Layer::Bg),
+        ProjectionLayer::internal(InternalLayer::AmbientPixelsLit),
+        ProjectionLayer::internal(InternalLayer::DetailPixelsLit),
+        ProjectionLayer::normal(Layer::StaticPixels),
+        ProjectionLayer::internal(InternalLayer::FinalBloom),
+        ProjectionLayer::normal(Layer::Fg),
+        ProjectionLayer::normal(Layer::Menu),
+        ProjectionLayer::normal(Layer::Transition),
     ];
 }
 
@@ -393,6 +472,7 @@ fn setup_physical_layers(
                 order: layer_order as isize,
                 target: RenderTarget::Image(target),
                 clear_color: ClearColorConfig::Custom(Color::srgba(0.0, 0.0, 0.0, 0.0)),
+                hdr: true,
                 ..default()
             },
             render_layers,
@@ -427,56 +507,20 @@ fn setup_physical_layers(
     }
 }
 
-#[derive(Component)]
-struct ResizeLayerToWindow;
-
-const SMUSH_RENDER_ORDER: isize = LayerOrder::PostLight as isize + 1;
-const SMUSH_RENDER_LAYERS: RenderLayers = RenderLayers::layer(36);
-
 fn setup_logical_layers(
     mut commands: Commands,
-    root: Res<LayerRoot>,
-    layer_settings: Res<LayerSettings>,
     mut lit_mats: ResMut<Assets<LitMat>>,
+    mut cutout_mats: ResMut<Assets<CutoutMat>>,
+    mut bcull_mats: ResMut<Assets<BrightnessCullMat>>,
+    mut blur_mats: ResMut<Assets<GaussianBlurMat>>,
     mut lighting: ResMut<Lighting>,
     screen_mesh: Res<ScreenMesh>,
+    root: Res<LayerRoot>,
+    layer_settings: Res<LayerSettings>,
+    mut images: ResMut<Assets<Image>>,
 ) {
-    // Helper function for setting up a simple layer shared for normal and internal varieties
-    let do_simple_setup =
-        |commands: &mut Commands, name: String, input_target: Handle<Image>, zix: usize| {
-            commands
-                .spawn((
-                    Name::new(name),
-                    Sprite {
-                        image: input_target,
-                        custom_size: Some(layer_settings.screen_size.as_vec2()),
-                        ..default()
-                    },
-                    Transform::from_translation(Vec3::Z * zix as f32),
-                    ResizeLayerToWindow,
-                    SMUSH_RENDER_LAYERS.clone(),
-                ))
-                .set_parent(root.eid());
-        };
-
     for (ix, layer) in LOGICAL_LAYERS.iter().enumerate() {
         match &layer.mode {
-            LogicalLayerMode::Simple { input } => {
-                do_simple_setup(
-                    &mut commands,
-                    format!("LayerSprite_Simple_{:?}", layer.name),
-                    input.target(),
-                    ix,
-                );
-            }
-            LogicalLayerMode::SimpleInternal { input } => {
-                do_simple_setup(
-                    &mut commands,
-                    format!("LayerSprite_SimpleInternal_{:?}", layer.name),
-                    input.target(),
-                    ix,
-                );
-            }
             LogicalLayerMode::Lit { input, output } => {
                 let lit_mat = LitMat::new(input.target(), Layer::Light.target(), Color::BLACK);
                 let lit_mat_hand = lit_mats.add(lit_mat);
@@ -493,9 +537,165 @@ fn setup_logical_layers(
                     .id();
                 lighting.layer_eid_map.insert(*input, eid);
             }
-            _ => {
-                // Do nothing for now...
+            LogicalLayerMode::BrightnessCull {
+                brightness,
+                reflexivity,
+                input_pixels,
+                output,
+            } => {
+                let bcull_mat = BrightnessCullMat::new(
+                    brightness.target(),
+                    reflexivity.target(),
+                    Layer::Light.target(),
+                    input_pixels.target(),
+                    Color::BLACK,
+                    1.0,
+                );
+                let bcull_mat_hand = bcull_mats.add(bcull_mat);
+                let mesh_hand = screen_mesh.0.clone();
+                let eid = commands
+                    .spawn((
+                        Name::new(format!("LayerSprite_BrightnessCull_{:?}", layer.name)),
+                        MeshMaterial2d(bcull_mat_hand),
+                        Mesh2d(mesh_hand),
+                        Transform::from_translation(Vec3::Z * ix as f32),
+                        output.render_layers(),
+                    ))
+                    .set_parent(root.eid())
+                    .id();
+                lighting.layer_eid_map.insert(*brightness, eid);
             }
+            LogicalLayerMode::BrightnessCombine { stages, output } => {
+                for (stage_ix, stage) in stages.iter().enumerate() {
+                    let (image, color) = match stage {
+                        BrightnessCombineStage::Show(internal_layer) => {
+                            (internal_layer.target(), Color::WHITE)
+                        }
+                        BrightnessCombineStage::Mask(meta_layer) => {
+                            (meta_layer.target(), Color::BLACK)
+                        }
+                    };
+                    commands
+                        .spawn((
+                            Name::new(format!("BrightnessCombine_{:?}", stage)),
+                            Sprite {
+                                image,
+                                custom_size: Some(layer_settings.screen_size.as_vec2()),
+                                color,
+                                ..default()
+                            },
+                            Transform::from_translation(Vec3::Z * stage_ix as f32),
+                            output.render_layers().clone(),
+                        ))
+                        .set_parent(root.eid());
+                }
+            }
+            LogicalLayerMode::GaussianBlur {
+                input,
+                output,
+                passes,
+            } => {
+                let cutout_mat = CutoutMat::new(input.target());
+                let cutout_mat_hand = cutout_mats.add(cutout_mat);
+                debug_assert!((LayerOrder::Blur as isize) < LayerOrder::PostBlur as isize);
+                debug_assert!(*passes > 0);
+                let mut available = ((LayerOrder::Blur as usize + 1)
+                    ..(LayerOrder::PostBlur as usize))
+                    .into_iter()
+                    .collect::<VecDeque<_>>();
+                let inner_passes = *passes * 2;
+                commands
+                    .spawn((
+                        Name::new(format!("LayerSprite_BrightnessCull_{:?}", layer.name)),
+                        MeshMaterial2d(cutout_mat_hand),
+                        Mesh2d(screen_mesh.0.clone()),
+                        RenderLayers::from_layers(&[300 + *available.front().unwrap()]),
+                    ))
+                    .set_parent(root.eid());
+                for pass in 0..inner_passes {
+                    let last_pass = pass + 1 == inner_passes;
+                    let input_order = available.pop_front().unwrap();
+                    let input_rl = RenderLayers::from_layers(&[300 + input_order]);
+                    let output_rl = if last_pass {
+                        output.render_layers()
+                    } else {
+                        RenderLayers::from_layers(&[300 + *available.front().unwrap()])
+                    };
+                    println!("mork - hmm {:?} {:?}", input_rl, output_rl);
+                    let image_hand = images.add(layer_settings.blank_screen_image());
+                    commands
+                        .spawn((
+                            Name::new(format!("GaussianBlurPass_{pass}_Camera")),
+                            Camera2d,
+                            Camera {
+                                order: input_order as isize,
+                                target: RenderTarget::Image(image_hand.clone()),
+                                clear_color: ClearColorConfig::Custom(Color::linear_rgba(
+                                    0.0, 0.0, 0.0, 0.0,
+                                )),
+                                hdr: true,
+                                ..default()
+                            },
+                            Transform::default(),
+                            input_rl.clone(),
+                        ))
+                        .set_parent(root.eid());
+                    let blur_mat_hand =
+                        blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 16));
+                    commands
+                        .spawn((
+                            Name::new(format!("GaussianBlurPass_{pass}_Mesh")),
+                            MeshMaterial2d(blur_mat_hand),
+                            Mesh2d(screen_mesh.0.clone()),
+                            Transform::default(),
+                            output_rl,
+                        ))
+                        .set_parent(root.eid());
+                }
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+struct ResizeLayerToWindow;
+
+const SMUSH_RENDER_LAYERS: RenderLayers = RenderLayers::layer(63);
+
+fn setup_projection_layers(
+    mut commands: Commands,
+    layer_settings: Res<LayerSettings>,
+    root: Res<LayerRoot>,
+    mut cutout_mats: ResMut<Assets<CutoutMat>>,
+    screen_mesh: Res<ScreenMesh>,
+) {
+    for (ix, layer) in PROJECTION_LAYERS.iter().enumerate() {
+        if matches!(layer.input, MetaLayer::Internal(InternalLayer::FinalBloom)) {
+            let new_mat_hand = cutout_mats.add(CutoutMat::new(layer.input.target()));
+            commands
+                .spawn((
+                    Name::new(format!("ProjectionLayer_{:?}", layer.input)),
+                    MeshMaterial2d(new_mat_hand),
+                    Mesh2d(screen_mesh.0.clone()),
+                    Transform::from_translation(Vec3::Z * ix as f32),
+                    ResizeLayerToWindow,
+                    SMUSH_RENDER_LAYERS.clone(),
+                ))
+                .set_parent(root.eid());
+        } else {
+            commands
+                .spawn((
+                    Name::new(format!("ProjectionLayer_{:?}", layer.input)),
+                    Sprite {
+                        image: layer.input.target(),
+                        custom_size: Some(layer_settings.screen_size.as_vec2()),
+                        ..default()
+                    },
+                    Transform::from_translation(Vec3::Z * ix as f32),
+                    ResizeLayerToWindow,
+                    SMUSH_RENDER_LAYERS.clone(),
+                ))
+                .set_parent(root.eid());
         }
     }
 }
@@ -506,10 +706,11 @@ fn setup_smush_layer(mut commands: Commands, root: Res<LayerRoot>) {
             Name::new("SmushCamera"),
             Camera2d,
             Camera {
-                order: SMUSH_RENDER_ORDER,
+                order: LayerOrder::Smush as isize,
                 clear_color: ClearColorConfig::Custom(Color::BLACK),
                 ..default()
             },
+            Tonemapping::ReinhardLuminance,
             SMUSH_RENDER_LAYERS.clone(),
         ))
         .set_parent(root.eid());
@@ -551,6 +752,7 @@ pub(super) fn register_layer(app: &mut App, screen_size: UVec2) {
             setup_screen_mesh,
             setup_physical_layers,
             setup_logical_layers,
+            setup_projection_layers,
             setup_smush_layer,
         )
             .chain(),

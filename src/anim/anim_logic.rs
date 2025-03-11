@@ -174,8 +174,15 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                     anim_man.get_flip_y(),
                     if anim_man.render_layers == Layer::AmbientPixels.render_layers() {
                         Layer::AmbientBrightness.render_layers()
-                    } else {
+                    } else if anim_man.render_layers == Layer::DetailPixels.render_layers() {
                         Layer::DetailBrightness.render_layers()
+                    } else if anim_man.render_layers == Layer::StaticPixels.render_layers() {
+                        Layer::StaticBrightness.render_layers()
+                    } else {
+                        panic!(
+                            "Trying to apply brightness in render_layers: {:?}",
+                            anim_man.render_layers
+                        );
                     },
                 ))
                 .set_parent(eid)
