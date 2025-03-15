@@ -61,3 +61,17 @@ AHHH okay
 - And have there be a default brightness of 0.0? Or do an ordered sampling? I guess I don't want to put a mesh on literally everything, so probably better to do ordered sampling
 i.e. sample static brightness, if nothing then static pixel (to zero out if it's there), then detail brightness...
 - And want tonemapping
+
+## NEW TODO
+
+- [ ] Take another read through of all the layer code I just wrote, make sure it looks good. Come up with a good answer on how to actually do brightness thresholding + control brightness in anim_man? Or maybe just multiply by 8 and call it a day?
+- [ ] Actually implement tonemapping (check that it's working, see how different stuff feels. 90% sure I want one with auto-correcting)
+- [ ] I think I want the brightness threshold to be uniform across layers
+- [ ] Want a "front detail" layer
+- [ ] Want removal of unneeded static hboxes
+- [x] Want consolidation of static hboxes
+- [ ] Want music, sound effects
+- [ ] Want it to work in WASM
+- [ ] Want sound effects, music
+- [ ] Want particles
+- [ ] Want save state

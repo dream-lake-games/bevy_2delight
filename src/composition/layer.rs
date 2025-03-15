@@ -384,7 +384,7 @@ lazy_static::lazy_static! {
         ),
         LogicalLayer::new(
             "BrightnessBlur",
-            gaussian_blur(InternalLayer::BrightnessLayered, InternalLayer::FinalBloom, 4),
+            gaussian_blur(InternalLayer::BrightnessLayered, InternalLayer::FinalBloom, 3),
         ),
     ];
 }
@@ -631,7 +631,7 @@ fn setup_logical_layers(
                                 order: input_order as isize,
                                 target: RenderTarget::Image(image_hand.clone()),
                                 clear_color: ClearColorConfig::Custom(Color::linear_rgba(
-                                    0.0, 0.0, 0.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0,
                                 )),
                                 hdr: true,
                                 ..default()
@@ -641,7 +641,7 @@ fn setup_logical_layers(
                         ))
                         .set_parent(root.eid());
                     let blur_mat_hand =
-                        blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 32));
+                        blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 16));
                     commands
                         .spawn((
                             Name::new(format!("GaussianBlurPass_{pass}_Mesh")),

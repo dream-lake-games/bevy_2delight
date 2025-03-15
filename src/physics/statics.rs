@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::physics::{colls::CollKey, hbox::HBox, pos::Pos};
+use crate::{
+    physics::{colls::CollKey, hbox::HBox, pos::Pos},
+    prelude::OccludeLight,
+};
 
 use super::spat_hash::{on_remove_spat_hash, SpatHash, SpatHashStaticTx};
 
@@ -55,7 +58,7 @@ pub(crate) struct StaticTxComp {
 }
 #[derive(Component)]
 #[component(on_add = on_add_static_tx)]
-#[component(on_remove = on_remove_spat_hash::<SpatHashStaticTx>)]
+#[component(on_remove = on_remove_static_tx)]
 pub struct StaticTx {
     pub(crate) comps: Vec<StaticTxComp>,
     pub coll_keys: Vec<CollKey>,
@@ -77,6 +80,17 @@ fn on_add_static_tx(
         .resource_mut::<SpatHash<SpatHashStaticTx>>()
         .insert(eid, pos, hboxes);
     world.commands().entity(eid).insert(keys);
+}
+fn on_remove_static_tx(
+    mut world: bevy::ecs::world::DeferredWorld,
+    eid: Entity,
+    cid: bevy::ecs::component::ComponentId,
+) {
+    let occlude_light = world.get::<OccludeLight>(eid).cloned();
+    if let Some(OccludeLight::StaticTx) = occlude_light {
+        world.commands().entity(eid).remove::<OccludeLight>();
+    }
+    on_remove_spat_hash::<SpatHashStaticTx>(world, eid, cid);
 }
 impl StaticTx {
     pub fn single(kind: StaticTxKind, hbox: HBox) -> Self {

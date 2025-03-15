@@ -1911,8 +1911,8 @@
 			"identifier": "Level_0",
 			"iid": "289cb4b0-e920-11ef-8ebd-c3d98294065b",
 			"uid": 0,
-			"worldX": -288,
-			"worldY": -192,
+			"worldX": 4,
+			"worldY": 4,
 			"worldDepth": 0,
 			"pxWid": 720,
 			"pxHei": 440,
@@ -1965,8 +1965,8 @@
 							"defUid": 59,
 							"px": [296,128],
 							"fieldInstances": [],
-							"__worldX": 8,
-							"__worldY": -64
+							"__worldX": 300,
+							"__worldY": 132
 						},
 						{
 							"__identifier": "Torch",
@@ -1981,8 +1981,8 @@
 							"defUid": 65,
 							"px": [352,152],
 							"fieldInstances": [],
-							"__worldX": 64,
-							"__worldY": -40
+							"__worldX": 356,
+							"__worldY": 156
 						},
 						{
 							"__identifier": "Torch",
@@ -1997,8 +1997,8 @@
 							"defUid": 65,
 							"px": [400,144],
 							"fieldInstances": [],
-							"__worldX": 112,
-							"__worldY": -48
+							"__worldX": 404,
+							"__worldY": 148
 						},
 						{
 							"__identifier": "Torch",
@@ -2013,8 +2013,8 @@
 							"defUid": 65,
 							"px": [248,208],
 							"fieldInstances": [],
-							"__worldX": -40,
-							"__worldY": 16
+							"__worldX": 252,
+							"__worldY": 212
 						},
 						{
 							"__identifier": "Torch",
@@ -2029,8 +2029,8 @@
 							"defUid": 65,
 							"px": [344,240],
 							"fieldInstances": [],
-							"__worldX": 56,
-							"__worldY": 48
+							"__worldX": 348,
+							"__worldY": 244
 						},
 						{
 							"__identifier": "Torch",
@@ -2045,8 +2045,8 @@
 							"defUid": 65,
 							"px": [496,264],
 							"fieldInstances": [],
-							"__worldX": 208,
-							"__worldY": 72
+							"__worldX": 500,
+							"__worldY": 268
 						},
 						{
 							"__identifier": "Torch",
@@ -2061,8 +2061,8 @@
 							"defUid": 65,
 							"px": [424,272],
 							"fieldInstances": [],
-							"__worldX": 136,
-							"__worldY": 80
+							"__worldX": 428,
+							"__worldY": 276
 						},
 						{
 							"__identifier": "Torch",
@@ -2077,8 +2077,8 @@
 							"defUid": 65,
 							"px": [304,288],
 							"fieldInstances": [],
-							"__worldX": 16,
-							"__worldY": 96
+							"__worldX": 308,
+							"__worldY": 292
 						},
 						{
 							"__identifier": "Torch",
@@ -2093,8 +2093,8 @@
 							"defUid": 65,
 							"px": [232,344],
 							"fieldInstances": [],
-							"__worldX": -56,
-							"__worldY": 152
+							"__worldX": 236,
+							"__worldY": 348
 						},
 						{
 							"__identifier": "Torch",
@@ -2109,8 +2109,8 @@
 							"defUid": 65,
 							"px": [240,144],
 							"fieldInstances": [],
-							"__worldX": -48,
-							"__worldY": -48
+							"__worldX": 244,
+							"__worldY": 148
 						},
 						{
 							"__identifier": "Torch",
@@ -2125,8 +2125,8 @@
 							"defUid": 65,
 							"px": [208,176],
 							"fieldInstances": [],
-							"__worldX": -80,
-							"__worldY": -16
+							"__worldX": 212,
+							"__worldY": 180
 						}
 					]
 				},

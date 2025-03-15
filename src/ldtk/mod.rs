@@ -14,7 +14,7 @@ pub(crate) struct LdtkSet;
 pub mod prelude {
     pub use super::entity::{LdtkEntity, LdtkEntityPluginGeneric};
     pub use super::int_cell::{
-        LdtkIntCellLayerer, LdtkIntCellValue, LdtkIntCellValuePluginGeneric,
+        LdtkIntCellConsolidate, LdtkIntCellLayerer, LdtkIntCellValue, LdtkIntCellValuePluginGeneric,
     };
     pub use super::ldtk_maint::LdtkLevelRects;
     pub use super::ldtk_roots::{LdtkRootKind, LdtkRootResGeneric};

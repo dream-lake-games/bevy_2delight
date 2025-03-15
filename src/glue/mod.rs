@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod aabbify;
 pub mod bullet_time;
 pub mod fvec;
 

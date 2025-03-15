@@ -26,9 +26,9 @@ var<uniform> base_light: vec4<f32>;
 var<uniform> bthreshold_unused_unused_unused: vec4<f32>;
 
 fn get_brightness(uv: vec2<f32>) -> vec4<f32> {
-    var measured_brightness = textureSample(brightness_texture, brightness_splr, uv);
-    var measured_reflexivity = textureSample(reflexivity_texture, reflexivity_splr, uv);
-    var measured_light = base_light + textureSample(light_texture, light_splr, uv);
+    let measured_brightness = textureSample(brightness_texture, brightness_splr, uv);
+    let measured_reflexivity = textureSample(reflexivity_texture, reflexivity_splr, uv);
+    let measured_light = base_light + textureSample(light_texture, light_splr, uv);
     return measured_brightness + measured_reflexivity * measured_light;
 }
 
@@ -42,13 +42,10 @@ fn threshold_brightness(raw_brightness: vec4<f32>) -> vec4<f32> {
 
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
-    // var raw_brightness = get_brightness(in.uv);
-    // var brightness = threshold_brightness(raw_brightness);
-    var pixel_value = textureSample(input_pixels_texture, input_pixels_splr, in.uv);
-    // return brightness * 1.4;
+    let raw_brightness = get_brightness(in.uv);
+    let pixel_value = textureSample(input_pixels_texture, input_pixels_splr, in.uv);
     let pixel_luminance = 0.2126 * pixel_value.x + 0.7152 * pixel_value.y + 0.0722 * pixel_value.z;
-    if (pixel_luminance < 0.001) {
-        return vec4<f32>(0.0);
-    }
-    return vec4<f32>(pixel_luminance, pixel_luminance, pixel_luminance, 1.0);
+    let total_brightness = raw_brightness + pixel_value * pixel_luminance;
+    var brightness = threshold_brightness(total_brightness);
+    return brightness;
 }

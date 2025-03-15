@@ -65,7 +65,7 @@ impl LdtkEntity<LdtkRoot> for TorchBundle {
             name: Name::new("Torch"),
             pos: pos.with_z(Fx::from_num(90)),
             anim: default(),
-            light: CircleLight::strength(24.0).with_color(Color::linear_rgb(1.0, 1.0, 1.0)),
+            light: CircleLight::strength(24.0).with_color(Color::linear_rgb(1.0, 1.0, 0.0)),
             flicker: LightFlicker::new(24.0, 4.0, 4.0, 3.0, 0.1, 0.05),
         }
     }
@@ -83,10 +83,9 @@ pub(super) fn register_ldtk(app: &mut App) {
     app.register_ldtk_int_cell_layer("DirtAmbience", Layer::AmbientPixels);
     app.register_ldtk_int_cell_layer("DirtDetail", Layer::DetailPixels);
 
-    app.add_plugins(LdtkIntCellValuePlugin::<DirtBundle>::single(
-        "DirtStatic",
-        1,
-    ));
+    app.add_plugins(
+        LdtkIntCellValuePlugin::<DirtBundle>::single("DirtStatic", 1).with_consolidate(8),
+    );
 
     app.add_plugins(LdtkEntityPlugin::<TorchBundle>::new("Entities", "Torch"));
 

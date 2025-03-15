@@ -51,7 +51,7 @@ pub(super) fn remove_light_source(
 /// The internal spatial hashes this depends on will only recalculate when one
 /// of Pos or OccludeLight on the entity has changed.
 /// So, if you to change underlying static HBoxes, be warned.
-#[derive(Component)]
+#[derive(Component, Clone)]
 #[component(on_add = on_add_occlude_light)]
 #[component(on_remove = on_remove_spat_hash::<SpatHashOccludeLight>)]
 pub enum OccludeLight {
