@@ -72,7 +72,8 @@ i.e. sample static brightness, if nothing then static pixel (to zero out if it's
 - [ ] Further reduce the number of meshes for light occlusion (I think one per light source would be great)
     - [ ] At least should be able to cut down by factor of 2 (or better maybe? Idk seems a little hard but possible)
         - [ ] Maybe closest point, then the two points near it? I think that works?
-- [ ] Want a "front detail" layer
+- [x] Want a "front detail" layer
+- [ ] Want reflexivity to actually work
 - [ ] Try to clean up the roots and code org of layer code to make it more readable/interpretable
 - [x] Want removal of unneeded static hboxes
 - [x] Want consolidation of static hboxes

@@ -37,10 +37,14 @@ fn update_lit_mats(lighting: Res<Lighting>, mut mats: ResMut<Assets<LitMat>>) {
         .expect("Ambient should always exist");
     ambient.base_light = color_as_vec4(lighting.base_ambient);
 
-    let detail = mats
-        .get_mut(lighting.lit_asset_map[&Layer::DetailPixels])
-        .expect("Detail should always exist");
-    detail.base_light = color_as_vec4(lighting.base_detail);
+    let back_detail = mats
+        .get_mut(lighting.lit_asset_map[&Layer::BackDetailPixels])
+        .expect("Back detail should always exist");
+    back_detail.base_light = color_as_vec4(lighting.base_detail);
+    let front_detail = mats
+        .get_mut(lighting.lit_asset_map[&Layer::FrontDetailPixels])
+        .expect("Front detail should always exist");
+    front_detail.base_light = color_as_vec4(lighting.base_detail);
 }
 
 fn update_brightness_cull_mats(

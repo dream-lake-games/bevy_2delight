@@ -95,7 +95,6 @@ impl LayerSettings {
                 label: None,
                 size: target_extent,
                 dimension: TextureDimension::D2,
-                // format: TextureFormat::bevy_default(),
                 format: TextureFormat::Rgba16Float,
                 mip_level_count: 1,
                 sample_count: 1,
@@ -162,12 +161,15 @@ pub enum Layer {
     AmbientPixels,
     AmbientBrightness,
     AmbientReflexivity,
-    DetailPixels,
-    DetailBrightness,
-    DetailReflexivity,
+    BackDetailPixels,
+    BackDetailBrightness,
+    BackDetailReflexivity,
     StaticPixels,
     StaticBrightness,
     StaticReflexivity,
+    FrontDetailPixels,
+    FrontDetailBrightness,
+    FrontDetailReflexivity,
     Fg,
     Menu,
     Transition,
@@ -185,14 +187,17 @@ impl Layer {
             Self::AmbientPixels => RenderLayers::layer(4),
             Self::AmbientBrightness => RenderLayers::layer(5),
             Self::AmbientReflexivity => RenderLayers::layer(6),
-            Self::DetailPixels => RenderLayers::layer(7),
-            Self::DetailBrightness => RenderLayers::layer(8),
-            Self::DetailReflexivity => RenderLayers::layer(9),
+            Self::BackDetailPixels => RenderLayers::layer(7),
+            Self::BackDetailBrightness => RenderLayers::layer(8),
+            Self::BackDetailReflexivity => RenderLayers::layer(9),
             Self::StaticBrightness => RenderLayers::layer(10),
             Self::StaticReflexivity => RenderLayers::layer(11),
-            Self::Fg => RenderLayers::layer(12),
-            Self::Menu => RenderLayers::layer(13),
-            Self::Transition => RenderLayers::layer(14),
+            Self::FrontDetailPixels => RenderLayers::layer(12),
+            Self::FrontDetailBrightness => RenderLayers::layer(13),
+            Self::FrontDetailReflexivity => RenderLayers::layer(14),
+            Self::Fg => RenderLayers::layer(15),
+            Self::Menu => RenderLayers::layer(16),
+            Self::Transition => RenderLayers::layer(17),
         }
     }
 
@@ -209,12 +214,15 @@ impl Layer {
             | Self::AmbientPixels
             | Self::AmbientBrightness
             | Self::AmbientReflexivity
-            | Self::DetailPixels
-            | Self::DetailBrightness
-            | Self::DetailReflexivity
+            | Self::BackDetailPixels
+            | Self::BackDetailBrightness
+            | Self::BackDetailReflexivity
             | Self::StaticPixels
             | Self::StaticBrightness
-            | Self::StaticReflexivity => LayerPosition::Dynamic,
+            | Self::StaticReflexivity
+            | Self::FrontDetailPixels
+            | Self::FrontDetailBrightness
+            | Self::FrontDetailReflexivity => LayerPosition::Dynamic,
             // NOTE: Light is included (indirectly) here in fixed because each of the underlying light cameras
             //       will follow the camera, and then render back at the origin
             _ => LayerPosition::Fixed,
@@ -233,7 +241,8 @@ impl Layer {
 #[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, EnumIter, std::hash::Hash)]
 pub(crate) enum InternalLayer {
     AmbientPixelsLit,
-    DetailPixelsLit,
+    BackDetailPixelsLit,
+    FrontDetailPixelsLit,
     /// Getting cheeky, but this is just ambient + detail + static combined into one
     Meat,
     /// Intermediate layer needed to combine the brightness from all the meaty parts properly
@@ -247,19 +256,21 @@ impl InternalLayer {
     pub const fn render_layers(&self) -> RenderLayers {
         match self {
             Self::AmbientPixelsLit => RenderLayers::layer(20),
-            Self::DetailPixelsLit => RenderLayers::layer(21),
-            Self::Meat => RenderLayers::layer(22),
-            Self::IntermediateBrightness => RenderLayers::layer(23),
-            Self::IntermediateReflexivity => RenderLayers::layer(24),
-            Self::BrightnessCulled => RenderLayers::layer(25),
-            Self::FinalBloom => RenderLayers::layer(26),
+            Self::BackDetailPixelsLit => RenderLayers::layer(21),
+            Self::FrontDetailPixelsLit => RenderLayers::layer(22),
+            Self::Meat => RenderLayers::layer(23),
+            Self::IntermediateBrightness => RenderLayers::layer(24),
+            Self::IntermediateReflexivity => RenderLayers::layer(25),
+            Self::BrightnessCulled => RenderLayers::layer(26),
+            Self::FinalBloom => RenderLayers::layer(27),
         }
     }
 
     const fn layer_order(&self) -> LayerOrder {
         match self {
             Self::AmbientPixelsLit => LayerOrder::ApplyLight,
-            Self::DetailPixelsLit => LayerOrder::ApplyLight,
+            Self::BackDetailPixelsLit => LayerOrder::ApplyLight,
+            Self::FrontDetailPixelsLit => LayerOrder::ApplyLight,
             Self::Meat => LayerOrder::FlattenMeat,
             Self::IntermediateBrightness => LayerOrder::FlattenMeat,
             Self::IntermediateReflexivity => LayerOrder::FlattenMeat,
@@ -384,14 +395,16 @@ lazy_static::lazy_static! {
     static ref LOGICAL_LAYERS: Vec<LogicalLayer> = vec![
         // All of our logic
         LogicalLayer::new("AmbiencePixels", lit(Layer::AmbientPixels, InternalLayer::AmbientPixelsLit)),
-        LogicalLayer::new("DetailPixels", lit(Layer::DetailPixels, InternalLayer::DetailPixelsLit)),
+        LogicalLayer::new("BackDetailPixels", lit(Layer::BackDetailPixels, InternalLayer::BackDetailPixelsLit)),
+        LogicalLayer::new("FrontDetailPixels", lit(Layer::FrontDetailPixels, InternalLayer::FrontDetailPixelsLit)),
         LogicalLayer::new(
             "FlattenMeat",
             flatten_meat(
                 vec![
                     MetaLayer::Internal(InternalLayer::AmbientPixelsLit),
-                    MetaLayer::Internal(InternalLayer::DetailPixelsLit),
+                    MetaLayer::Internal(InternalLayer::BackDetailPixelsLit),
                     MetaLayer::Normal(Layer::StaticPixels),
+                    MetaLayer::Internal(InternalLayer::FrontDetailPixelsLit),
                 ],
                 InternalLayer::Meat
             )
@@ -401,18 +414,22 @@ lazy_static::lazy_static! {
             brightness_cull(
                 vec![
                     BrightnessCullStage::Show(Layer::AmbientBrightness),
-                    BrightnessCullStage::Mask(Layer::DetailPixels),
-                    BrightnessCullStage::Show(Layer::DetailBrightness),
+                    BrightnessCullStage::Mask(Layer::BackDetailPixels),
+                    BrightnessCullStage::Show(Layer::BackDetailBrightness),
                     BrightnessCullStage::Mask(Layer::StaticPixels),
                     BrightnessCullStage::Show(Layer::StaticBrightness),
+                    BrightnessCullStage::Mask(Layer::FrontDetailPixels),
+                    BrightnessCullStage::Show(Layer::FrontDetailBrightness),
                 ],
                 InternalLayer::IntermediateBrightness,
                 vec![
                     BrightnessCullStage::Show(Layer::AmbientReflexivity),
-                    BrightnessCullStage::Mask(Layer::DetailPixels),
-                    BrightnessCullStage::Show(Layer::DetailReflexivity),
+                    BrightnessCullStage::Mask(Layer::BackDetailPixels),
+                    BrightnessCullStage::Show(Layer::BackDetailReflexivity),
                     BrightnessCullStage::Mask(Layer::StaticPixels),
                     BrightnessCullStage::Show(Layer::StaticReflexivity),
+                    BrightnessCullStage::Mask(Layer::FrontDetailPixels),
+                    BrightnessCullStage::Show(Layer::FrontDetailReflexivity),
                 ],
                 InternalLayer::IntermediateReflexivity,
                 InternalLayer::Meat,
