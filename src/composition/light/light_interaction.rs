@@ -269,12 +269,6 @@ fn block_lights(
     }
     let black_mat = black_mat.as_ref().unwrap();
 
-    // // One of these days I'll figure out if this is actually slow
-    // commands
-    //     .entity(light_occlude_root.eid())
-    //     .despawn_descendants();
-    let mut new_meshes = 0;
-    let mut old_meshes = 0;
     for (light_pos, mut source) in &mut source_q {
         let Some(radius) = source.radius else {
             continue;
@@ -288,7 +282,6 @@ fn block_lights(
             .map(|(pos, occlude, stx)| occlude.get_thboxes(stx, *pos))
             .flatten()
             .collect::<Vec<_>>();
-        old_meshes += occlude_thboxes.len();
         let this_frame_cache_key =
             LightMeshCacheKey::from_thboxes(light_pos.as_ivec2(), &occlude_thboxes);
         if Some(&this_frame_cache_key) == source.mesh_cache.key.as_ref() {
@@ -299,7 +292,6 @@ fn block_lights(
         source.mesh_cache.key = Some(this_frame_cache_key);
 
         for thbox in occlude_thboxes {
-            new_meshes += 1;
             let mesh = get_blocked_mesh(*light_pos, thbox);
             let new_eid = commands
                 .spawn((
@@ -315,7 +307,6 @@ fn block_lights(
             source.mesh_cache.meshes.push(new_eid);
         }
     }
-    println!("new meshes: {}, old meshes: {}", new_meshes, old_meshes);
 }
 
 pub(super) fn register_light_interaction(app: &mut App) {

@@ -72,6 +72,37 @@ impl LdtkEntity<LdtkRoot> for TorchBundle {
     }
 }
 
+defn_anim!(
+    ShinyRockAnim,
+    #[folder("platformer/world/detail/shiny_rock")]
+    #[layer(BackDetailPixels)]
+    pub enum ShinyRockAnim {
+        #[default]
+        #[tag("rock")]
+        Rock,
+    }
+);
+#[derive(Bundle)]
+struct ShinyRockBundle {
+    name: Name,
+    pos: Pos,
+    anim: AnimMan<ShinyRockAnim>,
+}
+impl LdtkEntity<LdtkRoot> for ShinyRockBundle {
+    const ROOT: LdtkRoot = LdtkRoot::Detail;
+    fn from_ldtk(
+        pos: Pos,
+        _fields: &bevy::utils::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _iid: String,
+    ) -> Self {
+        Self {
+            name: Name::new("ShinyRock"),
+            pos,
+            anim: default(),
+        }
+    }
+}
+
 fn startup(mut commands: Commands) {
     commands.trigger(LoadLdtk::new(
         "platformer/world/world.ldtk",
@@ -89,6 +120,10 @@ pub(super) fn register_ldtk(app: &mut App) {
     );
 
     app.add_plugins(LdtkEntityPlugin::<TorchBundle>::new("Entities", "Torch"));
+    app.add_plugins(LdtkEntityPlugin::<ShinyRockBundle>::new(
+        "Entities",
+        "ShinyRock",
+    ));
 
     app.add_systems(Startup, startup);
 }

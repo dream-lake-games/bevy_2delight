@@ -68,18 +68,25 @@ i.e. sample static brightness, if nothing then static pixel (to zero out if it's
 - [x] Actually implement tonemapping (check that it's working, see how different stuff feels. 90% sure I want one with auto-correcting)
 - [x] Don't do separate brightness culling per layer, combine, and then cull
     - [x] This should give: "I think I want the brightness threshold to be uniform across layers" for free
-- [ ] Change the ownership model of light occlusion meshes, so we only recalculate when we actually need to
-- [ ] Further reduce the number of meshes for light occlusion (I think one per light source would be great)
-    - [ ] At least should be able to cut down by factor of 2 (or better maybe? Idk seems a little hard but possible)
-        - [ ] Maybe closest point, then the two points near it? I think that works?
+- [x] Change the ownership model of light occlusion meshes, so we only recalculate when we actually need to
 - [x] Want a "front detail" layer
-- [ ] Want reflexivity to actually work
-- [ ] Try to clean up the roots and code org of layer code to make it more readable/interpretable
+- [x] Want reflexivity to actually work
+- [x] Collect observers to root
 - [x] Want removal of unneeded static hboxes
 - [x] Want consolidation of static hboxes
+- [ ] Want to be able to set trigger hitboxes from aesprite... this is the dream...
 - [ ] Want music, sound effects
 - [ ] Want it to work in WASM
 - [ ] Want sound effects, music
 - [ ] Want particles
 - [ ] Want save state
 
+## Okay things that I should maybe do later
+
+### Layering/lighting
+
+It still can only hit 30fps on my old computer :(. Oh well.
+
+I'm not really sure what to do to help. I need to learn more about why it's slow and go from there. Most frames it's creating only a handful of meshes, idk really how to speed it up there.
+
+I think I need to (a) figure out if this actually matters and (b) get better at profiling, and a better understanding of how it works so I can reason about this.

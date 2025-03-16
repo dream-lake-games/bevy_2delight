@@ -49,6 +49,7 @@ impl Plugin for CompositionPlugin {
         );
 
         super::camera::register_camera(app);
+        super::cleanup::register_cleanup(app);
         super::layer::register_layer(app, self.settings.screen_size);
         super::parallax::register_parallax(app);
         super::light::lighting::register_lighting(app);

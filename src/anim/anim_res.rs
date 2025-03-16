@@ -58,6 +58,7 @@ pub(super) struct AnimRes<StateMachine: AnimStateMachine> {
     size: UVec2,
     lengths: HashMap<StateMachine, u32>,
     has_brightness: bool,
+    has_reflexivity: bool,
 }
 impl<StateMachine: AnimStateMachine> AnimRes<StateMachine> {
     pub fn load() -> Self {
@@ -70,6 +71,8 @@ impl<StateMachine: AnimStateMachine> AnimRes<StateMachine> {
         let size = UVec2::new(pixel_tag_infos[0].1.w, pixel_tag_infos[0].1.h);
         let brightness_path =
             std::path::Path::new("assets").join(StateMachine::default().get_brightness_filepath());
+        let reflexivity_path =
+            std::path::Path::new("assets").join(StateMachine::default().get_reflexivity_filepath());
         Self {
             size,
             lengths: pixel_tag_infos
@@ -77,6 +80,7 @@ impl<StateMachine: AnimStateMachine> AnimRes<StateMachine> {
                 .map(|(state, t)| (state, t.length))
                 .collect(),
             has_brightness: brightness_path.exists(),
+            has_reflexivity: reflexivity_path.exists(),
         }
     }
 
@@ -88,6 +92,9 @@ impl<StateMachine: AnimStateMachine> AnimRes<StateMachine> {
     }
     pub fn has_brightness(&self) -> bool {
         self.has_brightness
+    }
+    pub fn has_reflexivity(&self) -> bool {
+        self.has_reflexivity
     }
 }
 

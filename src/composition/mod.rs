@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 mod camera;
+mod cleanup;
 mod layer;
 mod light;
 mod mats;

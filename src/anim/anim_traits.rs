@@ -31,6 +31,9 @@ pub trait AnimStateMachine:
     fn get_brightness_filepath(&self) -> String {
         self.get_special_filepath(Some("_brightness"))
     }
+    fn get_reflexivity_filepath(&self) -> String {
+        self.get_special_filepath(Some("_reflexivity"))
+    }
     fn get_pixel_jsonpath(&self) -> PathBuf {
         let mut path = std::path::Path::new("assets").join(self.get_pixel_filepath());
         path.set_extension("json");
@@ -52,6 +55,9 @@ pub trait AnimStateMachine:
     }
     fn make_brightness_handle_map(ass: &Res<AssetServer>) -> HashMap<Self, Handle<Image>> {
         Self::make_special_handle_map(ass, Some("_brightness"))
+    }
+    fn make_reflexivity_handle_map(ass: &Res<AssetServer>) -> HashMap<Self, Handle<Image>> {
+        Self::make_special_handle_map(ass, Some("_reflexivity"))
     }
 
     fn get_fps(&self) -> u32;

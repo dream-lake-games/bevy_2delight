@@ -73,11 +73,15 @@ pub struct AnimMan<StateMachine: AnimStateMachine> {
     /// The render layer of the animation
     pub(super) render_layers: RenderLayers,
     /// INTERNAL: More ergonomic way to get to the bodies
+    /// These feel okay, and work for this model. At some point (maybe two years from now :()
+    /// I'll do normal maps. Then I probably want to rethink the data model here. But not now.
     pub(super) pixel_body: Entity,
     pub(super) brightness_body: Entity,
+    pub(super) reflexivity_body: Entity,
     /// INTERNAL: Hold these strong handles to prevent flickering
     pub(super) pixel_handle_map: HashMap<StateMachine, Handle<Image>>,
     pub(super) brightness_handle_map: HashMap<StateMachine, Handle<Image>>,
+    pub(super) reflexivity_handle_map: HashMap<StateMachine, Handle<Image>>,
 }
 
 impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
@@ -90,8 +94,10 @@ impl<StateMachine: AnimStateMachine> Default for AnimMan<StateMachine> {
                 .unwrap_or(Layer::StaticPixels.render_layers()),
             pixel_body: Entity::PLACEHOLDER,
             brightness_body: Entity::PLACEHOLDER,
+            reflexivity_body: Entity::PLACEHOLDER,
             pixel_handle_map: default(),
             brightness_handle_map: default(),
+            reflexivity_handle_map: default(),
         }
     }
 }

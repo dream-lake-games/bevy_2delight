@@ -190,6 +190,35 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                 .set_parent(eid)
                 .id();
         }
+
+        if anim_res.has_reflexivity() {
+            anim_man.reflexivity_handle_map = StateMachine::make_reflexivity_handle_map(&ass);
+            anim_man.reflexivity_body = commands
+                .spawn(AnimBodyBundle::new(
+                    "reflexivity",
+                    anim_man.reflexivity_handle_map[&anim_man.this_frame.state].clone(),
+                    anim_res.get_size() * StateMachine::REP,
+                    anim_man.get_state().get_offset(),
+                    anim_man.get_flip_x(),
+                    anim_man.get_flip_y(),
+                    if anim_man.render_layers == Layer::AmbientPixels.render_layers() {
+                        Layer::AmbientReflexivity.render_layers()
+                    } else if anim_man.render_layers == Layer::BackDetailPixels.render_layers() {
+                        Layer::BackDetailReflexivity.render_layers()
+                    } else if anim_man.render_layers == Layer::StaticPixels.render_layers() {
+                        Layer::StaticReflexivity.render_layers()
+                    } else if anim_man.render_layers == Layer::FrontDetailPixels.render_layers() {
+                        Layer::FrontDetailReflexivity.render_layers()
+                    } else {
+                        panic!(
+                            "Trying to apply reflexivity in render_layers: {:?}",
+                            anim_man.render_layers
+                        );
+                    },
+                ))
+                .set_parent(eid)
+                .id();
+        }
     }
 }
 
@@ -209,6 +238,7 @@ fn drive_animations<StateMachine: AnimStateMachine>(
         for (body_eid, handle_map) in [
             (anim_man.pixel_body, &anim_man.pixel_handle_map),
             (anim_man.brightness_body, &anim_man.brightness_handle_map),
+            (anim_man.reflexivity_body, &anim_man.reflexivity_handle_map),
         ] {
             if body_eid == Entity::PLACEHOLDER {
                 continue;
