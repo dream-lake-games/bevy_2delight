@@ -4,8 +4,6 @@ use bevy::{
     sprite::Material2d,
 };
 
-use crate::glue::color_as_vec4;
-
 /// The mat that does the multiplying
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect, PartialEq)]
 pub(crate) struct BrightnessCullMat {
@@ -22,8 +20,6 @@ pub(crate) struct BrightnessCullMat {
     #[sampler(8)]
     input_pixels: Handle<Image>,
     #[uniform(9)]
-    pub(crate) base_light: Vec4,
-    #[uniform(10)]
     pub(crate) bthreshold_unused_unused_unused: Vec4,
 }
 impl Material2d for BrightnessCullMat {
@@ -40,16 +36,13 @@ impl BrightnessCullMat {
         reflexivity: Handle<Image>,
         light: Handle<Image>,
         input_pixels: Handle<Image>,
-        base_light: Color,
-        bthreshold: f32,
     ) -> Self {
         Self {
             brightness,
             reflexivity,
             light,
             input_pixels,
-            base_light: color_as_vec4(base_light),
-            bthreshold_unused_unused_unused: Vec4::new(bthreshold, 0.0, 0.0, 0.0),
+            bthreshold_unused_unused_unused: Vec4::new(1000.0, 0.0, 0.0, 0.0),
         }
     }
 }

@@ -64,14 +64,26 @@ i.e. sample static brightness, if nothing then static pixel (to zero out if it's
 
 ## NEW TODO
 
-- [ ] Take another read through of all the layer code I just wrote, make sure it looks good. Come up with a good answer on how to actually do brightness thresholding + control brightness in anim_man? Or maybe just multiply by 8 and call it a day?
-- [ ] Actually implement tonemapping (check that it's working, see how different stuff feels. 90% sure I want one with auto-correcting)
-- [ ] I think I want the brightness threshold to be uniform across layers
+- [x] Take another read through of all the layer code I just wrote, make sure it looks good.
+- [x] Actually implement tonemapping (check that it's working, see how different stuff feels. 90% sure I want one with auto-correcting)
+- [x] Don't do separate brightness culling per layer, combine, and then cull
+    - [x] This should give: "I think I want the brightness threshold to be uniform across layers" for free
+- [ ] Change the ownership model of light occlusion meshes, so we only recalculate when we actually need to
+- [ ] Further reduce the number of meshes for light occlusion (I think one per light source would be great)
+    - [ ] At least should be able to cut down by factor of 2 (or better maybe? Idk seems a little hard but possible)
+        - [ ] Maybe closest point, then the two points near it? I think that works?
 - [ ] Want a "front detail" layer
-- [ ] Want removal of unneeded static hboxes
+- [ ] Try to clean up the roots and code org of layer code to make it more readable/interpretable
+- [x] Want removal of unneeded static hboxes
 - [x] Want consolidation of static hboxes
 - [ ] Want music, sound effects
 - [ ] Want it to work in WASM
 - [ ] Want sound effects, music
 - [ ] Want particles
 - [ ] Want save state
+
+// Too tired to finish the thingy.
+// I think the insight is this tho:
+// - If I'm combining the brightness and reflexivity in this way (which I think I should) then I think I also need like a lit combine
+// - Then the final brightness cull output needs to take the lit combine, the brightnes combine, the reflexivity combine, and then give a final culling
+// I'm not sure this'll actually be faster performance wise but it'll certainly be more extensible.

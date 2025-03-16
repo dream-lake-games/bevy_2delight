@@ -112,7 +112,7 @@ fn drive_circle_lights(
     mut color_mats: ResMut<Assets<CircleLightMat>>,
     layer_settings: Res<LayerSettings>,
 ) {
-    const PIXELS_PER_RING: f32 = 2.0;
+    const PIXELS_PER_RING: f32 = 1.0;
     for (circle_light, mut light_source) in &mut light_q {
         light_source.radius = Some(Fx::from_num(circle_light.strength));
         let mat_holder = mat_holders

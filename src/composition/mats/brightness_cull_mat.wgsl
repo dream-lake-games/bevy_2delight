@@ -21,14 +21,12 @@ var input_pixels_texture: texture_2d<f32>;
 var input_pixels_splr: sampler;
 
 @group(2) @binding(9)
-var<uniform> base_light: vec4<f32>;
-@group(2) @binding(10)
 var<uniform> bthreshold_unused_unused_unused: vec4<f32>;
 
 fn get_brightness(uv: vec2<f32>) -> vec4<f32> {
     let measured_brightness = textureSample(brightness_texture, brightness_splr, uv);
     let measured_reflexivity = textureSample(reflexivity_texture, reflexivity_splr, uv);
-    let measured_light = base_light + textureSample(light_texture, light_splr, uv);
+    let measured_light = textureSample(light_texture, light_splr, uv);
     return measured_brightness + measured_reflexivity * measured_light;
 }
 

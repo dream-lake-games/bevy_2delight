@@ -2,7 +2,6 @@ use bevy::{prelude::*, utils::HashMap};
 
 use crate::{
     composition::{
-        layer::InternalLayer,
         mats::{brightness_cull_mat::BrightnessCullMat, lit_mat::LitMat},
         LightingSet,
     },
@@ -13,73 +12,45 @@ use crate::{
 #[derive(Resource, Reflect)]
 pub struct Lighting {
     pub base_ambient: Color,
-    pub brightness_threshold_ambient: f32,
     pub base_detail: Color,
-    pub brightness_threshold_detail: f32,
+    pub brightness_threshold: f32,
     // TODO: It was a little supid to insert the entity instead of just the asset id here.
     //       Oh well. Fix it later.
-    pub(crate) layer_eid_map: HashMap<Layer, Entity>,
-    pub(crate) internal_layer_eid_map: HashMap<InternalLayer, Entity>,
+    pub(crate) lit_asset_map: HashMap<Layer, AssetId<LitMat>>,
+    pub(crate) bcull_asset: AssetId<BrightnessCullMat>,
 }
 impl Default for Lighting {
     fn default() -> Self {
         Self {
             base_ambient: Color::linear_rgb(0.6, 0.6, 0.6),
-            brightness_threshold_ambient: 1.0,
+            brightness_threshold: 1.0,
             base_detail: Color::linear_rgb(0.3, 0.3, 0.3),
-            brightness_threshold_detail: 1.0,
-            layer_eid_map: default(),
-            internal_layer_eid_map: default(),
+            lit_asset_map: default(),
+            bcull_asset: default(),
         }
     }
 }
 
-fn update_lit_mats(
-    mat_q: Query<&MeshMaterial2d<LitMat>>,
-    lighting: Res<Lighting>,
-    mut mats: ResMut<Assets<LitMat>>,
-) {
-    let ambient_hand = mat_q
-        .get(lighting.layer_eid_map[&Layer::AmbientPixels])
-        .expect("Ambient hand should always exist");
+fn update_lit_mats(lighting: Res<Lighting>, mut mats: ResMut<Assets<LitMat>>) {
     let ambient = mats
-        .get_mut(ambient_hand)
+        .get_mut(lighting.lit_asset_map[&Layer::AmbientPixels])
         .expect("Ambient should always exist");
     ambient.base_light = color_as_vec4(lighting.base_ambient);
 
-    let detail_hand = mat_q
-        .get(lighting.layer_eid_map[&Layer::DetailPixels])
-        .expect("Detail hand should always exist");
     let detail = mats
-        .get_mut(detail_hand)
+        .get_mut(lighting.lit_asset_map[&Layer::DetailPixels])
         .expect("Detail should always exist");
     detail.base_light = color_as_vec4(lighting.base_detail);
 }
 
 fn update_brightness_cull_mats(
-    mat_q: Query<&MeshMaterial2d<BrightnessCullMat>>,
     lighting: Res<Lighting>,
     mut mats: ResMut<Assets<BrightnessCullMat>>,
 ) {
-    let ambient_hand = mat_q
-        .get(lighting.layer_eid_map[&Layer::AmbientBrightness])
-        .expect("Ambient hand should always exist");
-    let ambient = mats
-        .get_mut(ambient_hand)
-        .expect("Ambient should always exist");
-    ambient.base_light = color_as_vec4(lighting.base_ambient);
-    ambient.bthreshold_unused_unused_unused =
-        Vec4::new(lighting.brightness_threshold_ambient, 0.0, 0.0, 0.0);
-
-    let detail_hand = mat_q
-        .get(lighting.layer_eid_map[&Layer::DetailBrightness])
-        .expect("Detail hand should always exist");
-    let detail = mats
-        .get_mut(detail_hand)
-        .expect("Detail should always exist");
-    detail.base_light = color_as_vec4(lighting.base_detail);
-    detail.bthreshold_unused_unused_unused =
-        Vec4::new(lighting.brightness_threshold_detail, 0.0, 0.0, 0.0);
+    let bcull_mat = mats
+        .get_mut(lighting.bcull_asset)
+        .expect("Bcull mat should always exist");
+    bcull_mat.bthreshold_unused_unused_unused[0] = lighting.brightness_threshold;
 }
 
 pub(crate) fn register_lighting(app: &mut App) {
