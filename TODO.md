@@ -83,8 +83,3 @@ i.e. sample static brightness, if nothing then static pixel (to zero out if it's
 - [ ] Want particles
 - [ ] Want save state
 
-// Too tired to finish the thingy.
-// I think the insight is this tho:
-// - If I'm combining the brightness and reflexivity in this way (which I think I should) then I think I also need like a lit combine
-// - Then the final brightness cull output needs to take the lit combine, the brightnes combine, the reflexivity combine, and then give a final culling
-// I'm not sure this'll actually be faster performance wise but it'll certainly be more extensible.
