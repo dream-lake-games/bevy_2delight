@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::{thread_rng, Rng};
 
 use crate::{
     glue::Fx,
@@ -81,8 +82,18 @@ impl Particle {
             ..default()
         }
     }
+    pub fn with_pos_fuzz(mut self, x: f32, y: f32) -> Self {
+        self.initial_pos.x += Fx::from_num(thread_rng().gen_range(-x..x));
+        self.initial_pos.y += Fx::from_num(thread_rng().gen_range(-y..y));
+        self
+    }
     pub fn with_vel(mut self, vel: FVec2) -> Self {
         self.movement.initial_vel = vel;
+        self
+    }
+    pub fn with_vel_fuzz(mut self, x: f32, y: f32) -> Self {
+        self.movement.initial_vel.x += Fx::from_num(thread_rng().gen_range(-x..x));
+        self.movement.initial_vel.y += Fx::from_num(thread_rng().gen_range(-y..y));
         self
     }
     pub fn with_gravity(mut self, gravity: Fx) -> Self {

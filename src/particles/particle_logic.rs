@@ -10,11 +10,22 @@ use super::{particle_defn::ParticleColorInner, prelude::Particle, ParticleSet};
 #[derive(Component)]
 struct HasParticleSprite;
 
-#[derive(Component, Default)]
+#[derive(Component)]
 struct ParticleLifespan {
     current: Fx,
+    pixel_body: Entity,
     brightness_body: Option<Entity>,
     reflexivity_body: Option<Entity>,
+}
+impl Default for ParticleLifespan {
+    fn default() -> Self {
+        Self {
+            current: Fx::ZERO,
+            pixel_body: Entity::PLACEHOLDER,
+            brightness_body: None,
+            reflexivity_body: None,
+        }
+    }
 }
 
 #[derive(Resource)]
@@ -52,35 +63,31 @@ fn bless_lifespans(
     for (eid, particle) in &needs_lifespan {
         let mut lifespan = ParticleLifespan::default();
 
-        let mut comms = commands.entity(eid);
-        comms.insert(Name::new("Particle"));
-        comms.set_parent(root.eid());
-        comms.insert(particle.initial_pos);
-        comms.insert(Dyno::new(
-            particle.movement.initial_vel.x,
-            particle.movement.initial_vel.y,
-        ));
         let size = particle.size.eval(Fx::ZERO).round().to_num();
-        if let Some(srx_kind) = particle.movement.collision {
-            comms.insert(StaticRx::single(srx_kind, HBox::new(size, size)));
-        }
-        comms.insert((
-            Sprite {
-                color: particle.color.eval(Fx::ZERO),
-                custom_size: Some(Vec2::new(size as f32, size as f32)),
-                ..default()
-            },
-            particle.layer.render_layers(),
-            HasParticleSprite,
-        ));
+
+        lifespan.pixel_body = commands
+            .spawn((
+                Name::new("ParticlePixels"),
+                Sprite {
+                    color: particle.color.eval(Fx::ZERO),
+                    custom_size: Some(Vec2::new(size as f32, size as f32)),
+                    anchor: bevy::sprite::Anchor::BottomLeft,
+                    ..default()
+                },
+                particle.layer.render_layers(),
+                HasParticleSprite,
+            ))
+            .set_parent(eid)
+            .id();
         if let Some(brightness) = particle.brightness.as_ref() {
             lifespan.brightness_body = Some(
-                comms
-                    .with_child((
+                commands
+                    .spawn((
                         Name::new("ParticleBrightness"),
                         Sprite {
                             color: brightness.eval(Fx::ZERO),
                             custom_size: Some(Vec2::new(size as f32, size as f32)),
+                            anchor: bevy::sprite::Anchor::BottomLeft,
                             ..default()
                         },
                         particle
@@ -90,17 +97,19 @@ fn bless_lifespans(
                             .render_layers(),
                         HasParticleSprite,
                     ))
+                    .set_parent(eid)
                     .id(),
             );
         }
         if let Some(reflexivity) = particle.reflexivity.as_ref() {
             lifespan.reflexivity_body = Some(
-                comms
-                    .with_child((
+                commands
+                    .spawn((
                         Name::new("ParticleReflexivity"),
                         Sprite {
                             color: reflexivity.eval(Fx::ZERO),
                             custom_size: Some(Vec2::new(size as f32, size as f32)),
+                            anchor: bevy::sprite::Anchor::BottomLeft,
                             ..default()
                         },
                         particle
@@ -110,9 +119,23 @@ fn bless_lifespans(
                             .render_layers(),
                         HasParticleSprite,
                     ))
+                    .set_parent(eid)
                     .id(),
             );
         }
+
+        let mut comms = commands.entity(eid);
+        comms.insert(Name::new("Particle"));
+        comms.set_parent(root.eid());
+        comms.insert(particle.initial_pos);
+        comms.insert(Dyno::new(
+            particle.movement.initial_vel.x,
+            particle.movement.initial_vel.y,
+        ));
+        if let Some(srx_kind) = particle.movement.collision {
+            comms.insert(StaticRx::single(srx_kind, HBox::new(size, size)));
+        }
+
         comms.insert(lifespan);
     }
 }
@@ -125,7 +148,7 @@ fn update_particles(
         &Particle,
         Option<&StaticRx>,
     )>,
-    mut sprite_q: Query<&mut Sprite, With<HasParticleSprite>>,
+    mut sprite_q: Query<(&mut Sprite, &mut Transform), With<HasParticleSprite>>,
     bullet_time: Res<BulletTime>,
     mut commands: Commands,
 ) {
@@ -136,26 +159,26 @@ fn update_particles(
             continue;
         }
         // Appearance
-        let current_size = particle.size.eval(lifespan.current).round();
-        let handle_sprite = |sprite: &mut Sprite, inner: &ParticleColorInner| {
-            sprite.color = inner.eval(lifespan.current);
+        let current_size = particle
+            .size
+            .eval(lifespan.current / particle.lifetime)
+            .round();
+        let offset_pixel_perfect = (current_size.round() / 2).floor().to_num::<f32>();
+        let mut handle_sprite = |sprite_eid: Entity, inner: &ParticleColorInner| {
+            let Ok((mut sprite, mut tran)) = sprite_q.get_mut(sprite_eid) else {
+                return;
+            };
+            sprite.color = inner.eval(lifespan.current / particle.lifetime);
             sprite.custom_size = Some(Vec2::new(current_size.to_num(), current_size.to_num()));
+            tran.translation.x = -offset_pixel_perfect;
+            tran.translation.y = -offset_pixel_perfect;
         };
-        let mut color_sprite = sprite_q.get_mut(eid).unwrap();
-        handle_sprite(&mut color_sprite, &particle.color);
+        handle_sprite(lifespan.pixel_body, &particle.color);
         if let Some(bbody) = lifespan.brightness_body {
-            let mut brightness_sprite = sprite_q.get_mut(bbody).unwrap();
-            handle_sprite(
-                &mut brightness_sprite,
-                particle.brightness.as_ref().unwrap(),
-            );
+            handle_sprite(bbody, particle.brightness.as_ref().unwrap());
         }
         if let Some(rbody) = lifespan.reflexivity_body {
-            let mut reflexivity_sprite = sprite_q.get_mut(rbody).unwrap();
-            handle_sprite(
-                &mut reflexivity_sprite,
-                particle.reflexivity.as_ref().unwrap(),
-            );
+            handle_sprite(rbody, particle.reflexivity.as_ref().unwrap());
         }
         // Physics
         if let Some(gravity) = particle.movement.gravity {

@@ -291,12 +291,10 @@ fn player_juice(
     };
     commands.spawn(
         Particle::new(*pos, Fx::from_num(0.3))
-            .with_color_terp(
-                Color::WHITE,
-                tailwind::AMBER_100.into(),
-                TerpMode::EaseInQuadratic,
-            )
-            .with_size_terp(Fx::from_num(4), Fx::from_num(1), TerpMode::EaseOutQuadratic)
+            .with_pos_fuzz(0.75, 1.5)
+            .with_vel_fuzz(4.0, 4.0)
+            .with_color_terp(Color::WHITE, tailwind::BLUE_400.into(), TerpMode::Linear)
+            .with_size_terp(Fx::from_num(4), Fx::from_num(1), TerpMode::Linear)
             .with_layer(Layer::BackDetailPixels),
     );
 }
