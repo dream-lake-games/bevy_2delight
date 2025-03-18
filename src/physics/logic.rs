@@ -223,8 +223,37 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                             }
                         }
                     }
-                    (StaticRxKind::Observe, _) => {
+                    (StaticRxKind::Observe, StaticTxKind::Solid) => {
                         static_colls.insert(coll_rec);
+                    }
+                    (StaticRxKind::Observe, StaticTxKind::PassUp) => {
+                        if push.y > 0.0
+                            && old_perp.y < 0.0
+                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                        {
+                            static_colls.insert(coll_rec);
+                        }
+                    }
+                    (StaticRxKind::Bounce { perp, par }, StaticTxKind::Solid) => {
+                        static_colls.insert(coll_rec);
+                        do_push(&mut my_thbox);
+                        *my_vel = old_par * par + FVec2::new(Fx::ZERO, tx_dyno.vel.y);
+                        if old_perp.dot(push) > Fx::ZERO {
+                            *my_vel += old_perp * perp;
+                        }
+                    }
+                    (StaticRxKind::Bounce { perp, par }, StaticTxKind::PassUp) => {
+                        if push.y > 0.0
+                            && old_perp.y < 0.0
+                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                        {
+                            static_colls.insert(coll_rec);
+                            do_push(&mut my_thbox);
+                            *my_vel = old_par * par + FVec2::new(Fx::ZERO, tx_dyno.vel.y);
+                            if old_perp.dot(push) > Fx::ZERO {
+                                *my_vel += old_perp * perp;
+                            }
+                        }
                     }
                 }
             }

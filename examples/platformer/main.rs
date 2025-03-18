@@ -53,7 +53,7 @@ fn main() {
     camera::register_camera(&mut app);
     ldtk::register_ldtk(&mut app);
     platforms::register_platforms(&mut app);
-    player::regiser_player(&mut app);
+    player::register_player(&mut app);
 
     app.run();
 }

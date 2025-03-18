@@ -1,18 +1,21 @@
 use bevy::prelude::*;
 
 use crate::{
+    glue::Fx,
     physics::{colls::CollKey, hbox::HBox, pos::Pos},
     prelude::OccludeLight,
 };
 
 use super::spat_hash::{on_remove_spat_hash, SpatHash, SpatHashStaticTx};
 
-#[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, std::hash::Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, std::hash::Hash)]
 pub enum StaticRxKind {
     /// Pushes the rx ctrl out of tx comps, sets vel to zero along plane of intersection
     Default,
     /// Observes collisions but does nothing to respond
     Observe,
+    /// Bounces off things
+    Bounce { perp: Fx, par: Fx },
 }
 #[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, std::hash::Hash)]
 pub enum StaticTxKind {

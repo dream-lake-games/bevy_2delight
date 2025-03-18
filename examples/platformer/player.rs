@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_2delight::prelude::*;
 
 use crate::{
@@ -282,7 +282,26 @@ fn update_player_spawner(
     }
 }
 
-pub(super) fn regiser_player(app: &mut App) {
+fn player_juice(
+    player_q: Query<(&Pos, &Dyno, &AnimMan<PlayerAnim>), With<Player>>,
+    mut commands: Commands,
+) {
+    let Ok((pos, dyno, anim)) = player_q.get_single() else {
+        return;
+    };
+    commands.spawn(
+        Particle::new(*pos, Fx::from_num(0.3))
+            .with_color_terp(
+                Color::WHITE,
+                tailwind::AMBER_100.into(),
+                TerpMode::EaseInQuadratic,
+            )
+            .with_size_terp(Fx::from_num(4), Fx::from_num(1), TerpMode::EaseOutQuadratic)
+            .with_layer(Layer::BackDetailPixels),
+    );
+}
+
+pub(super) fn register_player(app: &mut App) {
     app.add_plugins(LdtkEntityPlugin::<PlayerSpawnerBundle>::new(
         "Entities",
         "PlayerSpawner",
@@ -299,6 +318,7 @@ pub(super) fn regiser_player(app: &mut App) {
             update_player_always,
             update_player_stateful,
             update_player_spawner,
+            player_juice,
         )
             .chain()
             .in_set(DelightedSet),

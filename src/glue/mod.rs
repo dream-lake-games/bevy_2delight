@@ -3,6 +3,7 @@ use bevy::prelude::*;
 pub mod aabbify;
 pub mod bullet_time;
 pub mod fvec;
+pub mod terp;
 
 pub type Fx = fixed::types::I32F32;
 
@@ -17,6 +18,7 @@ pub fn color_as_vec4(color: Color) -> Vec4 {
 pub mod prelude {
     pub use super::bullet_time::*;
     pub use super::fvec::*;
+    pub use super::terp::{Terp, TerpMode, Terpable};
     pub use super::Deterministic;
     pub use super::Fx;
 }

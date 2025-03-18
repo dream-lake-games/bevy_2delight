@@ -9,7 +9,8 @@ use crate::{
     prelude::{
         AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings,
         LayersCameraSet, LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, LightAnimSet,
-        LightInteractionSet, PhysicsPluginGeneric, PhysicsSettingsGeneric, TriggerKindTrait,
+        LightInteractionSet, ParticlePlugin, PhysicsPluginGeneric, PhysicsSettingsGeneric,
+        TriggerKindTrait,
     },
 };
 
@@ -69,6 +70,7 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
             AnimPlugin::new(self.anim_settings.clone()),
             BulletTimePlugin::default(),
             LdtkPlugin::<LdtkRoot>::default(),
+            ParticlePlugin,
             PhysicsPluginGeneric::<TriggerRxKind, TriggerTxKind>::default(),
         ));
         app.insert_resource(Deterministic(self.deterministic));

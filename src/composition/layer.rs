@@ -236,6 +236,58 @@ impl Layer {
     fn target(&self) -> Handle<Image> {
         Handle::weak_from_u128(self.render_layers().bits()[0] as u128)
     }
+
+    pub fn associated_pixel_layer(&self) -> Option<Layer> {
+        match self {
+            Self::AmbientPixels => Some(Layer::AmbientPixels),
+            Self::AmbientBrightness => Some(Layer::AmbientPixels),
+            Self::AmbientReflexivity => Some(Layer::AmbientPixels),
+            Self::BackDetailPixels => Some(Layer::BackDetailPixels),
+            Self::BackDetailBrightness => Some(Layer::BackDetailPixels),
+            Self::BackDetailReflexivity => Some(Layer::BackDetailPixels),
+            Self::StaticPixels => Some(Layer::StaticPixels),
+            Self::StaticBrightness => Some(Layer::StaticPixels),
+            Self::StaticReflexivity => Some(Layer::StaticPixels),
+            Self::FrontDetailPixels => Some(Layer::FrontDetailPixels),
+            Self::FrontDetailBrightness => Some(Layer::FrontDetailPixels),
+            Self::FrontDetailReflexivity => Some(Layer::FrontDetailPixels),
+            _ => None,
+        }
+    }
+    pub fn associated_brightness_layer(&self) -> Option<Layer> {
+        match self {
+            Self::AmbientPixels => Some(Layer::AmbientBrightness),
+            Self::AmbientBrightness => Some(Layer::AmbientBrightness),
+            Self::AmbientReflexivity => Some(Layer::AmbientBrightness),
+            Self::BackDetailPixels => Some(Layer::BackDetailBrightness),
+            Self::BackDetailBrightness => Some(Layer::BackDetailBrightness),
+            Self::BackDetailReflexivity => Some(Layer::BackDetailBrightness),
+            Self::StaticPixels => Some(Layer::StaticBrightness),
+            Self::StaticBrightness => Some(Layer::StaticBrightness),
+            Self::StaticReflexivity => Some(Layer::StaticBrightness),
+            Self::FrontDetailPixels => Some(Layer::FrontDetailBrightness),
+            Self::FrontDetailBrightness => Some(Layer::FrontDetailBrightness),
+            Self::FrontDetailReflexivity => Some(Layer::FrontDetailBrightness),
+            _ => None,
+        }
+    }
+    pub fn associated_reflexivity_layer(&self) -> Option<Layer> {
+        match self {
+            Self::AmbientPixels => Some(Layer::AmbientReflexivity),
+            Self::AmbientBrightness => Some(Layer::AmbientReflexivity),
+            Self::AmbientReflexivity => Some(Layer::AmbientReflexivity),
+            Self::BackDetailPixels => Some(Layer::BackDetailReflexivity),
+            Self::BackDetailBrightness => Some(Layer::BackDetailReflexivity),
+            Self::BackDetailReflexivity => Some(Layer::BackDetailReflexivity),
+            Self::StaticPixels => Some(Layer::StaticReflexivity),
+            Self::StaticBrightness => Some(Layer::StaticReflexivity),
+            Self::StaticReflexivity => Some(Layer::StaticReflexivity),
+            Self::FrontDetailPixels => Some(Layer::FrontDetailReflexivity),
+            Self::FrontDetailBrightness => Some(Layer::FrontDetailReflexivity),
+            Self::FrontDetailReflexivity => Some(Layer::FrontDetailReflexivity),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Reflect, PartialEq, Eq, EnumIter, std::hash::Hash)]
@@ -760,14 +812,16 @@ fn setup_projection_layers(
 ) {
     for (ix, layer) in PROJECTION_LAYERS.iter().enumerate() {
         if layer.use_cutout {
-            commands.spawn((
-                Name::new(format!("ProjectionLayer_{:?}", layer.input)),
-                Mesh2d(screen_mesh.0.clone()),
-                MeshMaterial2d(cutout_mats.add(CutoutMat::new(layer.input.target()))),
-                Transform::from_translation(Vec3::Z * ix as f32),
-                ResizeLayerToWindow,
-                SMUSH_RENDER_LAYERS.clone(),
-            ));
+            commands
+                .spawn((
+                    Name::new(format!("ProjectionLayer_{:?}", layer.input)),
+                    Mesh2d(screen_mesh.0.clone()),
+                    MeshMaterial2d(cutout_mats.add(CutoutMat::new(layer.input.target()))),
+                    Transform::from_translation(Vec3::Z * ix as f32),
+                    ResizeLayerToWindow,
+                    SMUSH_RENDER_LAYERS.clone(),
+                ))
+                .set_parent(root.eid());
         } else {
             commands
                 .spawn((

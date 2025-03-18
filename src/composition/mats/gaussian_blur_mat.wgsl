@@ -13,7 +13,7 @@ const E: f32 = 2.71828;
 
 const sampling_distance_factor: f32 = 1.0;
 // Based
-const sigma: f32 = 1.8;
+const sigma: f32 = 1.6;
 const sigma_square: f32 = sigma * sigma;
 
 fn gaussian_weight(v: i32) -> f32 {

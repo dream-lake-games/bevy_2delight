@@ -2,6 +2,7 @@ mod anim;
 mod composition;
 mod glue;
 mod ldtk;
+mod particles;
 mod physics;
 mod plugin;
 
@@ -25,6 +26,7 @@ pub mod prelude {
     pub use super::debug_resource;
     pub use super::glue::prelude::*;
     pub use super::ldtk::prelude::*;
+    pub use super::particles::prelude::*;
     pub use super::physics::prelude::*;
     pub use super::plugin::{DelightedSet, TwoDelightPlugin};
     pub use bevy_2delight_macros::TriggerKind;

@@ -80,6 +80,7 @@ i.e. sample static brightness, if nothing then static pixel (to zero out if it's
 - [ ] Want sound effects, music
 - [ ] Want particles
 - [ ] Want save state
+- [ ] Want dialogue system that's easy and expressive
 
 ## Okay things that I should maybe do later
 
@@ -90,3 +91,15 @@ It still can only hit 30fps on my old computer :(. Oh well.
 I'm not really sure what to do to help. I need to learn more about why it's slow and go from there. Most frames it's creating only a handful of meshes, idk really how to speed it up there.
 
 I think I need to (a) figure out if this actually matters and (b) get better at profiling, and a better understanding of how it works so I can reason about this.
+
+I feel like also, the realistic thing to do is just expose performance settings, and allow people to turn off lighting. Will probably also be relevant for some particle things.
+
+### Particles
+
+Okay so I did this for zenith way back.
+
+Let me reflect on this a little bit. I think what happened was that the API was hard to use, the pixels didn't look good, and the code was hard to maintain. So for redeath so far I've just been using aesprite for particles. But I think this is bad, and also not fun because I can't get particles that interact with physics, or brightness, or reflexivity, etc. Also does become kind of hell to maintain
+
+Kami particles were actually pretty cool. I think they added to the game a lot.
+
+I need a really good underlying abstraction for a single particle. What defines it? How does it get created? How does it die? How does it move?
