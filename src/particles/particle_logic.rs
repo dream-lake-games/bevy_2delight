@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     glue::Fx,
-    prelude::{BulletTime, Dyno, HBox, StaticRx},
+    prelude::{BulletTime, Dyno, HBox, Pos, StaticRx},
 };
 
 use super::{particle_defn::ParticleColorInner, prelude::Particle, ParticleSet};
@@ -56,12 +56,13 @@ fn startup_root(mut commands: Commands, mut particle_root: ResMut<ParticleRoot>)
 }
 
 fn bless_lifespans(
-    needs_lifespan: Query<(Entity, &Particle), Without<ParticleLifespan>>,
+    mut needs_lifespan: Query<(Entity, &mut Particle), Without<ParticleLifespan>>,
     root: Res<ParticleRoot>,
     mut commands: Commands,
 ) {
-    for (eid, particle) in &needs_lifespan {
+    for (eid, mut particle) in &mut needs_lifespan {
         let mut lifespan = ParticleLifespan::default();
+        particle.resolve_fuzz();
 
         let size = particle.size.eval(Fx::ZERO).round().to_num();
 
@@ -147,12 +148,13 @@ fn update_particles(
         &mut Dyno,
         &Particle,
         Option<&StaticRx>,
+        &mut Pos,
     )>,
     mut sprite_q: Query<(&mut Sprite, &mut Transform), With<HasParticleSprite>>,
     bullet_time: Res<BulletTime>,
     mut commands: Commands,
 ) {
-    for (eid, mut lifespan, mut dyno, particle, srx) in &mut particle_q {
+    for (eid, mut lifespan, mut dyno, particle, srx, mut pos) in &mut particle_q {
         lifespan.current += bullet_time.delta_secs();
         if lifespan.current > particle.lifetime {
             commands.entity(eid).despawn_recursive();
@@ -197,6 +199,7 @@ fn update_particles(
                 ));
             }
         }
+        pos.z -= bullet_time.delta_secs() / 100;
     }
 }
 

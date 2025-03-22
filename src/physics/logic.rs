@@ -31,6 +31,30 @@ fn invariants(
     }
 }
 
+fn reset_colls_every_frame<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
+    mut static_colls: ResMut<StaticColls>,
+    mut trigger_colls: ResMut<TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>>,
+    mut srx_ctrls: Query<&mut StaticRx>,
+    mut stx_ctrls: Query<&mut StaticTx>,
+    mut trx_ctrls: Query<&mut TriggerRxGeneric<TriggerRxKind>>,
+    mut ttx_ctrls: Query<&mut TriggerTxGeneric<TriggerTxKind>>,
+) {
+    // Eh at some point we may want to shrink memory used, but this probably fine
+    static_colls.map.clear();
+    trigger_colls.map.clear();
+    macro_rules! clear_coll_keys {
+        ($thing:expr) => {
+            for mut thing in &mut $thing {
+                thing.coll_keys.clear();
+            }
+        };
+    }
+    clear_coll_keys!(srx_ctrls);
+    clear_coll_keys!(stx_ctrls);
+    clear_coll_keys!(trx_ctrls);
+    clear_coll_keys!(ttx_ctrls);
+}
+
 /// Moves dynos that have no statics and no trigger receivers
 fn move_uninteresting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     bullet_time: Res<BulletTime>,
@@ -426,7 +450,6 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
         // Now that we're done moving, we need to update our spatial hashes
         // NOTE: See `invariants` fn, but we don't allow one entity to have both StaticRx and StaticTx
         //       So we only need to update a potential TriggerTx hash here
-
         if let (Ok((_, ttx)), Ok(mut spat_keys_ttx)) =
             (ttx_q.get(eid), spat_hash_ttx_q.get_mut(eid))
         {
@@ -460,6 +483,7 @@ pub(super) fn register_logic<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
     app.add_systems(
         Update,
         (
+            reset_colls_every_frame::<TriggerRxKind, TriggerTxKind>,
             move_uninteresting_dynos::<TriggerRxKind, TriggerTxKind>,
             move_static_txs::<TriggerTxKind>,
             move_interesting_dynos::<TriggerRxKind, TriggerTxKind>,

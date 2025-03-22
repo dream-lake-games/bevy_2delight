@@ -1,5 +1,6 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_2delight::prelude::*;
+use rand::{thread_rng, Rng};
 
 #[derive(
     Clone, Copy, Debug, Default, strum_macros::EnumIter, Reflect, PartialEq, Eq, std::hash::Hash,
@@ -71,6 +72,33 @@ impl LdtkEntity<LdtkRoot> for TorchBundle {
         }
     }
 }
+fn juice_torch(torches: Query<&Pos, With<AnimMan<TorchAnim>>>, mut commands: Commands) {
+    for pos in &torches {
+        if thread_rng().gen_bool(0.05) {
+            commands.spawn(
+                Particle::new(*pos, Fx::from_num(2.0))
+                    .with_pos_fuzz(0.5, 0.5)
+                    .with_lifetime_fuzz(0.5)
+                    .with_vel(FVec2::new(Fx::from_num(0), Fx::from_num(5)))
+                    .with_vel_fuzz(1.0, 2.5)
+                    .with_color_terp(
+                        Color::srgb_u8(238, 191, 245),
+                        Color::BLACK,
+                        TerpMode::Linear,
+                    )
+                    .with_color_fuzz(Color::srgb(0.1, 0.1, 0.1))
+                    .with_brightness_terp(
+                        tailwind::YELLOW_300.into(),
+                        Color::BLACK,
+                        TerpMode::Linear,
+                    )
+                    .with_size_terp(Fx::from_num(2), Fx::from_num(1), TerpMode::Linear)
+                    .with_size_fuzz(0.5)
+                    .with_layer(Layer::FrontDetailPixels),
+            );
+        }
+    }
+}
 
 defn_anim!(
     ShinyRockAnim,
@@ -126,4 +154,6 @@ pub(super) fn register_ldtk(app: &mut App) {
     ));
 
     app.add_systems(Startup, startup);
+
+    app.add_systems(Update, juice_torch);
 }

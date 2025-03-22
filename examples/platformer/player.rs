@@ -289,14 +289,81 @@ fn player_juice(
     let Ok((pos, dyno, anim)) = player_q.get_single() else {
         return;
     };
+
+    // Glowing trail
     commands.spawn(
         Particle::new(*pos, Fx::from_num(0.3))
             .with_pos_fuzz(0.75, 1.5)
+            .with_lifetime_fuzz(0.1)
             .with_vel_fuzz(4.0, 4.0)
-            .with_color_terp(Color::WHITE, tailwind::BLUE_400.into(), TerpMode::Linear)
+            .with_color_terp(
+                Color::srgb_u8(238, 191, 245),
+                tailwind::BLUE_400.into(),
+                TerpMode::Linear,
+            )
+            .with_color_fuzz(Color::srgb(0.1, 0.1, 0.1))
+            .with_brightness_terp(
+                Color::srgb_u8(238, 191, 245),
+                tailwind::BLUE_400.into(),
+                TerpMode::Linear,
+            )
             .with_size_terp(Fx::from_num(4), Fx::from_num(1), TerpMode::Linear)
+            .with_size_fuzz(0.5)
             .with_layer(Layer::BackDetailPixels),
     );
+
+    // State transition particles
+    let base_ground_particle = Particle::new(
+        *pos - FVec2::new(Fx::from_num(1), Fx::from_num(6)),
+        Fx::from_num(0.8),
+    )
+    .with_pos_fuzz(1.0, 0.0)
+    .with_lifetime_fuzz(0.1)
+    .with_color_constant(Color::srgb_u8(158, 129, 208))
+    .with_gravity(Fx::from_num(150))
+    .with_collision(StaticRxKind::Bounce {
+        perp: Fx::from_num(0),
+        par: Fx::from_num(0.9),
+    })
+    .with_layer(Layer::FrontDetailPixels);
+
+    if let Some(anim_state_change) = anim.delta_state() {
+        match (anim_state_change.last_frame, anim_state_change.this_frame) {
+            (_, PlayerAnim::Land) => {
+                let part = base_ground_particle
+                    .clone()
+                    .with_vel(FVec2::new(dyno.vel.x / 10, Fx::from_num(20)))
+                    .with_vel_fuzz(5.0, 3.0);
+                for _ in 0..3 {
+                    commands.spawn(part.clone());
+                }
+            }
+            (_, PlayerAnim::Jump) => {
+                let part = base_ground_particle
+                    .clone()
+                    .with_vel(FVec2::new(dyno.vel.x / 10, Fx::from_num(30)))
+                    .with_vel_fuzz(5.0, 3.0);
+                for _ in 0..6 {
+                    commands.spawn(part.clone());
+                }
+            }
+            _ => (),
+        }
+    }
+
+    // Mid-animation particles
+    match (anim.get_state(), anim.get_ix()) {
+        (PlayerAnim::Run, 3) => {
+            let part = base_ground_particle
+                .clone()
+                .with_vel(FVec2::new(dyno.vel.x / 8, Fx::from_num(20)))
+                .with_vel_fuzz(2.0, 2.0);
+            for _ in 0..2 {
+                commands.spawn(part.clone());
+            }
+        }
+        _ => (),
+    }
 }
 
 pub(super) fn register_player(app: &mut App) {

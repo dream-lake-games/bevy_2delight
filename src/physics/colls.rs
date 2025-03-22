@@ -178,43 +178,9 @@ impl<'a, TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>
     }
 }
 
-#[derive(Component)]
-pub struct HasStaticColl;
-#[derive(Component)]
-pub struct HasTriggerColl;
-
-fn reset_colls_every_frame<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
-    mut static_colls: ResMut<StaticColls>,
-    mut trigger_colls: ResMut<TriggerCollsGeneric<TriggerRxKind, TriggerTxKind>>,
-    mut srx_ctrls: Query<&mut StaticRx, With<HasStaticColl>>,
-    mut stx_ctrls: Query<&mut StaticTx, With<HasStaticColl>>,
-    mut trx_ctrls: Query<&mut TriggerRxGeneric<TriggerRxKind>, With<HasTriggerColl>>,
-    mut ttx_ctrls: Query<&mut TriggerTxGeneric<TriggerTxKind>, With<HasTriggerColl>>,
-) {
-    // Eh at some point we may want to shrink memory used, but this probably fine
-    static_colls.map.clear();
-    trigger_colls.map.clear();
-    macro_rules! clear_coll_keys {
-        ($thing:expr) => {
-            for mut thing in &mut $thing {
-                thing.coll_keys.clear();
-            }
-        };
-    }
-    clear_coll_keys!(srx_ctrls);
-    clear_coll_keys!(stx_ctrls);
-    clear_coll_keys!(trx_ctrls);
-    clear_coll_keys!(ttx_ctrls);
-}
-
 pub(super) fn register_colls<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKindTrait>(
     app: &mut App,
 ) {
     app.insert_resource(StaticColls { map: default() });
     app.insert_resource(TriggerCollsGeneric::<TriggerRxKind, TriggerTxKind> { map: default() });
-
-    app.add_systems(
-        First,
-        reset_colls_every_frame::<TriggerRxKind, TriggerTxKind>.in_set(PhysicsSet),
-    );
 }

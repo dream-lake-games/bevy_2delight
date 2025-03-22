@@ -55,11 +55,12 @@ impl StaticRx {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct StaticTxComp {
     pub(crate) kind: StaticTxKind,
     pub(crate) hbox: HBox,
 }
-#[derive(Component)]
+#[derive(Component, Debug)]
 #[component(on_add = on_add_static_tx)]
 #[component(on_remove = on_remove_static_tx)]
 pub struct StaticTx {

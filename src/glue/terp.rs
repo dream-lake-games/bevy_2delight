@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::Fx;
 
+#[derive(Clone)]
 pub enum TerpMode {
     Linear,
     EaseInQuadratic,
@@ -21,6 +22,7 @@ pub trait Terpable: Sized {
     fn terp(start: &Self, stop: &Self, mode: &TerpMode, frac: Fx) -> Self;
 }
 
+#[derive(Clone)]
 pub struct Terp<T: Terpable> {
     start: T,
     stop: T,
