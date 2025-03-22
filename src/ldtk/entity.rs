@@ -58,8 +58,8 @@ fn post_ldtk_entity_blessing<R: LdtkRootKind, B: LdtkEntity<R>>(
             continue;
         }
         let pos = Pos::new(
-            Fx::from_num(gt.translation().x.round() as i32),
-            Fx::from_num(gt.translation().y.round() as i32),
+            fx!(gt.translation().x.round() as i32),
+            fx!(gt.translation().y.round() as i32),
         );
         let bund = B::from_ldtk(pos, &wrapper.fields, wrapper.iid.clone());
         commands.spawn(bund).set_parent(roots.get_eid(B::ROOT));

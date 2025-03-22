@@ -1,6 +1,15 @@
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
 
 use super::Fx;
+
+#[macro_export]
+macro_rules! fx {
+    ($e:expr) => {
+        Fx::from_num($e)
+    };
+}
+pub use fx;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct FVec2 {
@@ -13,8 +22,11 @@ impl FVec2 {
     pub const X: Self = Self::const_new(Fx::ONE, Fx::ZERO);
     pub const Y: Self = Self::const_new(Fx::ZERO, Fx::ONE);
 
-    pub fn new(x: Fx, y: Fx) -> Self {
-        Self { x, y }
+    pub fn new<X: ToFixed, Y: ToFixed>(x: X, y: Y) -> Self {
+        Self {
+            x: fx!(x),
+            y: fx!(y),
+        }
     }
     pub const fn const_new(x: Fx, y: Fx) -> Self {
         Self { x, y }

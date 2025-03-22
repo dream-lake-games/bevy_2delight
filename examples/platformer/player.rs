@@ -35,12 +35,8 @@ struct PlayerInput {
 }
 fn update_player_input(mut player_input: ResMut<PlayerInput>, keyboard: Res<ButtonInput<KeyCode>>) {
     player_input.jump = keyboard.just_pressed(KeyCode::KeyJ);
-    let x_dir = Fx::from_num(
-        keyboard.pressed(KeyCode::KeyD) as i32 - keyboard.pressed(KeyCode::KeyA) as i32,
-    );
-    let y_dir = Fx::from_num(
-        keyboard.pressed(KeyCode::KeyW) as i32 - keyboard.pressed(KeyCode::KeyS) as i32,
-    );
+    let x_dir = keyboard.pressed(KeyCode::KeyD) as i32 - keyboard.pressed(KeyCode::KeyA) as i32;
+    let y_dir = keyboard.pressed(KeyCode::KeyW) as i32 - keyboard.pressed(KeyCode::KeyS) as i32;
     player_input.dir = FVec2::new(x_dir, y_dir);
 }
 
@@ -70,15 +66,12 @@ impl PlayerBundle {
             },
             anim: AnimMan::new(PlayerAnim::Idle),
             light: CircleLight::strength(64.0),
-            pos: pos.with_z(Fx::from_num(10)),
+            pos: pos.with_z(10),
             dyno: Dyno::default(),
-            static_rx: StaticRx::single(
-                StaticRxKind::Default,
-                HBox::new(7, 12).with_offset(Fx::from_num(0), Fx::from_num(-1)),
-            ),
+            static_rx: StaticRx::single(StaticRxKind::Default, HBox::new(7, 12).with_offset(0, -1)),
             trigger_rx: TriggerRx::single(
                 TriggerRxKind::Player,
-                HBox::new(7, 12).with_offset(Fx::from_num(0), Fx::from_num(-1)),
+                HBox::new(7, 12).with_offset(0, -1),
             ),
         }
     }
@@ -96,12 +89,12 @@ fn update_player_always(
         return;
     };
     // Gravity
-    dyno.vel.y -= bullet_time.delta_secs() * Fx::from_num(300);
+    dyno.vel.y -= bullet_time.delta_secs() * fx!(300);
     // Jump timing
     if scolls.get_refs(&srx.coll_keys).any(|coll| {
         coll.push.y > Fx::ZERO && matches!(coll.tx_kind, StaticTxKind::Solid | StaticTxKind::PassUp)
     }) {
-        player.jump_time = Fx::from_num(0.1);
+        player.jump_time = fx!(0.1);
     } else {
         if player.jump_time > Fx::ZERO {
             player.jump_time -= bullet_time.real_delta_secs();
@@ -160,31 +153,31 @@ fn update_player_stateful(
         PlayerAnim::Air | PlayerAnim::Jump => {
             if input.dir.x < Fx::ZERO {
                 if dyno.vel.x > Fx::ZERO {
-                    dyno.vel.x *= Fx::from_num(consts.air_drag);
+                    dyno.vel.x *= fx!(consts.air_drag);
                 }
-                dyno.vel.x -= Fx::from_num(consts.air_speed) * bullet_time.delta_secs();
+                dyno.vel.x -= fx!(consts.air_speed) * bullet_time.delta_secs();
             } else if input.dir.x > Fx::ZERO {
                 if dyno.vel.x < Fx::ZERO {
-                    dyno.vel.x *= Fx::from_num(consts.air_drag);
+                    dyno.vel.x *= fx!(consts.air_drag);
                 }
-                dyno.vel.x += Fx::from_num(consts.air_speed) * bullet_time.delta_secs();
+                dyno.vel.x += fx!(consts.air_speed) * bullet_time.delta_secs();
             } else {
-                dyno.vel.x *= Fx::from_num(consts.air_drag);
+                dyno.vel.x *= fx!(consts.air_drag);
             }
         }
         PlayerAnim::Idle | PlayerAnim::Run | PlayerAnim::Land => {
             if input.dir.x < Fx::ZERO {
                 if dyno.vel.x > Fx::ZERO {
-                    dyno.vel.x *= Fx::from_num(consts.ground_drag);
+                    dyno.vel.x *= fx!(consts.ground_drag);
                 }
-                dyno.vel.x -= Fx::from_num(consts.ground_speed) * bullet_time.delta_secs();
+                dyno.vel.x -= fx!(consts.ground_speed) * bullet_time.delta_secs();
             } else if input.dir.x > Fx::ZERO {
                 if dyno.vel.x < Fx::ZERO {
-                    dyno.vel.x *= Fx::from_num(consts.ground_drag);
+                    dyno.vel.x *= fx!(consts.ground_drag);
                 }
-                dyno.vel.x += Fx::from_num(consts.ground_speed) * bullet_time.delta_secs();
+                dyno.vel.x += fx!(consts.ground_speed) * bullet_time.delta_secs();
             } else {
-                dyno.vel.x *= Fx::from_num(consts.ground_drag);
+                dyno.vel.x *= fx!(consts.ground_drag);
             }
         }
     }
@@ -197,7 +190,7 @@ fn update_player_stateful(
         )
     {
         anim.set_state(PlayerAnim::Jump);
-        dyno.vel.y = Fx::from_num(consts.jump_speed);
+        dyno.vel.y = fx!(consts.jump_speed);
         player.jump_time = Fx::ZERO;
     }
     // State transitions
@@ -236,11 +229,11 @@ fn update_player_stateful(
         }
     }
     // Limit component speed (TODO: Fixed point square root...)
-    if dyno.vel.x.abs() > Fx::from_num(consts.max_component_speed) {
-        dyno.vel.x = dyno.vel.x.signum() * Fx::from_num(consts.max_component_speed);
+    if dyno.vel.x.abs() > fx!(consts.max_component_speed) {
+        dyno.vel.x = dyno.vel.x.signum() * fx!(consts.max_component_speed);
     }
-    if dyno.vel.y.abs() > Fx::from_num(consts.max_component_speed) {
-        dyno.vel.y = dyno.vel.y.signum() * Fx::from_num(consts.max_component_speed);
+    if dyno.vel.y.abs() > fx!(consts.max_component_speed) {
+        dyno.vel.y = dyno.vel.y.signum() * fx!(consts.max_component_speed);
     }
 }
 
@@ -292,10 +285,10 @@ fn player_juice(
 
     // Glowing trail
     commands.spawn(
-        Particle::new(*pos, Fx::from_num(0.3))
+        Particle::new(*pos, 0.3)
             .with_pos_fuzz(0.75, 1.5)
             .with_lifetime_fuzz(0.1)
-            .with_vel_fuzz(4.0, 4.0)
+            .with_vel_fuzz(4, 4)
             .with_color_terp(
                 Color::srgb_u8(238, 191, 245),
                 tailwind::BLUE_400.into(),
@@ -307,32 +300,29 @@ fn player_juice(
                 tailwind::BLUE_400.into(),
                 TerpMode::Linear,
             )
-            .with_size_terp(Fx::from_num(4), Fx::from_num(1), TerpMode::Linear)
+            .with_size_terp(4, 1, TerpMode::Linear)
             .with_size_fuzz(0.5)
             .with_layer(Layer::BackDetailPixels),
     );
 
     // State transition particles
-    let base_ground_particle = Particle::new(
-        *pos - FVec2::new(Fx::from_num(1), Fx::from_num(6)),
-        Fx::from_num(0.8),
-    )
-    .with_pos_fuzz(1.0, 0.0)
-    .with_lifetime_fuzz(0.1)
-    .with_color_constant(Color::srgb_u8(158, 129, 208))
-    .with_gravity(Fx::from_num(150))
-    .with_collision(StaticRxKind::Bounce {
-        perp: Fx::from_num(0),
-        par: Fx::from_num(0.9),
-    })
-    .with_layer(Layer::FrontDetailPixels);
+    let base_ground_particle = Particle::new(*pos - FVec2::new(1, 6), 0.8)
+        .with_pos_fuzz(1.0, 0.0)
+        .with_lifetime_fuzz(0.1)
+        .with_color_constant(Color::srgb_u8(158, 129, 208))
+        .with_gravity(150)
+        .with_collision(StaticRxKind::Bounce {
+            perp: fx!(0),
+            par: fx!(0.9),
+        })
+        .with_layer(Layer::FrontDetailPixels);
 
     if let Some(anim_state_change) = anim.delta_state() {
         match (anim_state_change.last_frame, anim_state_change.this_frame) {
             (_, PlayerAnim::Land) => {
                 let part = base_ground_particle
                     .clone()
-                    .with_vel(FVec2::new(dyno.vel.x / 10, Fx::from_num(20)))
+                    .with_vel(FVec2::new(dyno.vel.x / 10, 20))
                     .with_vel_fuzz(5.0, 3.0);
                 for _ in 0..3 {
                     commands.spawn(part.clone());
@@ -341,7 +331,7 @@ fn player_juice(
             (_, PlayerAnim::Jump) => {
                 let part = base_ground_particle
                     .clone()
-                    .with_vel(FVec2::new(dyno.vel.x / 10, Fx::from_num(30)))
+                    .with_vel(FVec2::new(dyno.vel.x / 10, 30))
                     .with_vel_fuzz(5.0, 3.0);
                 for _ in 0..6 {
                     commands.spawn(part.clone());
@@ -356,7 +346,7 @@ fn player_juice(
         (PlayerAnim::Run, 3) => {
             let part = base_ground_particle
                 .clone()
-                .with_vel(FVec2::new(dyno.vel.x / 8, Fx::from_num(20)))
+                .with_vel(FVec2::new(dyno.vel.x / 8, 20))
                 .with_vel_fuzz(2.0, 2.0);
             for _ in 0..2 {
                 commands.spawn(part.clone());

@@ -3,6 +3,7 @@ use bevy_ecs_ldtk::{app::LdtkIntCellAppExt, ldtk::LayerInstance, IntGridCell};
 use bevy_ecs_tilemap::map::TilemapType;
 
 use crate::{
+    fx,
     glue::aabbify::{aabbify_make_hollow, aabify_consolidate, Pixel},
     prelude::{Fx, HBox, Layer, OccludeLight, Pos, StaticTx},
 };
@@ -95,8 +96,8 @@ fn post_ldtk_int_cell_value_blessing<R: LdtkRootKind, B: LdtkIntCellValue<R>>(
             continue;
         }
         let pos = Pos::new(
-            Fx::from_num(gt.translation().x.round() as i32),
-            Fx::from_num(gt.translation().y.round() as i32),
+            fx!(gt.translation().x.round() as i32),
+            fx!(gt.translation().y.round() as i32),
         );
         let bund = B::from_ldtk(pos, wrapper.value);
         let spawned_eid = commands.spawn(bund).set_parent(roots.get_eid(B::ROOT)).id();
@@ -146,11 +147,11 @@ fn ldtk_int_cell_consolidate<R: LdtkRootKind, B: LdtkIntCellValue<R>>(
         }
         let first_pos = needs_consolidation.get(first).unwrap().1.clone();
         let last_pos = needs_consolidation.get(last).unwrap().1.clone();
-        let w = last_pos.x - first_pos.x + Fx::from_num(consolidate_res.grid_size);
-        let h = last_pos.y - first_pos.y + Fx::from_num(consolidate_res.grid_size);
+        let w = last_pos.x - first_pos.x + fx!(consolidate_res.grid_size);
+        let h = last_pos.y - first_pos.y + fx!(consolidate_res.grid_size);
         let new_hbox = HBox::new(w.round().to_num(), h.round().to_num()).with_offset(
-            w / 2 - Fx::from_num(consolidate_res.grid_size) / 2,
-            h / 2 - Fx::from_num(consolidate_res.grid_size) / 2,
+            w / 2 - fx!(consolidate_res.grid_size) / 2,
+            h / 2 - fx!(consolidate_res.grid_size) / 2,
         );
         let existing_comps = &stability_q.get(first).unwrap().0.comps;
         debug_assert!(existing_comps.len() == 1);

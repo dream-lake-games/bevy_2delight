@@ -114,33 +114,18 @@ fn startup(mut commands: Commands) {
             color: Color::linear_rgb(0.1, 1.0, 0.1),
             ..default()
         },
-        Pos::new(Fx::ZERO, Fx::from_num(-50)),
+        Pos::new(0, -50),
         Dyno::default(),
         StaticRx::single(StaticRxKind::Default, player_hbox.clone()),
         TriggerRx::single(TriggerRxKind::Player, player_hbox.clone()),
     ));
 
-    commands.spawn(GroundBundle::new(
-        Pos::new(Fx::ZERO, Fx::from_num(-300)),
-        UVec2::new(800, 72),
-    ));
-    commands.spawn(GroundBundle::new(
-        Pos::new(Fx::from_num(-300), Fx::ZERO),
-        UVec2::new(200, 72),
-    ));
-    commands.spawn(GroundBundle::new(
-        Pos::new(Fx::from_num(300), Fx::ZERO),
-        UVec2::new(200, 72),
-    ));
+    commands.spawn(GroundBundle::new(Pos::new(0, -300), UVec2::new(800, 72)));
+    commands.spawn(GroundBundle::new(Pos::new(-300, 0), UVec2::new(200, 72)));
+    commands.spawn(GroundBundle::new(Pos::new(300, 0), UVec2::new(200, 72)));
 
-    commands.spawn(SpikeBundle::new(
-        Pos::new(Fx::from_num(-300), Fx::from_num(72)),
-        UVec2::new(36, 72),
-    ));
-    commands.spawn(SpikeBundle::new(
-        Pos::new(Fx::from_num(300), Fx::from_num(72)),
-        UVec2::new(36, 72),
-    ));
+    commands.spawn(SpikeBundle::new(Pos::new(-300, 72), UVec2::new(36, 72)));
+    commands.spawn(SpikeBundle::new(Pos::new(300, 72), UVec2::new(36, 72)));
 }
 
 fn update(
@@ -152,17 +137,17 @@ fn update(
 ) {
     // Maybe toggle bullet time
     if keyboard.just_pressed(KeyCode::Space) {
-        if bullet_time.get_base() == Fx::from_num(1) {
-            bullet_time.set_base(Fx::from_num(0.3));
+        if bullet_time.get_base() == 1 {
+            bullet_time.set_base(0.3);
         } else {
-            bullet_time.set_base(Fx::from_num(1));
+            bullet_time.set_base(1);
         }
     }
 
     let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut();
 
     // Horizontal movement
-    let x_mag = Fx::from_num(200);
+    let x_mag = fx!(200);
     dyno.vel.x = Fx::ZERO;
     if keyboard.pressed(KeyCode::KeyA) {
         dyno.vel.x -= x_mag;
@@ -172,13 +157,13 @@ fn update(
     }
 
     // Vertical movement
-    let gravity_mag = Fx::from_num(600);
-    let jump_mag = Fx::from_num(400);
+    let gravity_mag = fx!(600);
+    let jump_mag = fx!(400);
     dyno.vel.y -= bullet_time.delta_secs() * gravity_mag;
     if keyboard.just_pressed(KeyCode::KeyW) {
         dyno.vel.y = jump_mag;
         // Commenting out bc it feels bad but here's how to add a short-term bullet-time effect
-        bullet_time.add_effect(Fx::ZERO, Fx::from_num(0.3));
+        bullet_time.add_effect(0, 0.3);
     }
 
     // How to check for collisions

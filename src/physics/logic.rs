@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    fx,
     glue::{bullet_time::BulletTime, fvec::FVec2, Fx},
     physics::{
         colls::{StaticCollRec, StaticColls, TriggerCollRecGeneric, TriggerCollsGeneric},
@@ -229,7 +230,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                     (StaticRxKind::Default, StaticTxKind::Solid) => {
                         static_colls.insert(coll_rec);
                         do_push(&mut my_thbox);
-                        *my_vel = old_par + FVec2::new(Fx::ZERO, tx_dyno.vel.y);
+                        *my_vel = old_par + FVec2::new(0, tx_dyno.vel.y);
                         if old_perp.dot(push) > Fx::ZERO {
                             *my_vel += old_perp;
                         }
@@ -237,7 +238,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                     (StaticRxKind::Default, StaticTxKind::PassUp) => {
                         if push.y > 0.0
                             && old_perp.y < 0.0
-                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                            && candidate.thbox.max_y() - fx!(1) < my_thbox.min_y()
                         {
                             static_colls.insert(coll_rec);
                             do_push(&mut my_thbox);
@@ -253,7 +254,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                     (StaticRxKind::Observe, StaticTxKind::PassUp) => {
                         if push.y > 0.0
                             && old_perp.y < 0.0
-                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                            && candidate.thbox.max_y() - fx!(1) < my_thbox.min_y()
                         {
                             static_colls.insert(coll_rec);
                         }
@@ -269,7 +270,7 @@ fn resolve_collisions<TriggerRxKind: TriggerKindTrait, TriggerTxKind: TriggerKin
                     (StaticRxKind::Bounce { perp, par }, StaticTxKind::PassUp) => {
                         if push.y > 0.0
                             && old_perp.y < 0.0
-                            && candidate.thbox.max_y() - Fx::from_num(1) < my_thbox.min_y()
+                            && candidate.thbox.max_y() - fx!(1) < my_thbox.min_y()
                         {
                             static_colls.insert(coll_rec);
                             do_push(&mut my_thbox);

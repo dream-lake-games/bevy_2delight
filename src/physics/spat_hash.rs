@@ -5,7 +5,7 @@ use bevy::{
     utils::{HashMap, HashSet},
 };
 
-use crate::glue::Fx;
+use crate::{fx, glue::Fx};
 
 use super::{hbox::HBox, pos::Pos};
 
@@ -84,18 +84,18 @@ impl<K: SpatHashKind> SpatHash<K> {
 impl<K: SpatHashKind> SpatHash<K> {
     pub fn get_thbox_keys(&self, hbox: HBox) -> HashSet<SpatKey> {
         let (min_x, max_x) = (
-            (hbox.min_x() / Fx::from_num(self.denominator))
+            (hbox.min_x() / fx!(self.denominator))
                 .floor()
                 .to_num::<i32>(),
-            (hbox.max_x() / Fx::from_num(self.denominator))
+            (hbox.max_x() / fx!(self.denominator))
                 .ceil()
                 .to_num::<i32>(),
         );
         let (min_y, max_y) = (
-            (hbox.min_y() / Fx::from_num(self.denominator))
+            (hbox.min_y() / fx!(self.denominator))
                 .floor()
                 .to_num::<i32>(),
-            (hbox.max_y() / Fx::from_num(self.denominator))
+            (hbox.max_y() / fx!(self.denominator))
                 .ceil()
                 .to_num::<i32>(),
         );

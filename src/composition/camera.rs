@@ -59,7 +59,7 @@ pub(super) struct FollowDynamicCamera;
 fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<BulletTime>) {
     // Obey SHAKE_EVERY
     camera_shake.time_since_last_update += bullet_time.real_delta_secs();
-    let shake_every = Fx::from_num(0.04);
+    let shake_every = fx!(0.04);
     if camera_shake.time_since_last_update < shake_every {
         return;
     }
@@ -70,8 +70,8 @@ fn update_camera_shake(mut camera_shake: ResMut<CameraShake>, bullet_time: Res<B
     let mut rng = rand::thread_rng();
     for spec in &mut camera_shake.specs {
         spec.time_left -= shake_every;
-        offset.x += Fx::from_num(rng.gen_range(spec.x_range.clone()));
-        offset.y += Fx::from_num(rng.gen_range(spec.y_range.clone()));
+        offset.x += fx!(rng.gen_range(spec.x_range.clone()));
+        offset.y += fx!(rng.gen_range(spec.y_range.clone()));
     }
     camera_shake.offset = offset;
 

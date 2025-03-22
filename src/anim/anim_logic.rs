@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
+use crate::fx;
 use crate::prelude::{BulletTime, Fx, Layer};
 
 use super::anim_man::{AnimMan, AnimNextState, AnimObserveStateChanges};
@@ -99,7 +100,7 @@ fn progress_animations<StateMachine: AnimStateMachine>(
 
         let get_spf = |current_state: &StateMachine| -> Fx {
             let fps = current_state.get_fps();
-            Fx::from_num(1) / Fx::from_num(fps as i32)
+            fx!(1) / fx!(fps as i32)
         };
 
         // Transition through ixs and states

@@ -3,6 +3,7 @@ use rand::{thread_rng, Rng};
 
 use crate::{
     composition::{layer::LayerSettings, mats::circle_light_mat::CircleLightMat, LightingSet},
+    fx,
     glue::{color_as_vec4, Fx},
     prelude::BulletTime,
 };
@@ -114,7 +115,7 @@ fn drive_circle_lights(
 ) {
     const PIXELS_PER_RING: f32 = 1.0;
     for (circle_light, mut light_source) in &mut light_q {
-        light_source.radius = Some(Fx::from_num(circle_light.strength));
+        light_source.radius = Some(fx!(circle_light.strength));
         let mat_holder = mat_holders
             .get(circle_light.child)
             .expect("Circle light invariant");

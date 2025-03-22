@@ -54,10 +54,7 @@ impl FallingPlatformBundle {
             name: Name::new("FallingPlatform"),
             marker: FallingPlatform { spawned_by },
             anim: default(),
-            stx: StaticTx::single(
-                StaticTxKind::PassUp,
-                HBox::new(8, 2).with_offset(Fx::ZERO, Fx::from_num(3)),
-            ),
+            stx: StaticTx::single(StaticTxKind::PassUp, HBox::new(8, 2).with_offset(0, 3)),
             pos,
         }
     }
@@ -99,12 +96,12 @@ fn update_falling_platforms(
         {
             commands.entity(eid).insert(Dyno::default());
             let mut spawner = spawners.get_mut(falling_platform.spawned_by).unwrap();
-            spawner.time_till_spawn = Some(Fx::from_num(1));
+            spawner.time_till_spawn = Some(fx!(1));
         }
     }
     for mut dyno in &mut falling {
-        dyno.vel.y -= bullet_time.delta_secs() * Fx::from_num(150);
-        dyno.vel.y = dyno.vel.y.max(Fx::from_num(-75));
+        dyno.vel.y -= bullet_time.delta_secs() * fx!(150);
+        dyno.vel.y = dyno.vel.y.max(fx!(-75));
     }
 }
 

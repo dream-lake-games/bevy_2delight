@@ -1,6 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
+
+use crate::fx;
 
 use super::{Deterministic, Fx};
 
@@ -62,13 +65,13 @@ impl BulletTime {
     pub fn get_base(&self) -> Fx {
         self.state.base
     }
-    pub fn set_base(&mut self, new_base: Fx) {
-        self.state.base = new_base;
+    pub fn set_base<Src: ToFixed>(&mut self, new_base: Src) {
+        self.state.base = fx!(new_base);
     }
-    pub fn add_effect(&mut self, factor: Fx, time: Fx) {
+    pub fn add_effect<F: ToFixed, T: ToFixed>(&mut self, factor: F, time: T) {
         self.state.effects.push(BulletTimeEffect {
-            factor,
-            time_left: time,
+            factor: fx!(factor),
+            time_left: fx!(time),
         });
     }
     pub fn clear_effects(&mut self) {
@@ -82,11 +85,11 @@ fn update_bullet_time(
     deterministic: Res<Deterministic>,
 ) {
     let time_fx = if deterministic.0 {
-        Fx::from_num(1) / Fx::from_num(FRAMERATE)
+        fx!(1) / fx!(FRAMERATE)
     } else {
-        let min_fps = Fx::from_num(1) / Fx::from_num(FRAMERATE - 4);
-        let max_fps = Fx::from_num(1) / Fx::from_num(FRAMERATE + 4);
-        Fx::from_num(time.delta_secs()).max(min_fps).min(max_fps)
+        let min_fps = fx!(1) / fx!(FRAMERATE - 4);
+        let max_fps = fx!(1) / fx!(FRAMERATE + 4);
+        fx!(time.delta_secs()).max(min_fps).min(max_fps)
     };
     bullet_time.state.tick(time_fx);
     bullet_time.duration = time_fx * bullet_time.state.to_factor();

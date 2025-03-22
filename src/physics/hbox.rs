@@ -1,6 +1,10 @@
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
 
-use crate::glue::{fvec::FVec2, Fx};
+use crate::{
+    fx,
+    glue::{fvec::FVec2, Fx},
+};
 
 pub type HBoxMarker = u32;
 
@@ -17,16 +21,13 @@ impl HBox {
         Self {
             offset: default(),
             size: UVec2::new(w, h),
-            half_size: FVec2::new(
-                Fx::from_num(w as i32) / Fx::from_num(2),
-                Fx::from_num(h as i32) / Fx::from_num(2),
-            ),
+            half_size: FVec2::new(fx!(w as i32) / fx!(2), fx!(h as i32) / fx!(2)),
             marker: default(),
         }
     }
-    pub fn with_offset(mut self, x: Fx, y: Fx) -> Self {
-        self.offset.x = x;
-        self.offset.y = y;
+    pub fn with_offset<X: ToFixed, Y: ToFixed>(mut self, x: X, y: Y) -> Self {
+        self.offset.x = fx!(x);
+        self.offset.y = fx!(y);
         self
     }
     pub fn with_size(mut self, w: u32, h: u32) -> Self {

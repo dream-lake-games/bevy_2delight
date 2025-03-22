@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
 
 use crate::prelude::*;
 
@@ -13,15 +14,15 @@ pub struct ParallaxX {
     wrap_size: Option<Fx>,
 }
 impl ParallaxX {
-    pub fn wrapped(mult: Fx, wrap: Fx) -> Self {
+    pub fn wrapped<M: ToFixed, W: ToFixed>(mult: M, wrap: W) -> Self {
         Self {
-            mult,
-            wrap_size: Some(wrap),
+            mult: fx!(mult),
+            wrap_size: Some(fx!(wrap)),
         }
     }
-    pub fn new_unwrapped(mult: Fx) -> Self {
+    pub fn new_unwrapped<M: ToFixed>(mult: M) -> Self {
         Self {
-            mult,
+            mult: fx!(mult),
             wrap_size: None,
         }
     }
@@ -61,10 +62,10 @@ fn reposition_parallax_x(
     for (px_pos, px_def, mut tran) in &mut px_q {
         let mut diff = (px_pos.x - cam_pos.x) * px_def.mult;
         if let Some(wrap_size_mults) = px_def.wrap_size {
-            let wrap_size = Fx::from_num(layer_settings.screen_size.x) * wrap_size_mults;
-            diff += wrap_size / Fx::from_num(2);
+            let wrap_size = fx!(layer_settings.screen_size.x) * wrap_size_mults;
+            diff += wrap_size / fx!(2);
             diff = diff.rem_euclid(wrap_size);
-            diff -= wrap_size / Fx::from_num(2);
+            diff -= wrap_size / fx!(2);
         }
         tran.translation.x = diff.round().to_num();
     }
@@ -81,10 +82,10 @@ fn reposition_parallax_y(
     for (py_pos, py_def, mut tran) in &mut py_q {
         let mut diff = (py_pos.y - cam_pos.y) * py_def.mult;
         if let Some(wrap_size_mults) = py_def.wrap_size {
-            let wrap_size = Fx::from_num(layer_settings.screen_size.y) * wrap_size_mults;
-            diff += wrap_size / Fx::from_num(2);
+            let wrap_size = fx!(layer_settings.screen_size.y) * wrap_size_mults;
+            diff += wrap_size / fx!(2);
             diff = diff.rem_euclid(wrap_size);
-            diff -= wrap_size / Fx::from_num(2);
+            diff -= wrap_size / fx!(2);
         }
         tran.translation.y = diff.round().to_num();
     }

@@ -5,8 +5,12 @@
 //! This way we avoid global transform shenanigans.
 
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
 
-use crate::glue::{fvec::FVec2, Fx};
+use crate::{
+    fx,
+    glue::{fvec::FVec2, Fx},
+};
 
 #[derive(Copy, Clone, Debug, Default, Component)]
 #[component(on_add = on_add_pos)]
@@ -37,15 +41,15 @@ fn on_add_pos(
     }
 }
 impl Pos {
-    pub fn new(x: Fx, y: Fx) -> Self {
+    pub fn new<X: ToFixed, Y: ToFixed>(x: X, y: Y) -> Self {
         Self {
-            x,
-            y,
+            x: fx!(x),
+            y: fx!(y),
             z: Fx::default(),
         }
     }
-    pub fn with_z(mut self, z: Fx) -> Self {
-        self.z = z;
+    pub fn with_z<Z: ToFixed>(mut self, z: Z) -> Self {
+        self.z = fx!(z);
         self
     }
     pub fn as_fvec2(&self) -> FVec2 {

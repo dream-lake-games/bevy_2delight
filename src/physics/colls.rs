@@ -5,9 +5,8 @@ use crate::{
     physics::{
         hbox::HBoxMarker,
         pos::Pos,
-        statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind},
-        triggers::{TriggerKindTrait, TriggerRxGeneric, TriggerTxGeneric},
-        PhysicsSet,
+        statics::{StaticRxKind, StaticTxKind},
+        triggers::TriggerKindTrait,
     },
 };
 

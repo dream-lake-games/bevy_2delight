@@ -76,10 +76,10 @@ fn juice_torch(torches: Query<&Pos, With<AnimMan<TorchAnim>>>, mut commands: Com
     for pos in &torches {
         if thread_rng().gen_bool(0.05) {
             commands.spawn(
-                Particle::new(*pos, Fx::from_num(2.0))
+                Particle::new(*pos, 2)
                     .with_pos_fuzz(0.5, 0.5)
                     .with_lifetime_fuzz(0.5)
-                    .with_vel(FVec2::new(Fx::from_num(0), Fx::from_num(5)))
+                    .with_vel(FVec2::new(0, 5))
                     .with_vel_fuzz(1.0, 2.5)
                     .with_color_terp(
                         Color::srgb_u8(238, 191, 245),
@@ -92,7 +92,7 @@ fn juice_torch(torches: Query<&Pos, With<AnimMan<TorchAnim>>>, mut commands: Com
                         Color::BLACK,
                         TerpMode::Linear,
                     )
-                    .with_size_terp(Fx::from_num(2), Fx::from_num(1), TerpMode::Linear)
+                    .with_size_terp(2, 1, TerpMode::Linear)
                     .with_size_fuzz(0.5)
                     .with_layer(Layer::FrontDetailPixels),
             );

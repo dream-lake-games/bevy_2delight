@@ -1,7 +1,9 @@
 use bevy::prelude::*;
+use fixed::traits::ToFixed;
 use rand::{thread_rng, Rng};
 
 use crate::{
+    fx,
     glue::Fx,
     prelude::{FVec2, Layer, Pos, StaticRxKind, Terp, TerpMode},
 };
@@ -66,7 +68,7 @@ pub struct ParticleFuzz {
 }
 fn fuzz_rand_fx(fuzz: Fx) -> Fx {
     if fuzz > 0.00001 {
-        Fx::from_num(thread_rng().gen_range(-fuzz.to_num::<f32>()..fuzz.to_num()))
+        fx!(thread_rng().gen_range(-fuzz.to_num::<f32>()..fuzz.to_num()))
     } else {
         Fx::ZERO
     }
@@ -97,7 +99,7 @@ impl Default for Particle {
     fn default() -> Self {
         Self {
             initial_pos: Pos::default(),
-            lifetime: Fx::from_num(1),
+            lifetime: fx!(1),
             movement: ParticleMovement::default(),
             size: ParticleFxInner::Constant(Fx::ONE),
             color: ParticleColorInner::Constant(Color::WHITE),
@@ -109,77 +111,82 @@ impl Default for Particle {
     }
 }
 impl Particle {
-    pub fn new(pos: Pos, lifetime: Fx) -> Self {
+    pub fn new<L: ToFixed>(pos: Pos, lifetime: L) -> Self {
         Self {
-            initial_pos: pos.with_z(pos.z - Fx::from_num(0.0001)),
-            lifetime,
+            initial_pos: pos.with_z(pos.z - fx!(0.0001)),
+            lifetime: fx!(lifetime),
             ..default()
         }
     }
-    pub fn with_pos_fuzz(mut self, x: f32, y: f32) -> Self {
+    pub fn with_pos_fuzz<X: ToFixed, Y: ToFixed>(mut self, x: X, y: Y) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().pos = Some(Pos::new(Fx::from_num(x), Fx::from_num(y)));
+        self.fuzz.as_mut().unwrap().pos = Some(Pos::new(fx!(x), fx!(y)));
         self
     }
-    pub fn with_lifetime_fuzz(mut self, fuzz: f32) -> Self {
+    pub fn with_lifetime_fuzz<F: ToFixed>(mut self, fuzz: F) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().lifetime = Some(Fx::from_num(fuzz));
+        self.fuzz.as_mut().unwrap().lifetime = Some(fx!(fuzz));
         self
     }
     pub fn with_vel(mut self, vel: FVec2) -> Self {
         self.movement.initial_vel = vel;
         self
     }
-    pub fn with_vel_fuzz(mut self, x: f32, y: f32) -> Self {
+    pub fn with_vel_fuzz<X: ToFixed, Y: ToFixed>(mut self, x: X, y: Y) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().vel = Some(FVec2::new(Fx::from_num(x), Fx::from_num(y)));
+        self.fuzz.as_mut().unwrap().vel = Some(FVec2::new(fx!(x), fx!(y)));
         self
     }
-    pub fn with_gravity(mut self, gravity: Fx) -> Self {
-        self.movement.gravity = Some(gravity);
+    pub fn with_gravity<G: ToFixed>(mut self, gravity: G) -> Self {
+        self.movement.gravity = Some(fx!(gravity));
         self
     }
-    pub fn with_gravity_fuzz(mut self, fuzz: f32) -> Self {
+    pub fn with_gravity_fuzz<F: ToFixed>(mut self, fuzz: F) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().gravity = Some(Fx::from_num(fuzz));
+        self.fuzz.as_mut().unwrap().gravity = Some(fx!(fuzz));
         self
     }
-    pub fn with_drag(mut self, drag: Fx) -> Self {
-        self.movement.drag = Some(drag);
+    pub fn with_drag<D: ToFixed>(mut self, drag: D) -> Self {
+        self.movement.drag = Some(fx!(drag));
         self
     }
-    pub fn with_drag_fuzz(mut self, fuzz: f32) -> Self {
+    pub fn with_drag_fuzz<F: ToFixed>(mut self, fuzz: F) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().drag = Some(Fx::from_num(fuzz));
+        self.fuzz.as_mut().unwrap().drag = Some(fx!(fuzz));
         self
     }
     pub fn with_collision(mut self, collision: StaticRxKind) -> Self {
         self.movement.collision = Some(collision);
         self
     }
-    pub fn with_size_constant(mut self, size: Fx) -> Self {
-        self.size = ParticleFxInner::Constant(size);
+    pub fn with_size_constant<S: ToFixed>(mut self, size: S) -> Self {
+        self.size = ParticleFxInner::Constant(fx!(size));
         self
     }
-    pub fn with_size_terp(mut self, start: Fx, stop: Fx, mode: TerpMode) -> Self {
-        self.size = ParticleFxInner::Terp(Terp::new(start, stop, mode));
+    pub fn with_size_terp<S1: ToFixed, S2: ToFixed>(
+        mut self,
+        start: S1,
+        stop: S2,
+        mode: TerpMode,
+    ) -> Self {
+        self.size = ParticleFxInner::Terp(Terp::new(fx!(start), fx!(stop), mode));
         self
     }
-    pub fn with_size_fuzz(mut self, fuzz: f32) -> Self {
+    pub fn with_size_fuzz<F: ToFixed>(mut self, fuzz: F) -> Self {
         if self.fuzz.is_none() {
             self.fuzz = Some(ParticleFuzz::default());
         }
-        self.fuzz.as_mut().unwrap().size = Some(Fx::from_num(fuzz));
+        self.fuzz.as_mut().unwrap().size = Some(fx!(fuzz));
         self
     }
     pub fn with_color_constant(mut self, color: Color) -> Self {

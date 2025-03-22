@@ -29,12 +29,12 @@ fn startup(mut commands: Commands) {
     commands.spawn((
         Name::new("Mountain"),
         AnimMan::new(MountainAnim::Mountain),
-        ParallaxX::wrapped(Fx::from_num(0.2), Fx::from_num(1)),
+        ParallaxX::wrapped(0.2, 1),
     ));
     commands.spawn((
         Name::new("Grass"),
         AnimMan::new(GrassAnim::Grass),
-        ParallaxX::wrapped(Fx::from_num(1.3), Fx::from_num(1)),
+        ParallaxX::wrapped(1.3, 1),
     ));
 }
 
