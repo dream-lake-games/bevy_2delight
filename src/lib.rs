@@ -5,6 +5,7 @@ mod ldtk;
 mod particles;
 mod physics;
 mod plugin;
+mod shader;
 
 #[macro_export]
 macro_rules! debug_resource {
@@ -29,5 +30,6 @@ pub mod prelude {
     pub use super::particles::prelude::*;
     pub use super::physics::prelude::*;
     pub use super::plugin::{DelightedSet, TwoDelightPlugin};
+    pub use super::shader::prelude::*;
     pub use bevy_2delight_macros::TriggerKind;
 }

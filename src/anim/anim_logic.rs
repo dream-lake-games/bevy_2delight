@@ -254,7 +254,7 @@ fn drive_animations<StateMachine: AnimStateMachine>(
             if state_change {
                 body.image = handle_map[&anim_man.get_state()].clone();
                 let bottom_left = UVec2::new(anim_man.get_ix() * size.x, 0);
-                let top_right = UVec2::new((anim_man.get_ix() + 1) * size.x - 1, size.y);
+                let top_right = UVec2::new((anim_man.get_ix() + 1) * size.x, size.y);
                 body.rect = Some(Rect::from_corners(
                     bottom_left.as_vec2(),
                     top_right.as_vec2(),

@@ -37,15 +37,15 @@ pub struct ParallaxY {
     wrap_size: Option<Fx>,
 }
 impl ParallaxY {
-    pub fn new_wrapped(mult: Fx, wrap: Fx) -> Self {
+    pub fn wrapped<M: ToFixed, W: ToFixed>(mult: M, wrap: W) -> Self {
         Self {
-            mult,
-            wrap_size: Some(wrap),
+            mult: fx!(mult),
+            wrap_size: Some(fx!(wrap)),
         }
     }
-    pub fn new_unwrapped(mult: Fx) -> Self {
+    pub fn new_unwrapped<M: ToFixed>(mult: M) -> Self {
         Self {
-            mult,
+            mult: fx!(mult),
             wrap_size: None,
         }
     }

@@ -20,5 +20,5 @@ pub mod prelude {
     pub use super::fvec::*;
     pub use super::terp::{Terp, TerpMode, Terpable};
     pub use super::Deterministic;
-    pub use super::Fx;
+    pub use super::{color_as_vec4, Fx};
 }

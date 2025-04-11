@@ -4,7 +4,6 @@ description = "A collection of tools to make building 2d games in Bevy _delightf
 version = "0.1.0"
 edition = "2021"
 authors = ["Mark Pekala <mfpekala@gmail.com>"]
-exclude = ["assets/*"]
 license = "MIT"
 homepage = "https://github.com/dream-lake-games/bevy_2delight"
 repository = "https://github.com/dream-lake-games/bevy_2delight"

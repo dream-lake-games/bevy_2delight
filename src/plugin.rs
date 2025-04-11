@@ -5,13 +5,15 @@ use crate::{
     composition::LightingSet,
     glue::Deterministic,
     ldtk::LdtkSet,
+    particles::ParticleSet,
     physics::PhysicsSet,
     prelude::{
         AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings,
         LayersCameraSet, LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, LightAnimSet,
         LightInteractionSet, ParticlePlugin, PhysicsPluginGeneric, PhysicsSettingsGeneric,
-        TriggerKindTrait,
+        ShaderPlugin, TriggerKindTrait,
     },
+    shader::ShaderSet,
 };
 
 /// You should add all actual game logic to this set.
@@ -62,6 +64,8 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
                 LayersCameraSet.after(DelightedSet),
                 LightAnimSet.after(DelightedSet),
                 LightingSet.after(DelightedSet),
+                ParticleSet.after(DelightedSet),
+                ShaderSet.after(DelightedSet),
             ),
         );
 
@@ -72,6 +76,7 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
             LdtkPlugin::<LdtkRoot>::default(),
             ParticlePlugin,
             PhysicsPluginGeneric::<TriggerRxKind, TriggerTxKind>::default(),
+            ShaderPlugin,
         ));
         app.insert_resource(Deterministic(self.deterministic));
     }
