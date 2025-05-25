@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 
 use crate::{
     glue::Fx,
@@ -67,14 +67,13 @@ pub struct StaticTx {
     pub(crate) comps: Vec<StaticTxComp>,
     pub coll_keys: Vec<CollKey>,
 }
-fn on_add_static_tx(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    let pos = world.get::<Pos>(eid).expect("StaticTx needs Pos").clone();
+fn on_add_static_tx(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    let pos = world
+        .get::<Pos>(hook.entity)
+        .expect("StaticTx needs Pos")
+        .clone();
     let hboxes = world
-        .get::<StaticTx>(eid)
+        .get::<StaticTx>(hook.entity)
         .expect("StaticTx myself")
         .comps
         .iter()
@@ -82,19 +81,18 @@ fn on_add_static_tx(
         .collect::<Vec<_>>();
     let keys = world
         .resource_mut::<SpatHash<SpatHashStaticTx>>()
-        .insert(eid, pos, hboxes);
-    world.commands().entity(eid).insert(keys);
+        .insert(hook.entity, pos, hboxes);
+    world.commands().entity(hook.entity).insert(keys);
 }
-fn on_remove_static_tx(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    cid: bevy::ecs::component::ComponentId,
-) {
-    let occlude_light = world.get::<OccludeLight>(eid).cloned();
+fn on_remove_static_tx(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    let occlude_light = world.get::<OccludeLight>(hook.entity).cloned();
     if let Some(OccludeLight::StaticTx) = occlude_light {
-        world.commands().entity(eid).remove::<OccludeLight>();
+        world
+            .commands()
+            .entity(hook.entity)
+            .remove::<OccludeLight>();
     }
-    on_remove_spat_hash::<SpatHashStaticTx>(world, eid, cid);
+    on_remove_spat_hash::<SpatHashStaticTx>(world, hook);
 }
 impl StaticTx {
     pub fn single(kind: StaticTxKind, hbox: HBox) -> Self {

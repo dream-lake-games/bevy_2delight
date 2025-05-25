@@ -55,10 +55,8 @@ fn reposition_parallax_x(
     mut px_q: Query<(&Pos, &ParallaxX, &mut Transform)>,
     cam_q: Query<&Pos, With<DynamicCamera>>,
     layer_settings: Res<LayerSettings>,
-) {
-    let Ok(cam_pos) = cam_q.get_single() else {
-        return;
-    };
+) -> Result {
+    let cam_pos = cam_q.single()?;
     for (px_pos, px_def, mut tran) in &mut px_q {
         let mut diff = (px_pos.x - cam_pos.x) * px_def.mult;
         if let Some(wrap_size_mults) = px_def.wrap_size {
@@ -69,16 +67,15 @@ fn reposition_parallax_x(
         }
         tran.translation.x = diff.round().to_num();
     }
+    Ok(())
 }
 
 fn reposition_parallax_y(
     mut py_q: Query<(&Pos, &ParallaxY, &mut Transform)>,
     cam_q: Query<&Pos, With<DynamicCamera>>,
     layer_settings: Res<LayerSettings>,
-) {
-    let Ok(cam_pos) = cam_q.get_single() else {
-        return;
-    };
+) -> Result {
+    let cam_pos = cam_q.single()?;
     for (py_pos, py_def, mut tran) in &mut py_q {
         let mut diff = (py_pos.y - cam_pos.y) * py_def.mult;
         if let Some(wrap_size_mults) = py_def.wrap_size {
@@ -89,6 +86,7 @@ fn reposition_parallax_y(
         }
         tran.translation.y = diff.round().to_num();
     }
+    Ok(())
 }
 
 pub(super) fn register_parallax(app: &mut App) {

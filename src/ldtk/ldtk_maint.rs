@@ -1,7 +1,9 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
 use super::LdtkSet;
+
+use crate::prelude::*;
 
 #[derive(Resource, Clone, Debug, Reflect)]
 pub struct LdtkLevelRects {
@@ -19,7 +21,7 @@ fn update_level_rects(
     ldtk_project_assets: Res<Assets<LdtkProject>>,
     mut level_rects: ResMut<LdtkLevelRects>,
 ) {
-    let Ok(project) = ldtk_projects.get_single() else {
+    let Ok(project) = ldtk_projects.single() else {
         return;
     };
     let Some(ldtk_project) = ldtk_project_assets.get(project) else {

@@ -85,7 +85,7 @@ impl LightClaim {
                 Camera2d,
                 Camera {
                     order: LayerOrder::PreLight as isize,
-                    target: RenderTarget::Image(image_hand.clone()),
+                    target: RenderTarget::Image(image_hand.clone().into()),
                     clear_color: ClearColorConfig::Custom(Color::linear_rgba(0.0, 0.0, 0.0, 0.0)),
                     hdr: true,
                     ..default()
@@ -93,7 +93,7 @@ impl LightClaim {
                 rl.clone(),
                 FollowDynamicCamera,
             ))
-            .set_parent(light_root)
+            .insert(ChildOf(light_root))
             .id();
 
         // Spawn the mesh which will apply proper cutout shader and chuck output into aggregate light layer
@@ -111,7 +111,7 @@ impl LightClaim {
                 MeshMaterial2d(mat),
                 Layer::Light.render_layers(),
             ))
-            .set_parent(light_root)
+            .insert(ChildOf(light_root))
             .id();
 
         LightClaim {
@@ -122,11 +122,11 @@ impl LightClaim {
     }
     pub(super) fn free(&self, world: &mut bevy::ecs::world::DeferredWorld) {
         world.resource_mut::<LightAllocer>().free(&self.rl);
-        if let Some(comms) = world.commands().get_entity(self.camera_eid) {
-            comms.despawn_recursive();
+        if let Ok(mut comms) = world.commands().get_entity(self.camera_eid) {
+            comms.despawn();
         }
-        if let Some(comms) = world.commands().get_entity(self.agg_mesh_eid) {
-            comms.despawn_recursive();
+        if let Ok(mut comms) = world.commands().get_entity(self.agg_mesh_eid) {
+            comms.despawn();
         }
     }
 }

@@ -1,9 +1,6 @@
-use bevy::{
-    prelude::*,
-    utils::{HashMap, HashSet},
-};
+use bevy::prelude::*;
 
-use crate::prelude::Pos;
+use crate::prelude::*;
 
 #[derive(std::hash::Hash, Debug, PartialEq, Eq, Clone)]
 pub struct Key {
@@ -107,7 +104,8 @@ pub(crate) fn aabbify_make_hollow<
 >(
     input: I,
 ) -> HashSet<T> {
-    let input_presence = HashMap::from_iter(input.into_iter().map(|e| (e.key, e.payload)));
+    let input_presence =
+        HashMap::<Key, T>::from_iter(input.into_iter().map(|e| (e.key, e.payload)));
     let mut output = HashSet::new();
     for (key, payload) in &input_presence {
         if !input_presence.contains_key(&key.left())
@@ -133,10 +131,10 @@ pub(crate) fn aabify_consolidate<
     let mut input_vec = input.into_iter().collect::<Vec<_>>();
     input_vec.sort();
     let input_map =
-        HashMap::from_iter(input_vec.iter().map(|e| (e.key.clone(), e.payload.clone())));
+        HashMap::<Key, T>::from_iter(input_vec.iter().map(|e| (e.key.clone(), e.payload.clone())));
 
     let mut groups: Vec<Vec<_>> = vec![];
-    let mut claimed = HashSet::default();
+    let mut claimed = HashSet::<Key>::default();
 
     for pixel in input_vec {
         if claimed.contains(&pixel.key) {

@@ -1,5 +1,6 @@
 use bevy::{
     asset::RenderAssetUsages,
+    ecs::component::HookContext,
     prelude::*,
     render::mesh::{Indices, PrimitiveTopology},
 };
@@ -78,25 +79,21 @@ impl LightSource {
         }
     }
 }
-fn on_remove_source(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    let source = world.get::<LightSource>(eid).unwrap();
+fn on_remove_source(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    let source = world.get::<LightSource>(hook.entity).unwrap();
     let claim = source.claim.clone();
     let mut mesh_cache = source.mesh_cache.clone();
     claim.free(&mut world);
     mesh_cache.clear(&mut world.commands());
 }
-pub(super) fn remove_light_source(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    world.commands().get_entity(eid).map(|mut inner| {
-        inner.remove::<LightSource>();
-    });
+pub(super) fn remove_light_source(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    world
+        .commands()
+        .get_entity(hook.entity)
+        .map(|mut inner| {
+            inner.remove::<LightSource>();
+        })
+        .ok();
 }
 
 /// Marks a component as occluding 2d light.
@@ -142,21 +139,20 @@ impl OccludeLight {
         }
     }
 }
-fn on_add_occlude_light(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    let stx = world.get::<StaticTx>(eid);
-    let hboxes = world.get::<OccludeLight>(eid).unwrap().get_hboxes(stx);
+fn on_add_occlude_light(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    let stx = world.get::<StaticTx>(hook.entity);
+    let hboxes = world
+        .get::<OccludeLight>(hook.entity)
+        .unwrap()
+        .get_hboxes(stx);
     let pos = world
-        .get::<Pos>(eid)
+        .get::<Pos>(hook.entity)
         .expect("OccludeLight needs Pos")
         .clone();
     let keys = world
         .resource_mut::<SpatHash<SpatHashOccludeLight>>()
-        .insert(eid, pos, hboxes);
-    world.commands().entity(eid).insert(keys);
+        .insert(hook.entity, pos, hboxes);
+    world.commands().entity(hook.entity).insert(keys);
 }
 fn update_occlude_light_spat_hashes(
     mut occlude_light_q: Query<
@@ -302,7 +298,7 @@ fn block_lights(
                     Visibility::Visible,
                     source.claim.rl.clone(),
                 ))
-                .set_parent(light_occlude_root.eid())
+                .insert(ChildOf(light_occlude_root.eid()))
                 .id();
             source.mesh_cache.meshes.push(new_eid);
         }

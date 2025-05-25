@@ -83,15 +83,14 @@ pub(super) fn follow_dynamic_camera(
     dynamic_camera: Query<&Pos, With<DynamicCamera>>,
     mut followers: Query<&mut Transform, With<FollowDynamicCamera>>,
     camera_shake: Res<CameraShake>,
-) {
-    let Ok(leader) = dynamic_camera.get_single() else {
-        return;
-    };
+) -> Result {
+    let leader = dynamic_camera.single()?;
     let shake_off = camera_shake.get_offset();
     for mut tran in &mut followers {
         tran.translation.x = (leader.x + shake_off.x).round().to_num();
         tran.translation.y = (leader.y + shake_off.y).round().to_num();
     }
+    Ok(())
 }
 
 pub(super) fn register_camera(app: &mut App) {

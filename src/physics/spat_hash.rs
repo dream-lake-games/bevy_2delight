@@ -1,11 +1,8 @@
 use std::marker::PhantomData;
 
-use bevy::{
-    prelude::*,
-    utils::{HashMap, HashSet},
-};
+use bevy::{ecs::component::HookContext, prelude::*};
 
-use crate::{fx, glue::Fx};
+use crate::prelude::*;
 
 use super::{hbox::HBox, pos::Pos};
 
@@ -42,7 +39,7 @@ impl<K: SpatHashKind> SpatKeys<K> {
     fn new(keys: HashSet<SpatKey>) -> Self {
         Self { keys, _pd: None }
     }
-    pub(crate) fn iter(&self) -> bevy::utils::hashbrown::hash_set::Iter<'_, SpatKey> {
+    pub(crate) fn iter(&self) -> bevy::platform::collections::hash_set::Iter<'_, SpatKey> {
         self.keys.iter()
     }
 }
@@ -157,11 +154,12 @@ impl<K: SpatHashKind> SpatHash<K> {
 
 pub(crate) fn on_remove_spat_hash<K: SpatHashKind>(
     mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
+    hook: HookContext,
 ) {
-    let keys = world.get::<SpatKeys<K>>(eid).unwrap().clone();
-    world.resource_mut::<SpatHash<K>>().remove(eid, &keys);
+    let keys = world.get::<SpatKeys<K>>(hook.entity).unwrap().clone();
+    world
+        .resource_mut::<SpatHash<K>>()
+        .remove(hook.entity, &keys);
 }
 
 pub(super) fn register_spat_hash(app: &mut App) {

@@ -1,11 +1,11 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::{app::LdtkIntCellAppExt, ldtk::LayerInstance, IntGridCell};
 use bevy_ecs_tilemap::map::TilemapType;
 
 use crate::{
     fx,
     glue::aabbify::{aabbify_make_hollow, aabify_consolidate, Pixel},
-    prelude::{Fx, HBox, Layer, OccludeLight, Pos, StaticTx},
+    prelude::*,
 };
 
 use super::{
@@ -100,7 +100,10 @@ fn post_ldtk_int_cell_value_blessing<R: LdtkRootKind, B: LdtkIntCellValue<R>>(
             fx!(gt.translation().y.round() as i32),
         );
         let bund = B::from_ldtk(pos, wrapper.value);
-        let spawned_eid = commands.spawn(bund).set_parent(roots.get_eid(B::ROOT)).id();
+        let spawned_eid = commands
+            .spawn(bund)
+            .insert(ChildOf(roots.get_eid(B::ROOT)))
+            .id();
         commands
             .entity(ldtk_eid)
             .remove::<LdtkIntCellWrapper<R, B>>();

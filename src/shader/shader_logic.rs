@@ -33,7 +33,7 @@ fn create_bodies<S: ShaderSpec>(
                 MeshMaterial2d(mat),
                 sman.layer.render_layers(),
             ))
-            .set_parent(eid)
+            .insert(ChildOf(eid))
             .id();
     }
 }

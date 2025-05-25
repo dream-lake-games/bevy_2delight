@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::{
     app::LdtkEntityAppExt,
     ldtk::{FieldValue, LayerInstance, TilesetDefinition},
@@ -62,7 +62,7 @@ fn post_ldtk_entity_blessing<R: LdtkRootKind, B: LdtkEntity<R>>(
             fx!(gt.translation().y.round() as i32),
         );
         let bund = B::from_ldtk(pos, &wrapper.fields, wrapper.iid.clone());
-        commands.spawn(bund).set_parent(roots.get_eid(B::ROOT));
+        commands.spawn(bund).insert(ChildOf(roots.get_eid(B::ROOT)));
         commands
             .entity(ldtk_eid)
             .remove::<LdtkEntityWrapper<R, B>>();

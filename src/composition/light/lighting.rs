@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 
 use crate::{
     composition::{
@@ -6,7 +6,7 @@ use crate::{
         LightingSet,
     },
     glue::color_as_vec4,
-    prelude::Layer,
+    prelude::*,
 };
 
 #[derive(Resource, Reflect)]
@@ -14,8 +14,6 @@ pub struct Lighting {
     pub base_ambient: Color,
     pub base_detail: Color,
     pub brightness_threshold: f32,
-    // TODO: It was a little supid to insert the entity instead of just the asset id here.
-    //       Oh well. Fix it later.
     pub(crate) lit_asset_map: HashMap<Layer, AssetId<LitMat>>,
     pub(crate) bcull_asset: AssetId<BrightnessCullMat>,
 }

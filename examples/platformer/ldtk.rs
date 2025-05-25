@@ -60,7 +60,7 @@ impl LdtkEntity<LdtkRoot> for TorchBundle {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
     fn from_ldtk(
         pos: Pos,
-        _fields: &bevy::utils::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _fields: &bevy::platform::collections::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
         _iid: String,
     ) -> Self {
         Self {
@@ -120,7 +120,7 @@ impl LdtkEntity<LdtkRoot> for ShinyRockBundle {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
     fn from_ldtk(
         pos: Pos,
-        _fields: &bevy::utils::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _fields: &bevy::platform::collections::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
         _iid: String,
     ) -> Self {
         Self {

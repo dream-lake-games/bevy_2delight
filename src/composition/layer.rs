@@ -3,6 +3,7 @@
 use std::collections::VecDeque;
 
 use bevy::{
+    asset::uuid::Uuid,
     core_pipeline::tonemapping::Tonemapping,
     prelude::*,
     render::{
@@ -234,7 +235,10 @@ impl Layer {
     }
 
     fn target(&self) -> Handle<Image> {
-        Handle::weak_from_u128(self.render_layers().bits()[0] as u128)
+        // Bit of a hack, sorry
+        Handle::Weak(AssetId::Uuid {
+            uuid: Uuid::from_u128(self.render_layers().bits()[0] as u128),
+        })
     }
 
     pub fn associated_pixel_layer(&self) -> Option<Layer> {
@@ -339,7 +343,9 @@ impl InternalLayer {
     }
 
     fn target(&self) -> Handle<Image> {
-        Handle::weak_from_u128(self.render_layers().bits()[0] as u128)
+        Handle::Weak(AssetId::Uuid {
+            uuid: Uuid::from_u128(self.render_layers().bits()[0] as u128),
+        })
     }
 }
 
@@ -549,7 +555,7 @@ fn spawn_roots(
             Transform::default(),
             Visibility::Visible,
         ))
-        .set_parent(layer_root.eid())
+        .insert(ChildOf(layer_root.eid()))
         .id();
     light_occlude_root.0 = commands
         .spawn((
@@ -557,7 +563,7 @@ fn spawn_roots(
             Transform::default(),
             Visibility::Visible,
         ))
-        .set_parent(light_root.eid())
+        .insert(ChildOf(light_root.eid()))
         .id();
 }
 
@@ -583,14 +589,14 @@ fn setup_physical_layers(
             Camera2d,
             Camera {
                 order: layer_order as isize,
-                target: RenderTarget::Image(target),
+                target: RenderTarget::Image(target.into()),
                 clear_color: ClearColorConfig::Custom(Color::srgba(0.0, 0.0, 0.0, 0.0)),
                 hdr: camera_mode.is_hdr(),
                 ..default()
             },
             render_layers,
         ));
-        comms.set_parent(root.eid());
+        comms.insert(ChildOf(root.eid()));
         if let LayerCameraMode::Tonemapped(tonemapping) = camera_mode {
             comms.insert(tonemapping);
         }
@@ -652,7 +658,7 @@ fn setup_logical_layers(
                         Transform::from_translation(Vec3::Z * ix as f32),
                         output.render_layers(),
                     ))
-                    .set_parent(root.eid());
+                    .insert(ChildOf(root.eid()));
             }
             LogicalLayerMode::FlattenMeat { stages, output } => {
                 for (stage_ix, stage) in stages.iter().enumerate() {
@@ -667,7 +673,7 @@ fn setup_logical_layers(
                             Transform::from_translation(Vec3::Z * stage_ix as f32),
                             output.render_layers().clone(),
                         ))
-                        .set_parent(root.eid());
+                        .insert(ChildOf(root.eid()));
                 }
             }
             LogicalLayerMode::BrightnessCull {
@@ -699,7 +705,7 @@ fn setup_logical_layers(
                                 Transform::from_translation(Vec3::Z * stage_ix as f32),
                                 rl.clone(),
                             ))
-                            .set_parent(root.eid());
+                            .insert(ChildOf(root.eid()));
                     }
                 };
                 handle_stages(
@@ -730,7 +736,7 @@ fn setup_logical_layers(
                         Transform::default(),
                         output.render_layers(),
                     ))
-                    .set_parent(root.eid());
+                    .insert(ChildOf(root.eid()));
             }
             LogicalLayerMode::GaussianBlur {
                 input,
@@ -753,7 +759,7 @@ fn setup_logical_layers(
                         Mesh2d(screen_mesh.0.clone()),
                         RenderLayers::from_layers(&[300 + *available.front().unwrap()]),
                     ))
-                    .set_parent(root.eid());
+                    .insert(ChildOf(root.eid()));
                 for pass in 0..inner_passes {
                     let last_pass = pass + 1 == inner_passes;
                     let input_order = available.pop_front().unwrap();
@@ -770,7 +776,7 @@ fn setup_logical_layers(
                             Camera2d,
                             Camera {
                                 order: input_order as isize,
-                                target: RenderTarget::Image(image_hand.clone()),
+                                target: RenderTarget::Image(image_hand.clone().into()),
                                 clear_color: ClearColorConfig::Custom(Color::linear_rgba(
                                     0.0, 0.0, 0.0, 1.0,
                                 )),
@@ -780,7 +786,7 @@ fn setup_logical_layers(
                             Transform::default(),
                             input_rl.clone(),
                         ))
-                        .set_parent(root.eid());
+                        .insert(ChildOf(root.eid()));
                     let blur_mat_hand =
                         blur_mats.add(GaussianBlurMat::new(image_hand, pass % 2 == 0, 16));
                     commands
@@ -791,7 +797,7 @@ fn setup_logical_layers(
                             Transform::default(),
                             output_rl,
                         ))
-                        .set_parent(root.eid());
+                        .insert(ChildOf(root.eid()));
                 }
             }
         }
@@ -821,7 +827,7 @@ fn setup_projection_layers(
                     ResizeLayerToWindow,
                     SMUSH_RENDER_LAYERS.clone(),
                 ))
-                .set_parent(root.eid());
+                .insert(ChildOf(root.eid()));
         } else {
             commands
                 .spawn((
@@ -835,7 +841,7 @@ fn setup_projection_layers(
                     ResizeLayerToWindow,
                     SMUSH_RENDER_LAYERS.clone(),
                 ))
-                .set_parent(root.eid());
+                .insert(ChildOf(root.eid()));
         }
     }
 }
@@ -853,7 +859,7 @@ fn setup_smush_layer(mut commands: Commands, root: Res<LayerRoot>) {
             Tonemapping::TonyMcMapface,
             SMUSH_RENDER_LAYERS.clone(),
         ))
-        .set_parent(root.eid());
+        .insert(ChildOf(root.eid()));
 }
 
 fn resize_layers_as_needed(

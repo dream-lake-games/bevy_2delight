@@ -4,7 +4,7 @@
 //! Transforms are updated by looking at the IPos diffs, and adding.
 //! This way we avoid global transform shenanigans.
 
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 use fixed::traits::ToFixed;
 
 use crate::{
@@ -20,13 +20,11 @@ pub struct Pos {
     pub y: Fx,
     pub z: Fx,
 }
-fn on_add_pos(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
-    let me = *world.get::<Pos>(eid).expect("Couldn't get Pos after add");
-    match world.get_mut::<Transform>(eid) {
+fn on_add_pos(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
+    let me = *world
+        .get::<Pos>(hook.entity)
+        .expect("Couldn't get Pos after add");
+    match world.get_mut::<Transform>(hook.entity) {
         Some(mut tran) => {
             tran.translation.x = me.x.round().to_num();
             tran.translation.y = me.y.round().to_num();
@@ -35,7 +33,7 @@ fn on_add_pos(
         None => {
             world
                 .commands()
-                .entity(eid)
+                .entity(hook.entity)
                 .insert(Transform::from_translation(me.as_vec2().extend(0.0)));
         }
     }

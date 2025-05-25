@@ -77,7 +77,7 @@ fn update_falling_platform_spawners(
         spawner.time_till_spawn = None;
         commands
             .spawn(FallingPlatformBundle::new(*pos, eid))
-            .set_parent(ldtk_roots.get_eid(LdtkRoot::Platforms));
+            .insert(ChildOf(ldtk_roots.get_eid(LdtkRoot::Platforms)));
     }
 }
 

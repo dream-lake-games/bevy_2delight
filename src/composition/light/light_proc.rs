@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 use rand::{thread_rng, Rng};
 
 use crate::{
@@ -74,16 +74,15 @@ impl CircleLight {
         self
     }
 }
-fn on_add_circle_light(
-    mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
-) {
+fn on_add_circle_light(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
     // Get da claim
     let claim = LightClaim::alloc(&mut world);
     let rl = claim.rl.clone();
-    world.commands().entity(eid).insert(LightSource::new(claim));
-    let myself = world.get::<CircleLight>(eid).unwrap();
+    world
+        .commands()
+        .entity(hook.entity)
+        .insert(LightSource::new(claim));
+    let myself = world.get::<CircleLight>(hook.entity).unwrap();
     let mat = CircleLightMat::new(myself.color);
 
     let screen_size = world.resource::<LayerSettings>().screen_size;
@@ -101,9 +100,9 @@ fn on_add_circle_light(
             Transform::from_translation(Vec3::Z * thread_rng().gen_range(0.0..1.0)),
             rl,
         ))
-        .set_parent(eid)
+        .insert(ChildOf(hook.entity))
         .id();
-    let mut myself = world.get_mut::<CircleLight>(eid).unwrap();
+    let mut myself = world.get_mut::<CircleLight>(hook.entity).unwrap();
     myself.child = child_eid;
 }
 

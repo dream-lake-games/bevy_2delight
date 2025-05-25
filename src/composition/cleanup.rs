@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 fn collect_observers(
     mut parent: Local<Option<Entity>>,
-    parentless: Query<Entity, (With<Observer>, Without<Parent>)>,
+    parentless: Query<Entity, (With<Observer>, Without<ChildOf>)>,
     mut commands: Commands,
 ) {
     if parent.is_none() {
@@ -12,7 +12,7 @@ fn collect_observers(
     }
     let parent_eid = parent.unwrap();
     for eid in &parentless {
-        commands.entity(eid).set_parent(parent_eid);
+        commands.entity(eid).insert(ChildOf(parent_eid));
     }
 }
 

@@ -78,7 +78,7 @@ fn bless_lifespans(
                 particle.layer.render_layers(),
                 HasParticleSprite,
             ))
-            .set_parent(eid)
+            .insert(ChildOf(eid))
             .id();
         if let Some(brightness) = particle.brightness.as_ref() {
             lifespan.brightness_body = Some(
@@ -98,7 +98,7 @@ fn bless_lifespans(
                             .render_layers(),
                         HasParticleSprite,
                     ))
-                    .set_parent(eid)
+                    .insert(ChildOf(eid))
                     .id(),
             );
         }
@@ -120,14 +120,14 @@ fn bless_lifespans(
                             .render_layers(),
                         HasParticleSprite,
                     ))
-                    .set_parent(eid)
+                    .insert(ChildOf(eid))
                     .id(),
             );
         }
 
         let mut comms = commands.entity(eid);
         comms.insert(Name::new("Particle"));
-        comms.set_parent(root.eid());
+        comms.insert(ChildOf(root.eid()));
         comms.insert(particle.initial_pos);
         comms.insert(Dyno::new(
             particle.movement.initial_vel.x,
@@ -157,7 +157,7 @@ fn update_particles(
     for (eid, mut lifespan, mut dyno, particle, srx, mut pos) in &mut particle_q {
         lifespan.current += bullet_time.delta_secs();
         if lifespan.current > particle.lifetime {
-            commands.entity(eid).despawn_recursive();
+            commands.entity(eid).despawn();
             continue;
         }
         // Appearance

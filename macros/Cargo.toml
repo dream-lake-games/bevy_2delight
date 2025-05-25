@@ -1,7 +1,7 @@
 [package]
 name = "bevy_2delight_macros"
 description = "Derive macros for bevy_2delight"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Mark Pekala <mfpekala@gmail.com>"]
 license = "MIT"
@@ -10,7 +10,7 @@ repository = "https://github.com/dream-lake-games/bevy_2delight"
 readme = "README.md"
 
 [dependencies]
-bevy = { version = "0.15", default-features = false, features = [
+bevy = { version = "0.16", default-features = false, features = [
     "bevy_asset",
     "bevy_render",
     "bevy_sprite",

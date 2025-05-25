@@ -120,13 +120,13 @@ fn progress_animations<StateMachine: AnimStateMachine>(
                         anim_man.this_frame.ix = 0;
                     }
                     AnimNextState::Despawn => {
-                        if let Some(comms) = commands.get_entity(anim_eid) {
-                            comms.despawn_recursive();
+                        if let Ok(mut comms) = commands.get_entity(anim_eid) {
+                            comms.despawn();
                         }
                         break;
                     }
                     AnimNextState::Remove => {
-                        commands.entity(anim_man.pixel_body).despawn_recursive();
+                        commands.entity(anim_man.pixel_body).despawn();
                         commands.entity(anim_eid).remove::<AnimMan<StateMachine>>();
                         commands
                             .entity(anim_eid)
@@ -160,7 +160,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                 anim_man.get_flip_y(),
                 anim_man.render_layers.clone(),
             ))
-            .set_parent(eid)
+            .insert(ChildOf(eid))
             .id();
 
         if anim_res.has_brightness() {
@@ -188,7 +188,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                         );
                     },
                 ))
-                .set_parent(eid)
+                .insert(ChildOf(eid))
                 .id();
         }
 
@@ -217,7 +217,7 @@ fn bless_animations<StateMachine: AnimStateMachine>(
                         );
                     },
                 ))
-                .set_parent(eid)
+                .insert(ChildOf(eid))
                 .id();
         }
     }
@@ -225,12 +225,12 @@ fn bless_animations<StateMachine: AnimStateMachine>(
 
 /// Actually updates the sprites, during PostUpdate
 fn drive_animations<StateMachine: AnimStateMachine>(
-    mut anims: Query<&AnimMan<StateMachine>>,
+    anims: Query<&AnimMan<StateMachine>>,
     mut bodies: Query<&mut Sprite, With<AnimBody>>,
     anim_res: Res<AnimRes<StateMachine>>,
 ) {
     let size = anim_res.get_size();
-    for anim_man in &mut anims {
+    for anim_man in &anims {
         let flip_change = anim_man.delta_flip_x().is_some() || anim_man.delta_flip_y().is_some();
         let state_change = Some(&anim_man.this_frame) == anim_man.last_frame.as_ref();
         if !flip_change && !state_change {

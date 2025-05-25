@@ -1,10 +1,8 @@
 use bevy::prelude::*;
 use bevy::reflect::Reflect;
 use bevy::render::view::RenderLayers;
-use bevy::utils::HashMap;
 
-use crate::composition::prelude::Layer;
-use crate::prelude::Fx;
+use crate::prelude::*;
 
 use super::anim_traits::AnimStateMachine;
 

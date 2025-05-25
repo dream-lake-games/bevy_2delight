@@ -1,7 +1,7 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use serde_json::Value;
 
-use super::prelude::AnimStateMachine;
+use crate::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct TagInfo {

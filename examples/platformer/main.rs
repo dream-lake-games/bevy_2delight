@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_2delight::prelude::*;
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
 
 mod bgfg;
 mod camera;
@@ -30,7 +31,10 @@ type PhysicsSettings = PhysicsSettingsGeneric<TriggerRxKind, TriggerTxKind>;
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
+    app.add_plugins((
+        FrameTimeDiagnosticsPlugin::default(),
+        LogDiagnosticsPlugin::default(),
+    ));
     app.add_plugins(TwoDelightPlugin {
         anim_settings: default(),
         composition_settings: CompositionSettings {
@@ -39,9 +43,12 @@ fn main() {
         },
         ldtk_settings: ldtk::LdtkSettings::default(),
         physics_settings: PhysicsSettings::default(),
-        deterministic: true,
+        deterministic: false,
     });
-    app.add_plugins(
+    app.add_plugins(EguiPlugin {
+        enable_multipass_for_primary_context: true,
+    })
+    .add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(
             bevy::input::common_conditions::input_toggle_active(false, KeyCode::Tab),
         ),

@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 
 use crate::{
     glue::fvec::FVec2,
@@ -8,6 +8,7 @@ use crate::{
         statics::{StaticRxKind, StaticTxKind},
         triggers::TriggerKindTrait,
     },
+    prelude::*,
 };
 
 pub type CollKey = u32;

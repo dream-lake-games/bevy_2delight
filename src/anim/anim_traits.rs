@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
-use bevy::{prelude::*, reflect::Reflectable, render::view::RenderLayers, utils::HashMap};
+use bevy::{prelude::*, reflect::Reflectable, render::view::RenderLayers};
 
 use super::{anim_man::AnimNextState, anim_time::AnimTimeClass};
+
+use crate::prelude::*;
 
 pub trait AnimStateMachine:
     Sized

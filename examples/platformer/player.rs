@@ -87,7 +87,7 @@ fn update_player_always(
     mut commands: Commands,
     keyboard: Res<ButtonInput<KeyCode>>,
 ) {
-    let Ok((eid, mut dyno, mut player, srx, trx)) = player_q.get_single_mut() else {
+    let Ok((eid, mut dyno, mut player, srx, trx)) = player_q.single_mut() else {
         return;
     };
     // Gravity
@@ -107,11 +107,11 @@ fn update_player_always(
         .get_refs(&trx.coll_keys)
         .any(|coll| coll.tx_kind == TriggerTxKind::Spikes)
     {
-        commands.entity(eid).despawn_recursive();
+        commands.entity(eid).despawn();
     }
     // Die intentionally
     if keyboard.just_pressed(KeyCode::Backspace) {
-        commands.entity(eid).despawn_recursive();
+        commands.entity(eid).despawn();
     }
 }
 #[derive(Resource, Reflect)]
@@ -143,7 +143,7 @@ fn update_player_stateful(
     bullet_time: Res<BulletTime>,
     consts: Res<MovementConsts>,
 ) {
-    let Ok((mut anim, mut dyno, mut player, srx)) = player_q.get_single_mut() else {
+    let Ok((mut anim, mut dyno, mut player, srx)) = player_q.single_mut() else {
         return;
     };
     let on_ground = scolls.get_refs(&srx.coll_keys).any(|coll| {
@@ -251,7 +251,7 @@ impl LdtkEntity<LdtkRoot> for PlayerSpawnerBundle {
     const ROOT: LdtkRoot = LdtkRoot::Player;
     fn from_ldtk(
         pos: Pos,
-        _fields: &bevy::utils::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _fields: &bevy::platform::collections::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
         _iid: String,
     ) -> Self {
         Self {
@@ -267,13 +267,13 @@ fn update_player_spawner(
     spawner_q: Query<&Pos, With<PlayerSpawner>>,
     ldtk_roots: Res<LdtkRootRes>,
 ) {
-    let Ok(spawn_pos) = spawner_q.get_single() else {
+    let Ok(spawn_pos) = spawner_q.single() else {
         return;
     };
     if player_q.is_empty() {
         commands
             .spawn(PlayerBundle::new(*spawn_pos))
-            .set_parent(ldtk_roots.get_eid(LdtkRoot::Player));
+            .insert(ChildOf(ldtk_roots.get_eid(LdtkRoot::Player)));
     }
 }
 
@@ -281,7 +281,7 @@ fn player_juice(
     player_q: Query<(&Pos, &Dyno, &AnimMan<PlayerAnim>), With<Player>>,
     mut commands: Commands,
 ) {
-    let Ok((pos, dyno, anim)) = player_q.get_single() else {
+    let Ok((pos, dyno, anim)) = player_q.single() else {
         return;
     };
 

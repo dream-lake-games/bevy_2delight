@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 
 use crate::physics::{colls::CollKey, hbox::HBox, pos::Pos};
 
@@ -52,12 +52,14 @@ pub struct TriggerTxGeneric<TriggerTxKind: TriggerKindTrait> {
 }
 fn on_add_trigger_tx<TriggerTxKind: TriggerKindTrait>(
     mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
+    hook: HookContext,
 ) {
-    let pos = world.get::<Pos>(eid).expect("TriggerTx needs Pos").clone();
+    let pos = world
+        .get::<Pos>(hook.entity)
+        .expect("TriggerTx needs Pos")
+        .clone();
     let hboxes = world
-        .get::<TriggerTxGeneric<TriggerTxKind>>(eid)
+        .get::<TriggerTxGeneric<TriggerTxKind>>(hook.entity)
         .expect("TriggerTx myself")
         .comps
         .iter()
@@ -65,8 +67,8 @@ fn on_add_trigger_tx<TriggerTxKind: TriggerKindTrait>(
         .collect::<Vec<_>>();
     let keys = world
         .resource_mut::<SpatHash<SpatHashTriggerTx>>()
-        .insert(eid, pos, hboxes);
-    world.commands().entity(eid).insert(keys);
+        .insert(hook.entity, pos, hboxes);
+    world.commands().entity(hook.entity).insert(keys);
 }
 impl<TriggerTxKind: TriggerKindTrait> TriggerTxGeneric<TriggerTxKind> {
     pub fn single(kind: TriggerTxKind, hbox: HBox) -> Self {

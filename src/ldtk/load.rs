@@ -110,12 +110,10 @@ fn handle_unload_ldtk<R: LdtkRootKind>(
         return;
     }
     for project_root in &existing_roots {
-        commands.entity(project_root).despawn_recursive();
+        commands.entity(project_root).despawn();
     }
     for logical_root in R::iter() {
-        commands
-            .entity(roots.get_eid(logical_root))
-            .despawn_descendants();
+        commands.entity(roots.get_eid(logical_root)).despawn();
     }
     next_state.set(LdtkState::Unloading);
 }

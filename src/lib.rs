@@ -31,5 +31,6 @@ pub mod prelude {
     pub use super::physics::prelude::*;
     pub use super::plugin::{DelightedSet, TwoDelightPlugin};
     pub use super::shader::prelude::*;
+    pub use bevy::platform::collections::{HashMap, HashSet};
     pub use bevy_2delight_macros::TriggerKind;
 }

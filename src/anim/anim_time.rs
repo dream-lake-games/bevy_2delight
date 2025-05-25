@@ -1,9 +1,6 @@
-use bevy::{
-    prelude::{Reflect, Resource},
-    utils::HashMap,
-};
+use bevy::prelude::{Reflect, Resource};
 
-use crate::prelude::Fx;
+use crate::prelude::*;
 
 #[derive(Resource, Default)]
 pub struct AnimsPaused(pub bool);

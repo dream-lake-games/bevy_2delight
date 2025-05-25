@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 
 use crate::{
     glue::Fx,
@@ -41,18 +41,17 @@ pub struct LightMan<Anim: LightAnim> {
 /// Responsible for getting a light claim from the world and creating the underlying anim
 fn on_add_light_man<Anim: LightAnim>(
     mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    _: bevy::ecs::component::ComponentId,
+    hook: HookContext,
 ) {
     // Claim a source
     let claim = LightClaim::alloc(&mut world);
     world
         .commands()
-        .entity(eid)
+        .entity(hook.entity)
         .insert(LightSource::new(claim.clone()));
 
     // Make da anim
-    let mut myself = world.get_mut::<LightMan<Anim>>(eid).unwrap();
+    let mut myself = world.get_mut::<LightMan<Anim>>(hook.entity).unwrap();
     let start_state = myself
         .state_update
         .as_mut()
@@ -60,17 +59,19 @@ fn on_add_light_man<Anim: LightAnim>(
         .cloned();
     world
         .commands()
-        .entity(eid)
+        .entity(hook.entity)
         .insert(AnimMan::new(start_state.unwrap_or_default()).with_render_layers(claim.rl));
 }
 /// Responsible for releasing the light claim and removing the underlying anim
 fn on_remove_light_man<Anim: LightAnim>(
     mut world: bevy::ecs::world::DeferredWorld,
-    eid: Entity,
-    component_id: bevy::ecs::component::ComponentId,
+    hook: HookContext,
 ) {
-    world.commands().entity(eid).remove::<AnimMan<Anim>>();
-    remove_light_source(world, eid, component_id);
+    world
+        .commands()
+        .entity(hook.entity)
+        .remove::<AnimMan<Anim>>();
+    remove_light_source(world, hook);
 }
 impl<Anim: LightAnim> LightMan<Anim> {
     pub fn new(state: Anim) -> Self {

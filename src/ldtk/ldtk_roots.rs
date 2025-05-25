@@ -1,4 +1,6 @@
-use bevy::{prelude::*, reflect::Reflectable, utils::HashMap};
+use bevy::{prelude::*, reflect::Reflectable};
+
+use crate::prelude::*;
 
 #[derive(Resource)]
 pub struct LdtkRootResGeneric<R: LdtkRootKind> {
