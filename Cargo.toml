@@ -1,7 +1,7 @@
 [package]
 name = "bevy_2delight"
 description = "A collection of tools to make building 2d games in Bevy _delightful_"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Mark Pekala <mfpekala@gmail.com>"]
 license = "MIT"
@@ -28,7 +28,7 @@ bevy = { version = "0.16", default-features = false, features = [
 ] }
 bevy_2delight_macros = { version = "0.2.0", path = "macros" }
 # bevy_ecs_ldtk = "0.11"
-bevy_ecs_ldtk = { git = "https://github.com/Trouv/bevy_ecs_ldtk.git", rev = "84a5bce7bb03233bb97ca5811e4ace5ba137a4f4" }
+bevy_ecs_ldtk = "0.12"
 bevy_ecs_tilemap = { version = "0.16", default-features = false }
 bevy_framepace = "0.19"
 bevy_reflect_derive = "0.16"

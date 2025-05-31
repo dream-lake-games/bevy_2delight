@@ -472,8 +472,8 @@ fn move_interesting_dynos<TriggerRxKind: TriggerKindTrait, TriggerTxKind: Trigge
 
 fn update_transforms(mut ents: Query<(&Pos, &mut Transform)>) {
     for (pos, mut tran) in &mut ents {
-        tran.translation.x = pos.x.round().to_num();
-        tran.translation.y = pos.y.round().to_num();
+        tran.translation.x = pos.x.round().to_num::<f32>();
+        tran.translation.y = pos.y.round().to_num::<f32>();
         tran.translation.z = pos.z.to_num();
     }
 }

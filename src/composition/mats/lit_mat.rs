@@ -23,7 +23,7 @@ impl Material2d for LitMat {
         "embedded://bevy_2delight/composition/mats/lit_mat.wgsl".into()
     }
     fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
-        bevy::sprite::AlphaMode2d::Blend
+        bevy::sprite::AlphaMode2d::Opaque
     }
 }
 impl LitMat {

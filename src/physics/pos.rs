@@ -1,8 +1,5 @@
 //! Pos functions as the source of truth for element translational placement.
 //! It should be updated ONLY during `CollisionsSet`, which is a subset of `PhysicsSet`.
-//! IPos is updated also in `CollisionsSet`, but is simply the rounded version of Pos.
-//! Transforms are updated by looking at the IPos diffs, and adding.
-//! This way we avoid global transform shenanigans.
 
 use bevy::{ecs::component::HookContext, prelude::*};
 use fixed::traits::ToFixed;
