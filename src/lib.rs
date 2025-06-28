@@ -1,6 +1,7 @@
 mod anim;
 mod composition;
 mod glue;
+mod input;
 mod ldtk;
 mod particles;
 mod physics;
@@ -26,6 +27,7 @@ pub mod prelude {
     pub use super::composition::prelude::*;
     pub use super::debug_resource;
     pub use super::glue::prelude::*;
+    pub use super::input::prelude::*;
     pub use super::ldtk::prelude::*;
     pub use super::particles::prelude::*;
     pub use super::physics::prelude::*;
