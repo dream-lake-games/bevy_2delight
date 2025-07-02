@@ -76,6 +76,7 @@ fn update_bodies<S: ShaderSpec>(
         mat.input.real_time = mat.input.real_time.rem_euclid(man.loop_time);
         mat.input.rep_x = man.reps.x as f32;
         mat.input.rep_y = man.reps.y as f32;
+        mat.data = man.data.clone();
     }
 }
 

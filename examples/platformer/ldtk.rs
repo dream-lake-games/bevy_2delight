@@ -14,6 +14,7 @@ pub(super) enum LdtkRoot {
 }
 impl LdtkRootKind for LdtkRoot {}
 pub(super) type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
+pub(super) type LdtkBundleEntityPlugin<B> = LdtkBundleEntityPluginGeneric<LdtkRoot, B>;
 pub(super) type LdtkEntityPlugin<B> = LdtkEntityPluginGeneric<LdtkRoot, B>;
 pub(super) type LdtkIntCellValuePlugin<B> = LdtkIntCellValuePluginGeneric<LdtkRoot, B>;
 pub(super) type LdtkRootRes = LdtkRootResGeneric<LdtkRoot>;
@@ -56,7 +57,7 @@ struct TorchBundle {
     light: CircleLight,
     flicker: LightFlicker,
 }
-impl LdtkEntity<LdtkRoot> for TorchBundle {
+impl LdtkBundleEntity<LdtkRoot> for TorchBundle {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
     fn from_ldtk(
         pos: Pos,
@@ -110,24 +111,22 @@ defn_anim!(
         Rock,
     }
 );
-#[derive(Bundle)]
-struct ShinyRockBundle {
-    name: Name,
-    pos: Pos,
-    anim: AnimMan<ShinyRockAnim>,
-}
-impl LdtkEntity<LdtkRoot> for ShinyRockBundle {
+struct ShinyRockEntity;
+impl LdtkEntity<LdtkRoot> for ShinyRockEntity {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
-    fn from_ldtk(
+    fn spawn_from_ldtk(
+        commands: &mut Commands,
         pos: Pos,
-        _fields: &bevy::platform::collections::HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
+        _fields: &HashMap<String, bevy_ecs_ldtk::prelude::FieldValue>,
         _iid: String,
-    ) -> Self {
-        Self {
-            name: Name::new("ShinyRock"),
-            pos,
-            anim: default(),
-        }
+    ) -> Entity {
+        commands
+            .spawn((
+                Name::new("shiny_rock"),
+                pos,
+                AnimMan::<ShinyRockAnim>::default(),
+            ))
+            .id()
     }
 }
 
@@ -147,8 +146,10 @@ pub(super) fn register_ldtk(app: &mut App) {
         LdtkIntCellValuePlugin::<DirtBundle>::single("DirtStatic", 1).with_consolidate(8),
     );
 
-    app.add_plugins(LdtkEntityPlugin::<TorchBundle>::new("Entities", "Torch"));
-    app.add_plugins(LdtkEntityPlugin::<ShinyRockBundle>::new(
+    app.add_plugins(LdtkBundleEntityPlugin::<TorchBundle>::new(
+        "Entities", "Torch",
+    ));
+    app.add_plugins(LdtkEntityPlugin::<ShinyRockEntity>::new(
         "Entities",
         "ShinyRock",
     ));

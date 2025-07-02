@@ -15,7 +15,7 @@ impl LdtkLevelRects {
     }
 }
 
-fn update_level_rects(
+pub(super) fn update_level_rects(
     levels: Query<(&LevelIid, &GlobalTransform)>,
     ldtk_projects: Query<&LdtkProjectHandle>,
     ldtk_project_assets: Res<Assets<LdtkProject>>,

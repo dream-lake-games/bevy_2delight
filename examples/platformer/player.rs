@@ -2,7 +2,8 @@ use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_2delight::prelude::*;
 
 use crate::{
-    ldtk::{LdtkEntityPlugin, LdtkRoot, LdtkRootRes},
+    input::Combos,
+    ldtk::{LdtkBundleEntityPlugin, LdtkRoot, LdtkRootRes},
     TriggerColls, TriggerRx, TriggerRxKind, TriggerTxKind,
 };
 
@@ -30,11 +31,9 @@ defn_anim!(
 
 #[derive(Resource, Default)]
 struct PlayerInput {
-    jump: bool,
     dir: FVec2,
 }
 fn update_player_input(mut player_input: ResMut<PlayerInput>, keyboard: Res<ButtonInput<KeyCode>>) {
-    player_input.jump = keyboard.just_pressed(KeyCode::KeyJ);
     let x_dir = keyboard.pressed(KeyCode::KeyD) as i32 - keyboard.pressed(KeyCode::KeyA) as i32;
     let y_dir = keyboard.pressed(KeyCode::KeyW) as i32 - keyboard.pressed(KeyCode::KeyS) as i32;
     player_input.dir = FVec2::new(x_dir, y_dir);
@@ -139,7 +138,8 @@ impl Default for MovementConsts {
 fn update_player_stateful(
     mut player_q: Query<(&mut AnimMan<PlayerAnim>, &mut Dyno, &mut Player, &StaticRx)>,
     scolls: Res<StaticColls>,
-    input: Res<PlayerInput>,
+    input: Res<Input>,
+    old_input: Res<PlayerInput>,
     bullet_time: Res<BulletTime>,
     consts: Res<MovementConsts>,
 ) {
@@ -153,12 +153,12 @@ fn update_player_stateful(
     // Horizontal movement
     match anim.get_state() {
         PlayerAnim::Air | PlayerAnim::Jump => {
-            if input.dir.x < Fx::ZERO {
+            if old_input.dir.x < Fx::ZERO {
                 if dyno.vel.x > Fx::ZERO {
                     dyno.vel.x *= fx!(consts.air_drag);
                 }
                 dyno.vel.x -= fx!(consts.air_speed) * bullet_time.delta_secs();
-            } else if input.dir.x > Fx::ZERO {
+            } else if old_input.dir.x > Fx::ZERO {
                 if dyno.vel.x < Fx::ZERO {
                     dyno.vel.x *= fx!(consts.air_drag);
                 }
@@ -168,12 +168,12 @@ fn update_player_stateful(
             }
         }
         PlayerAnim::Idle | PlayerAnim::Run | PlayerAnim::Land => {
-            if input.dir.x < Fx::ZERO {
+            if old_input.dir.x < Fx::ZERO {
                 if dyno.vel.x > Fx::ZERO {
                     dyno.vel.x *= fx!(consts.ground_drag);
                 }
                 dyno.vel.x -= fx!(consts.ground_speed) * bullet_time.delta_secs();
-            } else if input.dir.x > Fx::ZERO {
+            } else if old_input.dir.x > Fx::ZERO {
                 if dyno.vel.x < Fx::ZERO {
                     dyno.vel.x *= fx!(consts.ground_drag);
                 }
@@ -185,7 +185,7 @@ fn update_player_stateful(
     }
     // Jumping
     if player.jump_time > Fx::ZERO
-        && input.jump
+        && input.combos.pressed(Combos::Jump as u32)
         && matches!(
             anim.get_state(),
             PlayerAnim::Idle | PlayerAnim::Run | PlayerAnim::Land
@@ -205,7 +205,7 @@ fn update_player_stateful(
             }
         }
         PlayerAnim::Idle => {
-            if input.dir.x != Fx::ZERO {
+            if old_input.dir.x != Fx::ZERO {
                 anim.set_state(PlayerAnim::Run);
                 anim.set_flip_x(dyno.vel.x < Fx::ZERO);
             }
@@ -214,7 +214,7 @@ fn update_player_stateful(
             }
         }
         PlayerAnim::Run => {
-            if input.dir.x == Fx::ZERO {
+            if old_input.dir.x == Fx::ZERO {
                 anim.set_state(PlayerAnim::Idle);
             } else {
                 anim.set_flip_x(dyno.vel.x < Fx::ZERO);
@@ -247,7 +247,7 @@ struct PlayerSpawnerBundle {
     marker: PlayerSpawner,
     pos: Pos,
 }
-impl LdtkEntity<LdtkRoot> for PlayerSpawnerBundle {
+impl LdtkBundleEntity<LdtkRoot> for PlayerSpawnerBundle {
     const ROOT: LdtkRoot = LdtkRoot::Player;
     fn from_ldtk(
         pos: Pos,
@@ -359,7 +359,7 @@ fn player_juice(
 }
 
 pub(super) fn register_player(app: &mut App) {
-    app.add_plugins(LdtkEntityPlugin::<PlayerSpawnerBundle>::new(
+    app.add_plugins(LdtkBundleEntityPlugin::<PlayerSpawnerBundle>::new(
         "Entities",
         "PlayerSpawner",
     ));

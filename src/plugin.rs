@@ -4,12 +4,13 @@ use crate::{
     anim::{AnimPostSet, AnimPreSet},
     composition::LightingSet,
     glue::Deterministic,
+    input::InputSet,
     ldtk::LdtkSet,
     particles::ParticleSet,
     physics::PhysicsSet,
     prelude::{
         AnimPlugin, AnimSettings, BulletTimePlugin, CompositionPlugin, CompositionSettings,
-        LayersCameraSet, LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, LightAnimSet,
+        InputPlugin, LayersCameraSet, LdtkPlugin, LdtkRootKind, LdtkSettingsGeneric, LightAnimSet,
         LightInteractionSet, ParticlePlugin, PhysicsPluginGeneric, PhysicsSettingsGeneric,
         ShaderPlugin, TriggerKindTrait,
     },
@@ -59,6 +60,7 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
                 LdtkSet.before(DelightedSet),
                 LightInteractionSet.before(DelightedSet),
                 PhysicsSet.before(DelightedSet),
+                InputSet.before(DelightedSet),
                 // Post-delighted
                 AnimPostSet.after(DelightedSet),
                 LayersCameraSet.after(DelightedSet),
@@ -77,6 +79,7 @@ impl<LdtkRoot: LdtkRootKind, TriggerRxKind: TriggerKindTrait, TriggerTxKind: Tri
             ParticlePlugin,
             PhysicsPluginGeneric::<TriggerRxKind, TriggerTxKind>::default(),
             ShaderPlugin,
+            InputPlugin,
         ));
         app.insert_resource(Deterministic(self.deterministic));
     }

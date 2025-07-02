@@ -9,10 +9,12 @@ mod plugin;
 
 /// The set that contains all weird ldtk maintenence
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct LdtkSet;
+pub struct LdtkSet;
 
 pub mod prelude {
-    pub use super::entity::{LdtkEntity, LdtkEntityPluginGeneric};
+    pub use super::entity::{
+        LdtkBundleEntity, LdtkBundleEntityPluginGeneric, LdtkEntity, LdtkEntityPluginGeneric,
+    };
     pub use super::int_cell::{
         LdtkIntCellConsolidate, LdtkIntCellLayerer, LdtkIntCellValue, LdtkIntCellValuePluginGeneric,
     };
@@ -21,5 +23,5 @@ pub mod prelude {
     pub use super::load::{LdtkState, LoadLdtk, UnloadLdtk};
     pub(crate) use super::plugin::LdtkPlugin;
     pub use super::plugin::LdtkSettingsGeneric;
-    pub(crate) use super::LdtkSet;
+    pub use super::LdtkSet;
 }

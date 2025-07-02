@@ -1,6 +1,11 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::{LdtkProjectHandle, LdtkWorldBundle, LevelSelection};
 
+use crate::{
+    ldtk::ldtk_maint::update_level_rects,
+    prelude::{DynamicCamera, LdtkLevelRects, Pos},
+};
+
 use super::{
     prelude::{LdtkRootKind, LdtkRootResGeneric},
     LdtkSet,
@@ -79,6 +84,12 @@ fn update_load_ldtk(
     mut commands: Commands,
     mut next_state: ResMut<NextState<LdtkState>>,
     mut blockers: Query<(Entity, &mut BlockLdtkLoad)>,
+    rects: Res<LdtkLevelRects>,
+    level_selection: Res<LevelSelection>,
+    mut cam_pos: Query<&mut Pos, With<DynamicCamera>>,
+    // Need at least one frame to ensure level rects load in time so we can default to camera
+    // going to the middle of the screen
+    mut at_least_one_frame: Local<bool>,
 ) {
     if !blockers.is_empty() {
         for (eid, mut blocker) in &mut blockers {
@@ -89,7 +100,19 @@ fn update_load_ldtk(
             }
         }
     } else {
+        if !*at_least_one_frame {
+            *at_least_one_frame = true;
+            return;
+        }
+        if let LevelSelection::Iid(lid) = level_selection.into_inner() {
+            let mut cam_pos = cam_pos.single_mut().unwrap();
+            if let Some(rect) = rects.get(&lid) {
+                let center = Pos::from(rect.center());
+                *cam_pos = center;
+            }
+        };
         next_state.set(LdtkState::Loaded);
+        *at_least_one_frame = false;
     }
 }
 
@@ -113,7 +136,9 @@ fn handle_unload_ldtk<R: LdtkRootKind>(
         commands.entity(project_root).despawn();
     }
     for logical_root in R::iter() {
-        commands.entity(roots.get_eid(logical_root)).despawn();
+        commands
+            .entity(roots.get_eid(logical_root))
+            .despawn_related::<Children>();
     }
     next_state.set(LdtkState::Unloading);
 }
@@ -147,6 +172,7 @@ pub(super) fn register_load<R: LdtkRootKind>(app: &mut App) {
         Update,
         update_load_ldtk
             .run_if(in_state(LdtkState::Loading))
+            .after(update_level_rects)
             .in_set(LdtkSet),
     );
     app.add_systems(

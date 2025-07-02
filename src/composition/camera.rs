@@ -104,7 +104,7 @@ pub(super) fn register_camera(app: &mut App) {
         Update,
         (update_camera_shake, follow_dynamic_camera)
             .chain()
-            .after(PhysicsSet)
+            .after(InputSet)
             .in_set(LayersCameraSet),
     );
 }

@@ -48,5 +48,5 @@ fn create_roots<R: LdtkRootKind>(mut commands: Commands, mut roots: ResMut<LdtkR
 pub(super) fn register_ldtk_root<R: LdtkRootKind>(app: &mut App) {
     app.insert_resource(LdtkRootResGeneric::<R> { map: default() });
 
-    app.add_systems(Startup, create_roots::<R>);
+    app.add_systems(Startup, create_roots::<R>.in_set(LdtkSet));
 }

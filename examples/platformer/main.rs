@@ -7,6 +7,7 @@ use bevy_inspector_egui::bevy_egui::EguiPlugin;
 
 mod bgfg;
 mod camera;
+mod input;
 mod ldtk;
 mod platforms;
 mod player;
@@ -58,6 +59,7 @@ fn main() {
 
     bgfg::register_bgfg(&mut app);
     camera::register_camera(&mut app);
+    input::register_input(&mut app);
     ldtk::register_ldtk(&mut app);
     platforms::register_platforms(&mut app);
     player::register_player(&mut app);

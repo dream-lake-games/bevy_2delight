@@ -103,3 +103,8 @@ impl std::ops::Neg for Pos {
         self
     }
 }
+impl From<Vec2> for Pos {
+    fn from(value: Vec2) -> Self {
+        Self::new(value.x, value.y)
+    }
+}

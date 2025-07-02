@@ -28,5 +28,4 @@ pub mod prelude {
     };
     pub use super::statics::{StaticRx, StaticRxKind, StaticTx, StaticTxKind};
     pub use super::triggers::{TriggerKindTrait, TriggerRxGeneric, TriggerTxGeneric};
-    pub(crate) use super::PhysicsSet;
 }
