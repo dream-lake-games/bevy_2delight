@@ -1,5 +1,5 @@
+use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::*;
-use bevy::render::view::RenderLayers;
 
 use crate::fx;
 use crate::prelude::{BulletTime, Fx, Layer};

@@ -57,7 +57,7 @@ impl LoadLdtk {
     }
 }
 fn handle_load_ldtk(
-    trigger: Trigger<LoadLdtk>,
+    trigger: On<LoadLdtk>,
     mut commands: Commands,
     state: Res<State<LdtkState>>,
     mut next_state: ResMut<NextState<LdtkState>>,
@@ -121,7 +121,7 @@ pub struct UnloadLdtk<R: LdtkRootKind> {
     _pd: std::marker::PhantomData<R>,
 }
 fn handle_unload_ldtk<R: LdtkRootKind>(
-    _trigger: Trigger<UnloadLdtk<R>>,
+    _trigger: On<UnloadLdtk<R>>,
     mut commands: Commands,
     state: Res<State<LdtkState>>,
     mut next_state: ResMut<NextState<LdtkState>>,

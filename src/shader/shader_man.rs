@@ -1,9 +1,8 @@
 use bevy::{
     prelude::*,
-    render::render_resource::{
-        encase::private::WriteInto, AsBindGroup, ShaderRef, ShaderSize, ShaderType,
-    },
-    sprite::Material2d,
+    render::render_resource::{encase::private::WriteInto, AsBindGroup, ShaderSize, ShaderType},
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d},
 };
 
 use crate::prelude::Layer;
@@ -46,8 +45,8 @@ impl<S: ShaderSpec> Material2d for ShaderMat<S> {
     fn fragment_shader() -> ShaderRef {
         S::SHADER_PATH.into()
     }
-    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
-        bevy::sprite::AlphaMode2d::Blend
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 }
 

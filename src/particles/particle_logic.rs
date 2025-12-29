@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Anchor};
 
 use crate::{
     glue::Fx,
@@ -72,9 +72,9 @@ fn bless_lifespans(
                 Sprite {
                     color: particle.color.eval(Fx::ZERO),
                     custom_size: Some(Vec2::new(size as f32, size as f32)),
-                    anchor: bevy::sprite::Anchor::BottomLeft,
                     ..default()
                 },
+                Anchor::BOTTOM_LEFT,
                 particle.layer.render_layers(),
                 HasParticleSprite,
             ))
@@ -88,9 +88,9 @@ fn bless_lifespans(
                         Sprite {
                             color: brightness.eval(Fx::ZERO),
                             custom_size: Some(Vec2::new(size as f32, size as f32)),
-                            anchor: bevy::sprite::Anchor::BottomLeft,
                             ..default()
                         },
+                        Anchor::BOTTOM_LEFT,
                         particle
                             .layer
                             .associated_brightness_layer()
@@ -110,9 +110,9 @@ fn bless_lifespans(
                         Sprite {
                             color: reflexivity.eval(Fx::ZERO),
                             custom_size: Some(Vec2::new(size as f32, size as f32)),
-                            anchor: bevy::sprite::Anchor::BottomLeft,
                             ..default()
                         },
+                        Anchor::BOTTOM_LEFT,
                         particle
                             .layer
                             .associated_reflexivity_layer()
@@ -157,7 +157,7 @@ fn update_particles(
     for (eid, mut lifespan, mut dyno, particle, srx, mut pos) in &mut particle_q {
         lifespan.current += bullet_time.delta_secs();
         if lifespan.current > particle.lifetime {
-            commands.entity(eid).despawn();
+            commands.entity(eid).try_despawn();
             continue;
         }
         // Appearance

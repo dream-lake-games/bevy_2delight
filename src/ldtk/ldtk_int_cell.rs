@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
+    ldtk_load::BlockLdtkLoad,
     ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
-    load::BlockLdtkLoad,
     LdtkSet,
 };
 

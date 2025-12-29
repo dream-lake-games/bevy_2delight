@@ -1,7 +1,7 @@
 //! Pos functions as the source of truth for element translational placement.
 //! It should be updated ONLY during `CollisionsSet`, which is a subset of `PhysicsSet`.
 
-use bevy::{ecs::component::HookContext, prelude::*};
+use bevy::{ecs::lifecycle::HookContext, prelude::*};
 use fixed::traits::ToFixed;
 
 use crate::{

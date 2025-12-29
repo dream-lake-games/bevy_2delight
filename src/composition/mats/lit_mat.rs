@@ -1,7 +1,8 @@
 use bevy::{
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    render::render_resource::AsBindGroup,
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d},
 };
 
 use crate::glue::color_as_vec4;
@@ -22,8 +23,8 @@ impl Material2d for LitMat {
     fn fragment_shader() -> ShaderRef {
         "embedded://bevy_2delight/composition/mats/lit_mat.wgsl".into()
     }
-    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
-        bevy::sprite::AlphaMode2d::Opaque
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Opaque
     }
 }
 impl LitMat {

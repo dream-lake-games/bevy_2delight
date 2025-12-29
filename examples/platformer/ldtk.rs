@@ -111,8 +111,9 @@ defn_anim!(
         Rock,
     }
 );
-struct ShinyRockEntity;
-impl LdtkEntity<LdtkRoot> for ShinyRockEntity {
+#[derive(Component, Default)]
+struct ShinyRock;
+impl LdtkEntity<LdtkRoot> for ShinyRock {
     const ROOT: LdtkRoot = LdtkRoot::Detail;
     fn spawn_from_ldtk(
         commands: &mut Commands,
@@ -149,10 +150,7 @@ pub(super) fn register_ldtk(app: &mut App) {
     app.add_plugins(LdtkBundleEntityPlugin::<TorchBundle>::new(
         "Entities", "Torch",
     ));
-    app.add_plugins(LdtkEntityPlugin::<ShinyRockEntity>::new(
-        "Entities",
-        "ShinyRock",
-    ));
+    app.add_plugins(LdtkEntityPlugin::<ShinyRock>::new("Entities", "ShinyRock"));
 
     app.add_systems(Startup, startup);
 

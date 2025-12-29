@@ -1,4 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*, sprite::Material2dPlugin};
+use bevy::{asset::embedded_asset, prelude::*, sprite_render::Material2dPlugin};
 
 pub(super) mod brightness_cull_mat;
 pub(super) mod circle_light_mat;

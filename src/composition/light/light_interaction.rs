@@ -1,8 +1,8 @@
 use bevy::{
     asset::RenderAssetUsages,
-    ecs::component::HookContext,
+    ecs::lifecycle::HookContext,
+    mesh::{Indices, PrimitiveTopology},
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
 };
 
 use crate::{
@@ -57,7 +57,9 @@ impl Default for LightMeshCache {
 impl LightMeshCache {
     fn clear(&mut self, commands: &mut Commands) {
         for mesh_eid in &self.meshes {
-            commands.entity(*mesh_eid).despawn();
+            if let Ok(mut ent_comms) = commands.get_entity(*mesh_eid) {
+                ent_comms.try_despawn();
+            }
         }
         self.meshes = vec![];
     }
@@ -91,7 +93,7 @@ pub(super) fn remove_light_source(mut world: bevy::ecs::world::DeferredWorld, ho
         .commands()
         .get_entity(hook.entity)
         .map(|mut inner| {
-            inner.remove::<LightSource>();
+            inner.try_remove::<LightSource>();
         })
         .ok();
 }
@@ -290,15 +292,16 @@ fn block_lights(
         for thbox in occlude_thboxes {
             let mesh = get_blocked_mesh(*light_pos, thbox);
             let new_eid = commands
-                .spawn((
+                .spawn_empty()
+                .try_insert((
                     Name::new("temporary_mesh"),
                     Mesh2d(meshes.add(mesh).into()),
                     MeshMaterial2d(black_mat.clone()),
                     Transform::from_translation(Vec3::Z * 100.0),
                     Visibility::Visible,
                     source.claim.rl.clone(),
+                    ChildOf(light_occlude_root.eid()),
                 ))
-                .insert(ChildOf(light_occlude_root.eid()))
                 .id();
             source.mesh_cache.meshes.push(new_eid);
         }

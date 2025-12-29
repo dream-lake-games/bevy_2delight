@@ -91,7 +91,7 @@ fn update_falling_platforms(
 ) {
     for (eid, falling_platform, stx) in &waiting_to_fall {
         if static_colls
-            .get_refs(&stx.coll_keys)
+            .iter_refs(&stx.coll_keys)
             .any(|coll| coll.rx_kind == StaticRxKind::Default)
         {
             commands.entity(eid).insert(Dyno::default());

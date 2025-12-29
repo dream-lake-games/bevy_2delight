@@ -8,8 +8,8 @@ use bevy_ecs_ldtk::{
 use crate::prelude::*;
 
 use super::{
+    ldtk_load::BlockLdtkLoad,
     ldtk_roots::{LdtkRootKind, LdtkRootResGeneric},
-    load::BlockLdtkLoad,
 };
 
 pub trait LdtkBundleEntity<R: LdtkRootKind>: Bundle {
@@ -98,7 +98,7 @@ impl<R: LdtkRootKind, B: LdtkBundleEntity<R>> Plugin for LdtkBundleEntityPluginG
     }
 }
 
-pub trait LdtkEntity<R: LdtkRootKind>: std::marker::Sync + std::marker::Send + 'static {
+pub trait LdtkEntity<R: LdtkRootKind>: Component {
     const ROOT: R;
     fn spawn_from_ldtk(
         commands: &mut Commands,
@@ -109,13 +109,13 @@ pub trait LdtkEntity<R: LdtkRootKind>: std::marker::Sync + std::marker::Send + '
 }
 
 #[derive(Component, Default)]
-struct LdtkEntityWrapper<R: LdtkRootKind, E: LdtkEntity<R>> {
-    _pd: std::marker::PhantomData<(R, E)>,
+struct LdtkEntityWrapper<R: LdtkRootKind, C: LdtkEntity<R>> {
+    _pd: std::marker::PhantomData<(R, C)>,
     _blocker: BlockLdtkLoad,
     fields: HashMap<String, FieldValue>,
     iid: String,
 }
-impl<R: LdtkRootKind, E: LdtkEntity<R>> bevy_ecs_ldtk::app::LdtkEntity for LdtkEntityWrapper<R, E> {
+impl<R: LdtkRootKind, C: LdtkEntity<R>> bevy_ecs_ldtk::app::LdtkEntity for LdtkEntityWrapper<R, C> {
     fn bundle_entity(
         entity_instance: &EntityInstance,
         _layer_instance: &LayerInstance,
@@ -138,9 +138,9 @@ impl<R: LdtkRootKind, E: LdtkEntity<R>> bevy_ecs_ldtk::app::LdtkEntity for LdtkE
     }
 }
 
-fn post_ldtk_entity_blessing<R: LdtkRootKind, E: LdtkEntity<R>>(
+fn post_ldtk_entity_blessing<R: LdtkRootKind, C: LdtkEntity<R>>(
     mut commands: Commands,
-    wrappers: Query<(Entity, &GlobalTransform, &LdtkEntityWrapper<R, E>)>,
+    wrappers: Query<(Entity, &GlobalTransform, &LdtkEntityWrapper<R, C>)>,
     roots: Res<LdtkRootResGeneric<R>>,
 ) {
     for (ldtk_eid, gt, wrapper) in &wrappers {
@@ -152,20 +152,20 @@ fn post_ldtk_entity_blessing<R: LdtkRootKind, E: LdtkEntity<R>>(
             fx!(gt.translation().x.round() as i32),
             fx!(gt.translation().y.round() as i32),
         );
-        let eid = E::spawn_from_ldtk(&mut commands, pos, &wrapper.fields, wrapper.iid.clone());
-        commands.entity(eid).insert(ChildOf(roots.get_eid(E::ROOT)));
+        let eid = C::spawn_from_ldtk(&mut commands, pos, &wrapper.fields, wrapper.iid.clone());
+        commands.entity(eid).insert(ChildOf(roots.get_eid(C::ROOT)));
         commands
             .entity(ldtk_eid)
-            .remove::<LdtkEntityWrapper<R, E>>();
+            .remove::<LdtkEntityWrapper<R, C>>();
     }
 }
 
-pub struct LdtkEntityPluginGeneric<R: LdtkRootKind, E: LdtkEntity<R>> {
-    _pd: std::marker::PhantomData<(R, E)>,
+pub struct LdtkEntityPluginGeneric<R: LdtkRootKind, C: LdtkEntity<R>> {
+    _pd: std::marker::PhantomData<(R, C)>,
     layer_id: &'static str,
     entity_id: &'static str,
 }
-impl<R: LdtkRootKind, E: LdtkEntity<R>> LdtkEntityPluginGeneric<R, E> {
+impl<R: LdtkRootKind, C: LdtkEntity<R>> LdtkEntityPluginGeneric<R, C> {
     pub fn new(layer_id: &'static str, entity_id: &'static str) -> Self {
         Self {
             layer_id,
@@ -174,12 +174,12 @@ impl<R: LdtkRootKind, E: LdtkEntity<R>> LdtkEntityPluginGeneric<R, E> {
         }
     }
 }
-impl<R: LdtkRootKind, E: LdtkEntity<R>> Plugin for LdtkEntityPluginGeneric<R, E> {
+impl<R: LdtkRootKind, C: LdtkEntity<R>> Plugin for LdtkEntityPluginGeneric<R, C> {
     fn build(&self, app: &mut App) {
-        app.register_ldtk_entity_for_layer::<LdtkEntityWrapper<R, E>>(
+        app.register_ldtk_entity_for_layer::<LdtkEntityWrapper<R, C>>(
             &self.layer_id,
             &self.entity_id,
         );
-        app.add_systems(Update, post_ldtk_entity_blessing::<R, E>.in_set(LdtkSet));
+        app.add_systems(Update, post_ldtk_entity_blessing::<R, C>.in_set(LdtkSet));
     }
 }

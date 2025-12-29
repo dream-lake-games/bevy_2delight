@@ -8,6 +8,7 @@ struct EnumInfo {
     zix: Option<f32>,
     time_class: Option<Ident>,
     rep: Option<(u32, u32)>,
+    fps: Option<u32>,
 }
 
 #[derive(Clone)]
@@ -28,6 +29,7 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
         time_class: find_optional_attr!(ast, "time_class")
             .map(|attr| get_single_ident("time_class", attr)),
         rep: find_optional_attr!(ast, "rep").map(|attr| get_pair_lit_int::<u32>("rep", attr)),
+        fps: find_optional_attr!(ast, "fps").map(|attr| get_single_lit_int::<u32>("fps", attr)),
     };
 
     let mut variant_infos = vec![];
@@ -81,9 +83,14 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
         }
     });
 
+    let enum_default_fps = enum_info.fps.unwrap_or(30);
+
     let get_fps_tokens = variant_infos.clone().into_iter().map(|variant_info| {
         let ident = variant_info.ident;
-        let fps = variant_info.fps.unwrap_or(30);
+        let fps = match variant_info.fps {
+            Some(v) => v,
+            None => enum_default_fps,
+        };
         quote::quote! { Self::#ident => #fps, }
     });
 
@@ -110,7 +117,7 @@ pub(super) fn produce_anim_derive(ast: DeriveInput) -> proc_macro::TokenStream {
 
     quote::quote! {
         impl bevy_2delight::prelude::AnimStateMachine for #enum_ident {
-            const RENDER_LAYERS: Option<bevy::render::view::RenderLayers> = #layer;
+            const RENDER_LAYERS: Option<bevy::camera::visibility::RenderLayers> = #layer;
             const ZIX: f32 = #zix;
             const TIME_CLASS: Option<bevy_2delight::prelude::AnimTimeClass> = #time_class;
             const REP: UVec2 = UVec2::new(#rep_x, #rep_y);

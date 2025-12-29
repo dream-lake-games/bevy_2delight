@@ -17,7 +17,7 @@ pub(crate) struct AnimPostSet;
 pub mod prelude {
     pub use super::{
         anim_collect::_AnimWizardry,
-        anim_man::{AnimDelta, AnimMan, AnimNextState},
+        anim_man::{AnimDelta, AnimMan, AnimNextState, AnimObserveStateChanges},
         anim_plugin::*,
         anim_time::{AnimTime, AnimTimeClass},
         anim_traits::AnimStateMachine,

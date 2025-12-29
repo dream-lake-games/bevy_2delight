@@ -46,10 +46,7 @@ fn main() {
         physics_settings: PhysicsSettings::default(),
         deterministic: false,
     });
-    app.add_plugins(EguiPlugin {
-        enable_multipass_for_primary_context: true,
-    })
-    .add_plugins(
+    app.add_plugins(EguiPlugin::default()).add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(
             bevy::input::common_conditions::input_toggle_active(false, KeyCode::Tab),
         ),

@@ -35,8 +35,8 @@ impl Plugin for CompositionPlugin {
                         resizable: true,
                         title: self.settings.title.clone(),
                         resolution: bevy::window::WindowResolution::new(
-                            self.settings.screen_size.x as f32,
-                            self.settings.screen_size.y as f32,
+                            self.settings.screen_size.x,
+                            self.settings.screen_size.y,
                         ),
                         mode: bevy::window::WindowMode::BorderlessFullscreen(
                             MonitorSelection::Primary,

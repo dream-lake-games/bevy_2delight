@@ -13,7 +13,7 @@ readme = "README.md"
 members = ["macros"]
 
 [dependencies]
-bevy = { version = "0.16", default-features = false, features = [
+bevy = { version = "0.17", default-features = false, features = [
     "bevy_asset",
     "bevy_gizmos",
     "bevy_render",
@@ -28,10 +28,10 @@ bevy = { version = "0.16", default-features = false, features = [
 ] }
 bevy_2delight_macros = { version = "0.2.0", path = "macros" }
 # bevy_ecs_ldtk = "0.11"
-bevy_ecs_ldtk = "0.12"
-bevy_ecs_tilemap = { version = "0.16", default-features = false }
-bevy_framepace = "0.19"
-bevy_reflect_derive = "0.16"
+bevy_ecs_ldtk = "0.13"
+bevy_ecs_tilemap = { version = "0.17", default-features = false }
+bevy_framepace = "0.20"
+bevy_reflect_derive = "0.17"
 fixed = "1.29.0"
 lazy_static = "1.5.0"
 inventory = "0.3.17"
@@ -42,8 +42,8 @@ strum = "0.27"
 strum_macros = "0.27"
 
 [dev-dependencies]
-bevy = "0.16"
-bevy-inspector-egui = { version = "0.31", default-features = false, features = [
+bevy = "0.17"
+bevy-inspector-egui = { version = "0.35", default-features = false, features = [
     "bevy_pbr",
     "bevy_image",
     "bevy_render",

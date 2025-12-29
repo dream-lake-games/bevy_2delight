@@ -92,7 +92,7 @@ fn update_player_always(
     // Gravity
     dyno.vel.y -= bullet_time.delta_secs() * fx!(300);
     // Jump timing
-    if scolls.get_refs(&srx.coll_keys).any(|coll| {
+    if scolls.iter_refs(&srx.coll_keys).any(|coll| {
         coll.push.y > Fx::ZERO && matches!(coll.tx_kind, StaticTxKind::Solid | StaticTxKind::PassUp)
     }) {
         player.jump_time = fx!(0.1);
@@ -146,7 +146,7 @@ fn update_player_stateful(
     let Ok((mut anim, mut dyno, mut player, srx)) = player_q.single_mut() else {
         return;
     };
-    let on_ground = scolls.get_refs(&srx.coll_keys).any(|coll| {
+    let on_ground = scolls.iter_refs(&srx.coll_keys).any(|coll| {
         coll.push.y > Fx::ZERO && matches!(coll.tx_kind, StaticTxKind::Solid | StaticTxKind::PassUp)
     });
 

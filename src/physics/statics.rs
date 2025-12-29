@@ -1,4 +1,4 @@
-use bevy::{ecs::component::HookContext, prelude::*};
+use bevy::{ecs::lifecycle::HookContext, prelude::*};
 
 use crate::{
     glue::Fx,
@@ -87,10 +87,9 @@ fn on_add_static_tx(mut world: bevy::ecs::world::DeferredWorld, hook: HookContex
 fn on_remove_static_tx(mut world: bevy::ecs::world::DeferredWorld, hook: HookContext) {
     let occlude_light = world.get::<OccludeLight>(hook.entity).cloned();
     if let Some(OccludeLight::StaticTx) = occlude_light {
-        world
-            .commands()
-            .entity(hook.entity)
-            .remove::<OccludeLight>();
+        if let Ok(mut ent_comms) = world.commands().get_entity(hook.entity) {
+            ent_comms.try_remove::<OccludeLight>();
+        }
     }
     on_remove_spat_hash::<SpatHashStaticTx>(world, hook);
 }

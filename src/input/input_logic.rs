@@ -1,5 +1,5 @@
 use super::input_data::*;
-use bevy::{input::InputSystem, platform::collections::HashMap, prelude::*};
+use bevy::{input::InputSystems, platform::collections::HashMap, prelude::*};
 use strum::IntoEnumIterator;
 
 fn update_input(keyboard: Res<ButtonInput<KeyCode>>, mut input: ResMut<Input>) {
@@ -72,5 +72,5 @@ fn update_input(keyboard: Res<ButtonInput<KeyCode>>, mut input: ResMut<Input>) {
 pub(super) fn register_input_logic(app: &mut App) {
     app.insert_resource(Input::default());
 
-    app.add_systems(Update, update_input.in_set(InputSystem));
+    app.add_systems(Update, update_input.in_set(InputSystems));
 }

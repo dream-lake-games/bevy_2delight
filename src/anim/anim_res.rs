@@ -100,7 +100,7 @@ impl<StateMachine: AnimStateMachine> AnimRes<StateMachine> {
 
 #[cfg(debug_assertions)]
 fn on_reload_anims<StateMachine: AnimStateMachine>(
-    _trigger: Trigger<super::anim_plugin::ReloadAnims>,
+    _trigger: On<super::anim_plugin::ReloadAnims>,
     mut anim_res: ResMut<AnimRes<StateMachine>>,
 ) {
     *anim_res = AnimRes::load();

@@ -1,13 +1,12 @@
 use bevy::{
+    mesh::MeshVertexBufferLayoutRef,
     prelude::*,
-    render::{
-        mesh::MeshVertexBufferLayoutRef,
-        render_resource::{
-            AsBindGroup, BlendComponent, BlendFactor, BlendOperation, BlendState,
-            RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
-        },
+    render::render_resource::{
+        AsBindGroup, BlendComponent, BlendFactor, BlendOperation, BlendState,
+        RenderPipelineDescriptor, SpecializedMeshPipelineError,
     },
-    sprite::{Material2d, Material2dKey},
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d, Material2dKey},
 };
 
 const BLEND_ADD: BlendState = BlendState {
@@ -36,8 +35,8 @@ impl Material2d for CutoutMat {
     fn fragment_shader() -> ShaderRef {
         "embedded://bevy_2delight/composition/mats/cutout_mat.wgsl".into()
     }
-    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
-        bevy::sprite::AlphaMode2d::Blend
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,

@@ -1,4 +1,4 @@
-use bevy::{ecs::component::HookContext, prelude::*};
+use bevy::{ecs::lifecycle::HookContext, prelude::*};
 
 use crate::physics::{colls::CollKey, hbox::HBox, pos::Pos};
 

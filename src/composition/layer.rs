@@ -4,14 +4,14 @@ use std::collections::VecDeque;
 
 use bevy::{
     asset::uuid::Uuid,
+    camera::{visibility::RenderLayers, RenderTarget},
     core_pipeline::tonemapping::Tonemapping,
     prelude::*,
     render::{
-        camera::RenderTarget,
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
-        view::RenderLayers,
+        view::Hdr,
     },
     window::WindowResized,
 };
@@ -137,14 +137,6 @@ pub(super) enum LayerCameraMode {
     Hdr,
     Tonemapped(Tonemapping),
 }
-impl LayerCameraMode {
-    fn is_hdr(&self) -> bool {
-        match self {
-            Self::Hdr => true,
-            _ => false,
-        }
-    }
-}
 
 #[derive(PartialEq, Eq)]
 enum LayerPosition {
@@ -236,9 +228,10 @@ impl Layer {
 
     fn target(&self) -> Handle<Image> {
         // Bit of a hack, sorry
-        Handle::Weak(AssetId::Uuid {
-            uuid: Uuid::from_u128(self.render_layers().bits()[0] as u128),
-        })
+        Handle::Uuid(
+            Uuid::from_u128(self.render_layers().bits()[0] as u128),
+            default(),
+        )
     }
 
     pub fn associated_pixel_layer(&self) -> Option<Layer> {
@@ -343,9 +336,10 @@ impl InternalLayer {
     }
 
     fn target(&self) -> Handle<Image> {
-        Handle::Weak(AssetId::Uuid {
-            uuid: Uuid::from_u128(self.render_layers().bits()[0] as u128),
-        })
+        Handle::Uuid(
+            Uuid::from_u128(self.render_layers().bits()[0] as u128),
+            default(),
+        )
     }
 }
 
@@ -581,7 +575,9 @@ fn setup_physical_layers(
                            render_layers: RenderLayers,
                            camera_mode: LayerCameraMode,
                            follow_dynamic: bool| {
-        images.insert(target.id(), layer_settings.blank_screen_image());
+        images
+            .insert(target.id(), layer_settings.blank_screen_image())
+            .expect("Failed to insert blank screen image");
         let mut comms = commands.spawn((
             Name::new(name),
             Transform::default(),
@@ -591,9 +587,9 @@ fn setup_physical_layers(
                 order: layer_order as isize,
                 target: RenderTarget::Image(target.into()),
                 clear_color: ClearColorConfig::Custom(Color::srgba(0.0, 0.0, 0.0, 0.0)),
-                hdr: camera_mode.is_hdr(),
                 ..default()
             },
+            Hdr,
             render_layers,
         ));
         comms.insert(ChildOf(root.eid()));
@@ -780,9 +776,9 @@ fn setup_logical_layers(
                                 clear_color: ClearColorConfig::Custom(Color::linear_rgba(
                                     0.0, 0.0, 0.0, 1.0,
                                 )),
-                                hdr: true,
                                 ..default()
                             },
+                            Hdr,
                             Transform::default(),
                             input_rl.clone(),
                         ))
@@ -863,7 +859,7 @@ fn setup_smush_layer(mut commands: Commands, root: Res<LayerRoot>) {
 }
 
 fn resize_layers_as_needed(
-    mut events: EventReader<WindowResized>,
+    mut events: MessageReader<WindowResized>,
     mut quad_trans: Query<&mut Transform, With<ResizeLayerToWindow>>,
     layer_settings: Res<LayerSettings>,
 ) {

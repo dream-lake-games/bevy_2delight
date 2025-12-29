@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_2delight::prelude::{LdtkSettingsGeneric, *};
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use strum_macros::EnumIter;
 
 // You also could write:
@@ -65,15 +66,20 @@ impl LdtkRootKind for LdtkRoot {}
 type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
 
 fn startup(mut commands: Commands) {
+    // Spawn the dynamic camera that the layer cameras will follow
+    commands.spawn((Name::new("DynamicCamera"), DynamicCamera, Pos::default()));
+
     commands.spawn((
         Name::new("slow_circle"),
         AnimMan::<SlowCircleAnim>::default(),
         Visibility::default(),
+        Pos::default(), // Give it a position too
     ));
     commands.spawn((
         Name::new("fast_circle"),
         AnimMan::<FastCircleAnim>::default(),
         Visibility::default(),
+        Pos::default(), // Give it a position too
     ));
 }
 
@@ -87,6 +93,7 @@ fn main() {
         physics_settings: PhysicsSettings::default(),
         deterministic: false,
     });
+    app.add_plugins(EguiPlugin::default());
     app.add_plugins(
         bevy_inspector_egui::quick::WorldInspectorPlugin::default().run_if(
             bevy::input::common_conditions::input_toggle_active(false, KeyCode::Tab),

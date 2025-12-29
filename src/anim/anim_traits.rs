@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use bevy::{prelude::*, reflect::Reflectable, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, prelude::*, reflect::Reflectable};
 
 use super::{anim_man::AnimNextState, anim_time::AnimTimeClass};
 

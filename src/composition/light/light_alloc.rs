@@ -5,8 +5,9 @@ use bevy::prelude::*;
 pub const BASE_LIGHT_RENDER_LAYER: usize = 100;
 pub const MAX_NUM_LIGHTS: usize = 256;
 
-use bevy::render::camera::RenderTarget;
-use bevy::render::view::RenderLayers;
+use bevy::camera::visibility::RenderLayers;
+use bevy::camera::RenderTarget;
+use bevy::render::view::Hdr;
 use rand::{thread_rng, Rng};
 
 use crate::composition::camera::FollowDynamicCamera;
@@ -87,9 +88,9 @@ impl LightClaim {
                     order: LayerOrder::PreLight as isize,
                     target: RenderTarget::Image(image_hand.clone().into()),
                     clear_color: ClearColorConfig::Custom(Color::linear_rgba(0.0, 0.0, 0.0, 0.0)),
-                    hdr: true,
                     ..default()
                 },
+                Hdr,
                 rl.clone(),
                 FollowDynamicCamera,
             ))
@@ -123,10 +124,10 @@ impl LightClaim {
     pub(super) fn free(&self, world: &mut bevy::ecs::world::DeferredWorld) {
         world.resource_mut::<LightAllocer>().free(&self.rl);
         if let Ok(mut comms) = world.commands().get_entity(self.camera_eid) {
-            comms.despawn();
+            comms.try_despawn();
         }
         if let Ok(mut comms) = world.commands().get_entity(self.agg_mesh_eid) {
-            comms.despawn();
+            comms.try_despawn();
         }
     }
 }

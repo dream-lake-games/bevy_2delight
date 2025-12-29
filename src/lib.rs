@@ -36,4 +36,5 @@ pub mod prelude {
     pub use bevy::color::palettes::tailwind;
     pub use bevy::platform::collections::{HashMap, HashSet};
     pub use bevy_2delight_macros::TriggerKind;
+    pub use bevy_ecs_ldtk::LevelSelection;
 }

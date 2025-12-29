@@ -50,7 +50,7 @@ impl StaticColls {
     pub fn get(&self, key: &CollKey) -> Option<&StaticCollRec> {
         self.map.get(key)
     }
-    pub fn get_refs<'a, 'b>(
+    pub fn iter_refs<'a, 'b>(
         &'a self,
         coll_keys: &'b [CollKey],
     ) -> std::iter::FilterMap<

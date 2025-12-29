@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::Material2dPlugin};
+use bevy::{prelude::*, sprite_render::Material2dPlugin};
 
 mod shader_collect;
 mod shader_logic;

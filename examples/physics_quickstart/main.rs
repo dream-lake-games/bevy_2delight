@@ -34,7 +34,10 @@ type LdtkSettings = LdtkSettingsGeneric<LdtkRoot>;
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
+    app.add_plugins((
+        FrameTimeDiagnosticsPlugin::default(),
+        LogDiagnosticsPlugin::default(),
+    ));
     app.add_plugins(TwoDelightPlugin {
         anim_settings: default(),
         composition_settings: CompositionSettings {
@@ -56,8 +59,8 @@ fn main() {
 struct Player;
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Ground")))]
 struct Ground;
+
 #[derive(Bundle)]
 struct GroundBundle {
     ground: Ground,
@@ -80,8 +83,8 @@ impl GroundBundle {
 }
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Spike")))]
 struct Spike;
+
 #[derive(Bundle)]
 struct SpikeBundle {
     spike: Spike,
@@ -105,6 +108,9 @@ impl SpikeBundle {
 }
 
 fn startup(mut commands: Commands) {
+    // Spawn the dynamic camera that the layer cameras will follow
+    commands.spawn((Name::new("DynamicCamera"), DynamicCamera, Pos::default()));
+
     let player_hbox = HBox::new(36, 36);
     commands.spawn((
         Name::new("Player"),
@@ -144,7 +150,7 @@ fn update(
         }
     }
 
-    let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut();
+    let (mut pos, mut dyno, mut sprite, srx, trx) = player_q.single_mut().unwrap();
 
     // Horizontal movement
     let x_mag = fx!(200);
@@ -168,7 +174,7 @@ fn update(
 
     // How to check for collisions
     if static_colls
-        .get_refs(&srx.coll_keys)
+        .iter_refs(&srx.coll_keys)
         .any(|coll| coll.tx_kind == StaticTxKind::Solid)
     {
         sprite.color = Color::linear_rgb(0.1, 1.0, 1.0);
